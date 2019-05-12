@@ -129,7 +129,7 @@ class SharpSat(Problem):
     def solve(self):
         super().solve()
         root_tab = "td_node_{}".format(self.td.root.id)
-        sum_count = self.db.replace_dynamic_tabs("(select sum(model_count) from {})".format(root_tab), [root_tab])
+        sum_count = self.db.replace_dynamic_tabs("(select coalesce(sum(model_count),0) from {})".format(root_tab), [root_tab])
         self.db.ignore_next_praefix()
         model_count = self.db.update("problem_sharpsat",["model_count"],[sum_count],["ID = {}".format(self.id)],"model_count")[0]
         self.db.commit()
