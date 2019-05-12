@@ -31,7 +31,7 @@ class Problem(object):
         pass
 
     def td_node_extra_columns(self):
-        pass
+        return []
 
     def setup(self):
         def init_problem():

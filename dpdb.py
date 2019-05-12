@@ -1,16 +1,15 @@
 import logging
 import sys
 import subprocess
+import argparse
 
-from dpdb.db import DB, DEBUG_SQL, setup_debug_sql
-from dpdb.db import BlockingThreadedConnectionPool
+from dpdb.db import BlockingThreadedConnectionPool, DEBUG_SQL, setup_debug_sql
 from dpdb.reader import TdReader
 from dpdb.writer import StreamWriter
 from dpdb.treedecomp import TreeDecomp
-from dpdb.sat import Sat
-from dpdb.sharpsat import SharpSat
+import dpdb.problems as problems
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("main")
 
 def read_cfg(cfg_file):
     import json
@@ -35,11 +34,31 @@ def solve_problem(problem_type, cfg, fname):
     problem.setup()
     problem.solve()
 
-if __name__ == "__main__":
-    # TODO: parse args
+_PROBLEM_CLASS = {
+    "sat": problems.Sat,
+    "#sat": problems.SharpSat,
+    "sharpsat": problems.SharpSat,
+}
 
+_LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+
+if __name__ == "__main__":
     setup_debug_sql()
-    logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', level=logging.INFO)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("problem", help="Type of the problem to solve", choices=_PROBLEM_CLASS.keys())
+    parser.add_argument("file", help="Input file for the problem to solve")
+    parser.add_argument("--log-level", dest="log_level", help="Log level", choices=_LOG_LEVEL_STRINGS, default="INFO")
+
+    args = parser.parse_args()
+
+    if args.log_level:
+        if args.log_level == "DEBUG_SQL":
+            log_level = DEBUG_SQL
+        else:
+            log_level = getattr(logging,args.log_level)
+
+    logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', level=log_level)
 
     cfg = read_cfg("config.json")
-    solve_problem(SharpSat, cfg, sys.argv[1])
+    solve_problem(_PROBLEM_CLASS[args.problem], cfg, args.file)
