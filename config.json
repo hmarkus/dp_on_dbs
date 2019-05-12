@@ -1,0 +1,18 @@
+{
+  "db": {
+    "dsn": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "logicsem", 
+      "user": "logicsem", 
+      "password": "XXX"
+    },
+    "max_connections": 100
+  },
+  "htd": {
+    "path": "../htd/bin/htd_main",
+    "parameters": [
+      "--child-limit","5"
+    ]
+  }
+}
