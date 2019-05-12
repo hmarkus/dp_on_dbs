@@ -8,6 +8,9 @@ from dpdb.reader import TdReader
 from dpdb.writer import StreamWriter
 from dpdb.treedecomp import TreeDecomp
 from dpdb.sat import Sat
+from dpdb.sharpsat import SharpSat
+
+logger = logging.getLogger(__name__)
 
 def read_cfg(cfg_file):
     import json
@@ -27,6 +30,7 @@ def solve_problem(problem_type, cfg, fname):
 
     tdr = TdReader.from_stream(p.stdout)
     td = TreeDecomp(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, tdr.adjecency_list)
+    logger.debug("#bags: {0} tree_width: {1} #vertices: {2} edges: {3}".format(td.num_bags, td.tree_width, td.num_orig_vertices, td.edges))
     problem.set_td(td)
     problem.setup()
     problem.solve()
@@ -35,7 +39,7 @@ if __name__ == "__main__":
     # TODO: parse args
 
     setup_debug_sql()
-    logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', level=DEBUG_SQL)
+    logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', level=logging.INFO)
 
     cfg = read_cfg("config.json")
-    solve_problem(Sat, cfg, sys.argv[1])
+    solve_problem(SharpSat, cfg, sys.argv[1])

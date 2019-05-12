@@ -27,6 +27,12 @@ class Problem(object):
         self.id = id
         self.db.set_praefix("p{}_".format(self.id))
 
+    def td_node_column_def(self, var):
+        pass
+
+    def td_node_extra_columns(self):
+        pass
+
     def setup(self):
         def init_problem():
             self.db.create_table("problem", [
@@ -62,7 +68,7 @@ class Problem(object):
             for n in self.td.nodes:
                 # create all columns and insert null if values are not used in parent
                 # this only works in the current version of manual inserts without procedure calls in worker
-                self.db.create_table("td_node_{}".format(n.id), [self.td_node_column_def(c) for c in n.vertices])
+                self.db.create_table("td_node_{}".format(n.id), [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
                 #self.db.create_table("td_node_{}".format(n.id), [self.td_node_column_def(c) for c in n.stored_vertices])
             self.db.create_table("td_edge", [("node", "INTEGER NOT NULL"), ("parent", "INTEGER NOT NULL")])
             self.db.create_table("td_bag", [("bag", "INTEGER NOT NULL"),("node", "INTEGER")])
@@ -121,13 +127,11 @@ class NodeWorker(threading.Thread):
         logger.debug("Creating records for node %d", self._node.id)
         # undecided if manual update/insert or call procedure...
         # with manual less dependent on database type (procedure language)
-        # but have to think about future problems with more columns than just nodes in bag (i.e. #SAT)
         # db.call("create_records",[self._problem,self._node.id])
         db.update("td_node_status",["start_time"],["statement_timestamp()"],["node = {}".format(self._node.id)])
         db.commit()
-        cols = ", ".join(["v{}".format(n) if n in self._node.stored_vertices else "null" for n in self._node.vertices])
         assignment_tab = "td_n_{}_assignment".format(self._node.id)
-        select = "SELECT {0} from {1}".format(cols, assignment_tab)
+        select = "SELECT * from {0}".format(assignment_tab)
         db.insert_select("td_node_{}".format(self._node.id), db.replace_dynamic_tabs(select,[assignment_tab]))
         db.update("td_node_status",["end_time","rows"],["statement_timestamp()",str(db.last_rowcount)],["node = {}".format(self._node.id)])
         db.commit()
