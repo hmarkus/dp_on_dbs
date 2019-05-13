@@ -97,7 +97,7 @@ class TdReader(DimacsReader):
     def __init__(self):
         super().__init__()
         self.bags = {}
-        self.adjecency_list = {}
+        self.adjacency_list = {}
 
     def store_problem_vars(self):
         self.num_bags = int(self._problem_vars[0])
@@ -105,10 +105,10 @@ class TdReader(DimacsReader):
         self.num_orig_vertices = int(self._problem_vars[2])
 
     def _add_directed_edge(self, vertex1, vertex2):
-        if vertex1 in self.adjecency_list:
-            self.adjecency_list[vertex1].append(vertex2)
+        if vertex1 in self.adjacency_list:
+            self.adjacency_list[vertex1].append(vertex2)
         else:
-            self.adjecency_list[vertex1] = [vertex2]
+            self.adjacency_list[vertex1] = [vertex2]
 
     def body(self, lines):
         if self.format != "td":

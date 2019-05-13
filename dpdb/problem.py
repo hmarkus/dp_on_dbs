@@ -10,11 +10,12 @@ class Problem(object):
     id = None
     td = None
 
-    def __init__(self, name, type, pool):
+    def __init__(self, name, type, pool, **kwargs):
         self.name = name
         self.type = type
         self.pool = pool
         self.db = DB.from_pool(pool)
+        self.kwargs = kwargs
 
     def set_td(self, td):
         self.td = td
@@ -45,9 +46,17 @@ class Problem(object):
                 ("start_time", "TIMESTAMP"),
                 ("end_time", "TIMESTAMP")
             ])
+            self.db.create_table("problem_option", [
+                ("id", "INTEGER NOT NULL REFERENCES PROBLEM(id)"),
+                ("name", "VARCHAR(255) NOT NULL"),
+                ("value", "VARCHAR(255)")
+            ])
             problem_id = self.db.insert("problem",
                 ["name","type","num_bags","tree_width","num_vertices"],
                 [self.name,self.type,self.td.num_bags,self.td.tree_width,self.td.num_orig_vertices],"id")[0]
+            for k, v in self.kwargs.items():
+                if v:
+                    self.db.insert("problem_option",("id", "name", "value"),(problem_id,k,v))
             self.set_id(problem_id)
             logger.info("Created problem with ID %d", self.id)
             self.db.create_table("td_node_status", [
@@ -98,7 +107,7 @@ class Problem(object):
         for n in self.td.nodes:
             # TODO: get rid of map()
             waitfor = {c: e for c, e in events.items() if c in map(lambda x: x.id, n.children)}
-            w = NodeWorker(self.id,n,events[n.id],waitfor,self.pool)
+            w = NodeWorker(self.id,n,events[n.id],waitfor,self.pool,**self.kwargs)
             workers.append(w)
         for w in workers:
             w.start()
@@ -110,13 +119,14 @@ class Problem(object):
         self.db.commit()
 
 class NodeWorker(threading.Thread):
-    def __init__(self, problem, node, finish, children, pool):
+    def __init__(self, problem, node, finish, children, pool, **kwargs):
+        super().__init__()
         self._problem = problem 
         self._node = node
         self._finish = finish
         self._children = children
         self._pool = pool
-        super(NodeWorker,self).__init__()
+        self._kwargs = kwargs
 
     def run(self):
         for n, e in self._children.items():
@@ -132,6 +142,10 @@ class NodeWorker(threading.Thread):
         db.commit()
         assignment_tab = "td_n_{}_assignment".format(self._node.id)
         select = "SELECT * from {0}".format(assignment_tab)
+        if "randomize_rows" in self._kwargs and self._kwargs["randomize_rows"]:
+            select += " ORDER BY RANDOM()"
+        if "limit_result_rows" in self._kwargs and self._kwargs["limit_result_rows"]:
+            select += " LIMIT {}".format(self._kwargs["limit_result_rows"])
         db.insert_select("td_node_{}".format(self._node.id), db.replace_dynamic_tabs(select,[assignment_tab]))
         db.update("td_node_status",["end_time","rows"],["statement_timestamp()",str(db.last_rowcount)],["node = {}".format(self._node.id)])
         db.commit()

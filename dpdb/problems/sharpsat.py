@@ -10,8 +10,8 @@ class SharpSat(Problem):
     num_clauses = 0
     clauses = []
 
-    def __init__(self, name, pool):
-        super().__init__(name, "sat", pool)
+    def __init__(self, name, pool, **kwargs):
+        super().__init__(name, "#sat", pool, **kwargs)
 
     def td_node_column_def(self,var):
         return ("v{}".format(var), "BOOLEAN")
@@ -120,11 +120,13 @@ class SharpSat(Problem):
             """).format("({0})".format(") AND (".join(
                     [" OR ".join(map(_lit2expr,clause)) for clause in cur_cl]
                 )))
-        q += (
-        """ GROUP BY {0}
-        """).format(",".join(["v{}".format(n) for n in node.stored_vertices]))
 
-        return self.db.replace_dynamic_tabs(q,_dynamic_tabs(from_tdn))
+        if node.stored_vertices:
+            q += (
+            """ GROUP BY {0}
+            """).format(",".join(["v{}".format(n) for n in node.stored_vertices]))
+
+        return self.db.replace_dynamic_tabs(q,_dynamic_tabs(node, from_tdn))
 
     def solve(self):
         super().solve()
@@ -187,11 +189,13 @@ def _var2cnt(var, from_tdn):
     else:
         return "1"
 
-def _dynamic_tabs(from_tdn):
+def _dynamic_tabs(node, from_tdn):
     ret = set()
     ret.add("sat_clause")
     for t in from_tdn.values():
         if len(t) > 0:
             for tab in t:
                 ret.add("td_node_{}".format(tab))
+    for t in node.children:
+        ret.add("td_node_{}".format(t.id))
     return ret
