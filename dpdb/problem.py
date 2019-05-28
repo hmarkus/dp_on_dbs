@@ -186,11 +186,20 @@ class Problem(object):
 
     def assignment_view(self,node):
         q = "{} {}".format(self.assignment_select(node),self.filter(node))
+
         if node.stored_vertices:
             q += " GROUP BY {}".format(",".join([var2col(v) for v in node.stored_vertices]))
-            extra_group = self.group_extra_cols(node)
-            if extra_group:
-                q += ", {}".format(",".join(extra_group))
+
+        extra_group = self.group_extra_cols(node)
+        if extra_group:
+            if not node.stored_vertices:
+                q += " GROUP BY ";
+            else:
+                q += ", "
+            q += "{}".format(",".join(extra_group))
+
+        if not node.stored_vertices and not extra_group:
+            q += " LIMIT 1"
         return q
 
     # the following methods should be considered final
@@ -210,7 +219,8 @@ class Problem(object):
                 ("num_bags", "INTEGER"),
                 ("tree_width", "INTEGER"),
                 ("num_vertices", "INTEGER"),
-                ("start_time", "TIMESTAMP"),
+                ("setup_start_time", "TIMESTAMP"),
+                ("calc_start_time", "TIMESTAMP"),
                 ("end_time", "TIMESTAMP")
             ])
             self.db.create_table("problem_option", [
@@ -228,12 +238,14 @@ class Problem(object):
             logger.info("Created problem with ID %d", self.id)
             
         def drop_tables():
+            logger.debug("Dropping tables")
             self.db.drop_table("td_bag")
             self.db.drop_table("td_edge")
             for n in self.td.nodes:
                 self.db.drop_table(f"td_node_{n.id}")
 
         def create_tables():
+            logger.debug("Creating tables")
             self.db.create_table("td_node_status", [
                 ("node", "INTEGER NOT NULL PRIMARY KEY"),
                 ("start_time", "TIMESTAMP"),
@@ -256,6 +268,7 @@ class Problem(object):
                 self.db.create_view(f"td_node_{n.id}_v", ass_view)
 
         def insert_data():
+            logger.debug("Inserting problem data")
             self.db.ignore_next_praefix(3)
             self.db.insert("problem_option",("id", "name", "value"),(self.id,"candidate_store",self.candidate_store))
             self.db.insert("problem_option",("id", "name", "value"),(self.id,"limit_result_rows",self.limit_result_rows))
@@ -274,6 +287,8 @@ class Problem(object):
 
         create_base_tables()
         init_problem()
+        self.db.ignore_next_praefix()
+        self.db.update("problem",["setup_start_time"],["statement_timestamp()"],[f"ID = {self.id}"])
         drop_tables()
         create_tables()
         insert_data()
@@ -290,7 +305,7 @@ class Problem(object):
 
     def solve(self):
         self.db.ignore_next_praefix()
-        self.db.update("problem",["start_time"],["statement_timestamp()"],[f"ID = {self.id}"])
+        self.db.update("problem",["calc_start_time"],["statement_timestamp()"],[f"ID = {self.id}"])
         self.db.commit()
 
         self.before_solve()
@@ -344,7 +359,7 @@ class Problem(object):
         select = f"SELECT * from td_node_{node.id}_v"
         if self.randomize_rows:
             select += " ORDER BY RANDOM()"
-        if self.limit_result_rows:
+        if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
             select += f" LIMIT {self.limit_result_rows}"
         db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
         if self.interrupted:

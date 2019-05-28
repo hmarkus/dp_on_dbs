@@ -119,7 +119,6 @@ class DB(object):
         def repl(m):
             tab = m.group(2)
             dyn_tab = self.__table_name__(tab).as_string(self._conn)
-            logger.debug_sql("Replace table %s with %s", tab, dyn_tab)
             return m.group(1) + dyn_tab + m.group(3)
 
         query = re.sub("(\W)(td_node_\w+)((\W|$))",
