@@ -1,9 +1,10 @@
+import logging
 import select
 import re
 import psycopg2 as pg
 from psycopg2 import sql
-
-import logging
+from psycopg2.pool import ThreadedConnectionPool
+from threading import Semaphore
 
 DEBUG_SQL = logging.DEBUG - 5
 
@@ -37,20 +38,9 @@ class DB(object):
         instance._conn = pool.getconn()
         return instance 
 
-    # TODO: improve logger.debug_sql so this is not needed?
+    # we need this wrapper because conn object is required
     def __debug_query__ (self, query, params = []):
         logger.debug_sql(query.as_string(self._conn),*params)
-        """
-        if not self._debug:
-            return
-
-        print("[DB] Executing: "),
-        print(query.as_string(self._conn)),
-        if params:
-            print(" (params = %s)" % str(params))
-        else:
-            print()
-        """
 
     def __table_name__(self, table):
         if self._praefix and self._ignore_next_praefix == 0:
@@ -61,6 +51,7 @@ class DB(object):
             return sql.Identifier(table)
 
     def connect(self, params):
+        self._db_name = params["database"]
         self._conn = pg.connect(**params)
 
     def close(self):
@@ -76,44 +67,35 @@ class DB(object):
     def rollback(self):
         self._conn.rollback()
 
-    """
-    use this maybe if we want to support distributed workers
-
-    def listen(self, name):
-        self.execute_ddl("LISTEN %s" % name)
-
-    def poll(self):
-        while True:
-            if select.select([self._conn],[],[],5) == ([],[],[]):
-                print "Timeout"
-            else:
-                self._conn.poll()
-                while self._conn.notifies:
-                    notify = self._conn.notifies.pop(0)
-                    print "Got NOTIFY:", notify.pid, notify.channel, notify.payload
-                    return True
-    """
-
     def execute(self,q,p = []):
-        self.__debug_query__(q,p)
-        with self._conn.cursor() as cur:
-            cur.execute(q,p)
-            self.last_rowcount = cur.rowcount
+        try:
+            self.__debug_query__(q,p)
+            with self._conn.cursor() as cur:
+                cur.execute(q,p)
+                self.last_rowcount = cur.rowcount
+        except pg.errors.AdminShutdown:
+            logger.warning("Connection closed by admin")
 
     def exec_and_fetch(self,q,p = []):
-        self.__debug_query__(q,p)
-        with self._conn.cursor() as cur:
-            cur.execute(q,p)
-            self.last_rowcount = cur.rowcount
-            return cur.fetchone()
+        try:
+            self.__debug_query__(q,p)
+            with self._conn.cursor() as cur:
+                cur.execute(q,p)
+                self.last_rowcount = cur.rowcount
+                return cur.fetchone()
+        except pg.errors.AdminShutdown:
+            logger.warning("Connection closed by admin")
         
     def execute_ddl(self,q):
-        self.__debug_query__(q)
-        with self._conn.cursor() as cur:
-            cur.execute(q)
-        # DDL always auto-commits as its default for many DBMS 
-        # should make transition to e.g. Oracle easier
-        self.commit()
+        try:
+            self.__debug_query__(q)
+            with self._conn.cursor() as cur:
+                cur.execute(q)
+            # DDL always auto-commits as its default for many DBMS
+            # should make transition to e.g. Oracle easier
+            self.commit()
+        except pg.errors.AdminShutdown:
+            logger.warning("Connection closed by admin")
 
     def drop_table(self, name, if_exists = True):
         q = sql.SQL("DROP TABLE %s {}" % "IF EXISTS" if if_exists else "").format(
@@ -133,39 +115,18 @@ class DB(object):
         q = sql.Composed([q,sql.SQL(text)])
         self.execute_ddl(q)
 
-    # TODO: get this working without full-fletched query-builder?
-    def select(self,columns,where = None):
-        tab_alias = {}
-        cnt = 1
-        for c in columns:
-            tab = c[0]
-            if ' ' in tab:
-                tab_alias[tab] = tab[tab.find(' ')+1:]
-            elif tab not in tab_alias:
-                tab_alias[tab] = "t{}".format(cnt)
-                cnt += 1
-        q = sql.SQL("SELECT {} FROM {}").format(
-                    sql.SQL(', ').join(map(lambda c: sql.Identifier(tab_alias[c[0]],str(c[1])), columns)),
-                    sql.SQL(', ').join(map(lambda t: sql.Composed([sql.Identifier(t[0]),
-                                                                   sql.SQL(' '),
-                                                                   sql.Identifier(t[1])
-                                                                  ])
-                                        ,tab_alias.iteritems()))
-                    )
-        """
-        if where:
-            for w in where:
+    def replace_dynamic_tabs(self,query):
+        def repl(m):
+            tab = m.group(2)
+            dyn_tab = self.__table_name__(tab).as_string(self._conn)
+            logger.debug_sql("Replace table %s with %s", tab, dyn_tab)
+            return m.group(1) + dyn_tab + m.group(3)
 
-            q = sql.Composed([q,sql.SQL(" WHERE "), where_str])
-        """
-        print(q.as_string(self._conn))
+        query = re.sub("(\W)(td_node_\w+)((\W|$))",
+            repl,
+            query)
 
-    def replace_dynamic_tabs(self,query,tables):
-        for t in tables:
-            query = re.sub('(\W){}((\W|$))'.format(t),
-                "\g<1>{}\g<2>".format(self.__table_name__(t).as_string(self._conn)),
-                query)
-        return query;
+        return query
 
     def insert(self, table, columns, values, returning = None):
         sql_str = "INSERT INTO {} ({}) VALUES ({})"
@@ -190,6 +151,13 @@ class DB(object):
             return self.exec_and_fetch(q)
         else:
             self.execute(q)
+
+    def persist_view(self, table, view=None):
+        if not view:
+            view = table + "_v"
+        select = f"SELECT * FROM {view}"
+        select = self.replace_dynamic_tabs(select)
+        self.insert_select(table, select)
 
     def update(self, table, columns, values, where = None, returning = None):
         sql_str = "UPDATE {} SET {}"
@@ -221,8 +189,14 @@ class DB(object):
     def ignore_next_praefix(self, count = 1):
         self._ignore_next_praefix = count
 
-from psycopg2.pool import ThreadedConnectionPool
-from threading import Semaphore
+class DBAdmin(DB):
+    def killall(self, app_name=None):
+        q = "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and datname = %s"
+        if app_name:
+            q += " and application_name=%s"
+            self.execute(sql.SQL(q),[self._db_name,app_name])
+        else:
+            self.execute(sql.SQL(q),[self._db_name])
 
 class BlockingThreadedConnectionPool(ThreadedConnectionPool):
     def __init__(self, minconn, maxconn, *args, **kwargs):
