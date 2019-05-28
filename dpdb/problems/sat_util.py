@@ -1,13 +1,13 @@
 from dpdb.problem import *
 
 def cnf2primal (num_vars, clauses):
-    edges = []
+    edges = set([])
     for clause in clauses:
         atoms = [abs(lit) for lit in clause]
         for i in atoms:
             for j in atoms:
                 if i < j:
-                    edges.append((i,j))
+                    edges.add((i,j))
     return (num_vars, edges)
 
 def td_node_column_def(var):
