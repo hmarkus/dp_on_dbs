@@ -143,13 +143,13 @@ class GrReader(DimacsReader):
 
     def store_problem_vars(self):
         self.num_vertices = int(self._problem_vars[0])
-        self.num_edges = int(self._problem_vars[1]) - 1
+        self.num_edges = int(self._problem_vars[1])
 
     def body(self, lines):
         if self.format != "tw":
             logger.error("Not a tw file!")
             return
-        
+
         for lineno, line in enumerate(lines):
             if not line or self.is_comment(line):
                 continue
@@ -160,4 +160,38 @@ class GrReader(DimacsReader):
             vertex1 = int(line[0])
             vertex2 = int(line[1])
 
-            edges.append((vertex1,vertex2))
+            self.edges.append((vertex1,vertex2))
+            self.edges.append((vertex2,vertex1))
+
+        if len(self.edges) != self.num_edges * 2:
+            logger.warning("Effective number of edges mismatch preamble (%d vs %d)", len(self.edges)/2, self.num_edges)
+
+class GraphReader(DimacsReader):
+    def __init__(self):
+        super().__init__()
+        self.edges = []
+
+    def store_problem_vars(self):
+        self.num_vertices = int(self._problem_vars[0])
+        self.num_edges = int(self._problem_vars[1])
+
+    def body(self, lines):
+        if self.format != "edge":
+            logger.error("Not a tw file!")
+            return
+
+        for lineno, line in enumerate(lines):
+            if not line or self.is_comment(line):
+                continue
+
+            line = line.split()
+            if line[0] != 'e':
+                logger.warning("Invalid line %d", lineno)
+            vertex1 = int(line[1])
+            vertex2 = int(line[2])
+
+            self.edges.append((vertex1,vertex2))
+            self.edges.append((vertex2,vertex1))
+
+        if len(self.edges) != self.num_edges * 2:
+            logger.warning("Effective number of edges mismatch preamble (%d vs %d)", len(self.edges)/2, self.num_edges)

@@ -65,6 +65,10 @@ class Node(object):
     def stored_vertices(self):
         return [v for v in self.vertices if self.is_root() or v in self.parent.vertices]
 
+    @property
+    def edges(self):
+        return self.children + [self.parent]
+
     def needs_introduce(self, vertex):
         return self._vertex_child_map[vertex] == []
 

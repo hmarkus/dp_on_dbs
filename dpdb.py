@@ -99,7 +99,9 @@ if __name__ == "__main__":
     )
 
     for cls, prob_args in args.specific.items():
-        options = prob_args.pop("options")
+        options = {}
+        if "options" in prob_args:
+            options = prob_args.pop("options")
         if "aliases" in prob_args:
             prob_args["aliases"].insert(0,cls.__name__.lower())
         else:

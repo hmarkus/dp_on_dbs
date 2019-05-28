@@ -51,9 +51,12 @@ def var2tab_alias(node, var):
 def var2col(var):
     return f"v{var}"
 
-def var2tab_col(node, var):
+def var2tab_col(node, var, alias=True):
     if node.needs_introduce(var):
-        return "{}.val {}".format(var2tab_alias(node, var),var2col(var))
+        if alias:
+            return "{}.val {}".format(var2tab_alias(node, var),var2col(var))
+        else:
+            return "{}.val".format(var2tab_alias(node, var))
     else:
         return "{}.{}".format(var2tab_alias(node, var),var2col(var))
 
@@ -120,7 +123,7 @@ class Problem(object):
 
     def prepare_input(self, fname):
         input = GrReader.from_file(fname)
-        return (input.num_vars, input.edges)
+        return (input.num_vertices, input.edges)
 
     def setup_extra(self):
         pass
