@@ -41,6 +41,7 @@ class DimacsReader(Reader):
         for lineno, line in enumerate(lines):
             if line.startswith("p ") or line.startswith("s "):
                 line = line.split()
+                self.problem_solution_type = line[0]
                 self.format = line[1] 
                 self._problem_vars = line[2:]
                 return lineno+1
@@ -93,22 +94,37 @@ class CnfReader(DimacsReader):
         if len(self.clauses) != self.num_clauses:
             logger.warning("Effective number of clauses mismatch preamble (%d vs %d)", len(self.clauses), self.num_clauses)
 
+def _add_directed_edge(edges, adjacency_list, vertex1, vertex2):
+    if vertex1 in adjacency_list:
+        adjacency_list[vertex1].append(vertex2)
+    else:
+        adjacency_list[vertex1] = [vertex2]
+    edges.append((vertex1,vertex2))
+
 class TdReader(DimacsReader):
     def __init__(self):
         super().__init__()
+        self.edges = []
         self.bags = {}
         self.adjacency_list = {}
 
     def store_problem_vars(self):
-        self.num_bags = int(self._problem_vars[0])
-        self.tree_width = int(self._problem_vars[1]) - 1
-        self.num_orig_vertices = int(self._problem_vars[2])
+        if self.problem_solution_type == "p":
+            self.num_vertices = int(self._problem_vars[0])
+            self.num_edges = int(self._problem_vars[1])
+        elif self.problem_solution_type == "s":
+            self.num_bags = int(self._problem_vars[0])
+            self.tree_width = int(self._problem_vars[1]) - 1
+            self.num_orig_vertices = int(self._problem_vars[2])
+        else:
+            logger.error("Unrecognized problem or solution indicator: %s", self.problem_solution_type)
 
     def _add_directed_edge(self, vertex1, vertex2):
         if vertex1 in self.adjacency_list:
             self.adjacency_list[vertex1].append(vertex2)
         else:
             self.adjacency_list[vertex1] = [vertex2]
+        self.edges.append((vertex1,vertex2))
 
     def body(self, lines):
         if self.format != "td":
@@ -133,13 +149,21 @@ class TdReader(DimacsReader):
                 vertex1 = int(line[0])
                 vertex2 = int(line[1])
 
-                self._add_directed_edge(vertex1,vertex2)
-                self._add_directed_edge(vertex2,vertex1)
+                _add_directed_edge(self.edges,self.adjacency_list,vertex1,vertex2)
+                _add_directed_edge(self.edges,self.adjacency_list,vertex2,vertex1)
 
-class GrReader(DimacsReader):
+        if self.problem_solution_type == "p":
+            if len(self.edges) != self.num_edges * 2:
+                logger.warning("Effective number of edges mismatch preamble (%d vs %d)", len(self.edges)/2, self.num_edges)
+        elif self.problem_solution_type == "s":
+            if len(self.bags) != self.num_bags:
+                logger.warning("Effective number of bags mismatch preamble (%d vs %d)", len(self.bags), self.num_bags)
+
+class TwReader(DimacsReader):
     def __init__(self):
         super().__init__()
         self.edges = []
+        self.adjacency_list = {}
 
     def store_problem_vars(self):
         self.num_vertices = int(self._problem_vars[0])
@@ -160,16 +184,17 @@ class GrReader(DimacsReader):
             vertex1 = int(line[0])
             vertex2 = int(line[1])
 
-            self.edges.append((vertex1,vertex2))
-            self.edges.append((vertex2,vertex1))
+            _add_directed_edge(self.edges,self.adjacency_list,vertex1,vertex2)
+            _add_directed_edge(self.edges,self.adjacency_list,vertex2,vertex1)
 
         if len(self.edges) != self.num_edges * 2:
             logger.warning("Effective number of edges mismatch preamble (%d vs %d)", len(self.edges)/2, self.num_edges)
 
-class GraphReader(DimacsReader):
+class EdgeReader(DimacsReader):
     def __init__(self):
         super().__init__()
         self.edges = []
+        self.adjacency_list = {}
 
     def store_problem_vars(self):
         self.num_vertices = int(self._problem_vars[0])
@@ -177,7 +202,7 @@ class GraphReader(DimacsReader):
 
     def body(self, lines):
         if self.format != "edge":
-            logger.error("Not a tw file!")
+            logger.error("Not a edge file!")
             return
 
         for lineno, line in enumerate(lines):
@@ -190,8 +215,8 @@ class GraphReader(DimacsReader):
             vertex1 = int(line[1])
             vertex2 = int(line[2])
 
-            self.edges.append((vertex1,vertex2))
-            self.edges.append((vertex2,vertex1))
+            _add_directed_edge(self.edges,self.adjacency_list,vertex1,vertex2)
+            _add_directed_edge(self.edges,self.adjacency_list,vertex2,vertex1)
 
         if len(self.edges) != self.num_edges * 2:
             logger.warning("Effective number of edges mismatch preamble (%d vs %d)", len(self.edges)/2, self.num_edges)

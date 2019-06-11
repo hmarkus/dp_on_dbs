@@ -3,7 +3,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
-from dpdb.reader import GrReader
+from dpdb.reader import TwReader
 from dpdb.db import DB
 
 logger = logging.getLogger(__name__)
@@ -122,8 +122,7 @@ class Problem(object):
         return "WHERE FALSE"
 
     def prepare_input(self, fname):
-        input = GrReader.from_file(fname)
-        return (input.num_vertices, input.edges)
+        pass
 
     def setup_extra(self):
         pass
