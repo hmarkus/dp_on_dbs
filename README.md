@@ -42,7 +42,9 @@ python dpdb.py <PROBLEM> --help
 for problem specific help/options
 
 ## TODO / Future Work
+
 ###Parallel setup
+
 Setup is currently not concurrent.
 For some instances setup is even the bottleneck right now.
 
