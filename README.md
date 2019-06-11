@@ -43,17 +43,17 @@ for problem specific help/options
 
 ## TODO / Future Work
 
-###Parallel setup
+### Parallel setup
 
 Setup is currently not concurrent.
 For some instances setup is even the bottleneck right now.
 
-###Indexing
+### Indexing
 
 Currently no indices are created. It is an open problem to investigate whether good indices can be determined just by the structure of the problem.
 
 Oracle's Bitmap Indices also seem worth a try (Oracle Enterprise Feature)
 
-###Resume / Re-run
+### Resume / Re-run
 
 Re-construct input from database to be able to run the same instance again (without needing a seed for htd) or to resume previously unfinished jobs.
