@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import logging
 import select
 import re
@@ -189,13 +190,17 @@ class DB(object):
         self._ignore_next_praefix = count
 
 class DBAdmin(DB):
-    def killall(self, app_name=None):
+    def killall(self, app_name):
+        q = "select pg_kill_all_sessions(%s,%s)"
+        self.execute(sql.SQL(q),[self._db_name,app_name])
+        """
         q = "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and datname = %s"
         if app_name:
             q += " and application_name=%s"
             self.execute(sql.SQL(q),[self._db_name,app_name])
         else:
             self.execute(sql.SQL(q),[self._db_name])
+        """
 
 class BlockingThreadedConnectionPool(ThreadedConnectionPool):
     def __init__(self, minconn, maxconn, *args, **kwargs):

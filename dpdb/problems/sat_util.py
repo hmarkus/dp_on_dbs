@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 from dpdb.problem import *
 
 def cnf2primal (num_vars, clauses):

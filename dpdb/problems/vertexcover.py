@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import logging
 
 from dpdb.reader import TdReader, TwReader, EdgeReader

@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+# -*- coding: future_fstrings -*-
 import logging
 import sys
 import subprocess
@@ -48,12 +50,14 @@ def solve_problem(cfg, cls, file, **kwargs):
 
     admin_db = DBAdmin.from_cfg(cfg["db_admin"])
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     pool = BlockingThreadedConnectionPool(1,cfg["db"]["max_connections"],**cfg["db"]["dsn"])
     problem = cls(file,pool, **cfg["dpdb"], **kwargs)
 
+    logger.info("Using tree decomposition seed: {}".format(kwargs["runid"]))
     # Run htd
-    p = subprocess.Popen([cfg["htd"]["path"], *cfg["htd"]["parameters"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    p = subprocess.Popen([cfg["htd"]["path"], "--seed", str(kwargs["runid"]), *cfg["htd"]["parameters"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     logger.info("Parsing input file")
     input = problem.prepare_input(file)
     if "gr_file" in kwargs and kwargs["gr_file"]:
@@ -87,15 +91,15 @@ class MyFormatter(argparse.ArgumentDefaultsHelpFormatter,argparse.RawDescription
 if __name__ == "__main__":
     setup_debug_sql()
 
-    parser = argparse.ArgumentParser(usage="%(prog)s [general options] problem-type [problem specific-options] file", formatter_class=MyFormatter)
+    parser = argparse.ArgumentParser(usage="%(prog)s [general options] problem-type [problem specific-options] -f file", formatter_class=MyFormatter)
 
     # add problem types
     problem_parsers = parser.add_subparsers(
         title="problem types",
         description="Type of problems that can be solved\n%(prog)s problem-type --help for additional information on each type and problem specific options",
         metavar="problem-type",
-        help="Type of the problem to solve",
-        required=True
+        help="Type of the problem to solve"#,
+        #required=True
     )
 
     for cls, prob_args in args.specific.items():
@@ -111,10 +115,13 @@ if __name__ == "__main__":
         for arg, kwargs in options.items():
             p.add_argument(arg,**kwargs)
 
-    parser.add_argument("file", help="Input file for the problem to solve")
-
+    parser.add_argument("--file", "-f", dest="file", help="Input file for the problem to solve")
+    #parser.add_argument("--seed", "-s", dest="seed", help="Seed for tree decomposition", type=int, default=1412)
+    
     # general options
     gen_opts = parser.add_argument_group("general options", "General options")
+    gen_opts.add_argument("-t", dest="type", help="type of the cluster run", default="")
+    gen_opts.add_argument("--runid", dest="runid", help="runid of the cluster run", default=0, type=int)
     gen_opts.add_argument("--config", help="Config file", default="config.json")
     gen_opts.add_argument("--log-level", dest="log_level", help="Log level", choices=_LOG_LEVEL_STRINGS, default="INFO")
     gen_opts.add_argument("--td-file", dest="td_file", help="Store TreeDecomposition file (htd Output)")

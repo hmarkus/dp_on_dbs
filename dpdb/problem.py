@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor

@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 class Reader(object):
     @classmethod
     def from_file(cls, fname):
-        with open(fname) as f:
+        with open(fname, "r") as f:
             return cls.from_string(f.read())
 
     @classmethod
@@ -23,6 +23,8 @@ class Reader(object):
 
 class DimacsReader(Reader):
     def parse(self, string):
+        self.problem_solution_type = "?"
+        self.format = "?"
         lines = string.split("\n")
         body_start = self.preamble(lines)
         self.store_problem_vars()
