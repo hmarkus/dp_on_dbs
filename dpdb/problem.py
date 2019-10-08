@@ -285,13 +285,13 @@ class Problem(object):
             for edge in self.td.edges:
                 self.db.insert("td_edge",("node","parent"),(edge[1],edge[0]))
 
-        create_base_tables()
+        #create_base_tables()
         init_problem()
         self.db.ignore_next_praefix()
         self.db.update("problem",["setup_start_time"],["statement_timestamp()"],[f"ID = {self.id}"])
-        drop_tables()
-        create_tables()
-        insert_data()
+        #drop_tables()
+        #create_tables()
+        #insert_data()
 
         self.setup_extra()
 
@@ -319,9 +319,9 @@ class Problem(object):
 
         self.after_solve()
 
-        self.db.ignore_next_praefix()
-        self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
-        self.db.commit()
+        #self.db.ignore_next_praefix()
+        #self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
+        #self.db.commit()
         self.db.close()
 
     def interrupt(self):
@@ -350,22 +350,27 @@ class Problem(object):
             logger.exception("Error in worker thread")
 
     def solve_node(self, node, db):
-        db.update("td_node_status",["start_time"],["statement_timestamp()"],[f"node = {node.id}"])
-        db.commit()
+        #db.update("td_node_status",["start_time"],["statement_timestamp()"],[f"node = {node.id}"])
+        #db.commit()
 
         self.before_solve_node(node, db)
         if self.candidate_store == "table":
             db.persist_view(f"td_node_{node.id}_candidate")
-        select = f"SELECT * from td_node_{node.id}_v"
-        if self.randomize_rows:
-            select += " ORDER BY RANDOM()"
-        if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
-            select += f" LIMIT {self.limit_result_rows}"
-        db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
+        #select = f"SELECT * from td_node_{node.id}_v"
+        #if self.randomize_rows:
+        #    select += " ORDER BY RANDOM()"
+        #if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
+        #    select += f" LIMIT {self.limit_result_rows}"
+        # TODO: create_select
+        #db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
+        ass_view = self.assignment_view(node)
+        ass_view = self.db.replace_dynamic_tabs(ass_view)
+        #self.db.create_view(f"td_node_{n.id}_v", ass_view)
+        db.create_select(f"td_node_{node.id}", ass_view)
         if self.interrupted:
             return
-        row_cnt = db.last_rowcount
+        #row_cnt = db.last_rowcount
         self.after_solve_node(node, db)
-        db.update("td_node_status",["end_time","rows"],["statement_timestamp()",str(row_cnt)],[f"node = {node.id}"])
+        #db.update("td_node_status",["end_time","rows"],["statement_timestamp()",str(row_cnt)],[f"node = {node.id}"])
         db.commit()
 

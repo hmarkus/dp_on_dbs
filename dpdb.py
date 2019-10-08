@@ -79,7 +79,7 @@ def solve_problem(cfg, cls, file, **kwargs):
             fw.write_td(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, td.edges)
     problem.set_td(td)
     problem.setup()
-    problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
+    #problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
     problem.solve()
 
 _LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
