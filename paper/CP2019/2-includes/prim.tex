@@ -1,0 +1,249 @@
+\documentclass{article}
+%\usepackage[a4paper, total={6in, 8in}]{geometry}
+% \usepackage{geometry}
+%  \geometry{
+%  a4paper,
+%  total={120mm,257mm},
+%  left=20mm,
+%  top=20mm,
+%  }
+
+ 
+\newcommand{\longversion}[1]{}
+\newcommand{\shortversion}[1]{#1}
+
+\usepackage[USenglish]{babel}
+\usepackage[novbox]{pdfsync}
+
+%
+%SPRINGER DOI URL FIX
+\usepackage[hyphens,spaces]{url}
+\usepackage{hyperref}
+\usepackage[table]{xcolor}
+\renewcommand\UrlFont{\color{blue}\rmfamily} 
+\usepackage{accsupp}
+%
+\newcommand{\tuplecolor}[1]{\textcolor{#1}}
+\newcommand{\inputPredColor}{orange!55!red}
+\newcommand{\outputPredColor}{blue!45!black}
+\newcommand{\statePredColor}{green!62!black}
+\newcommand{\specialPredColor}{red!62!black}
+
+\newcommand{\MAIR}[2]{\ensuremath{#1^+_{#2}}}%
+\newcommand{\MAR}[1]{\ensuremath{#1^-_a}}%
+\newcommand{\MARR}[2]{\ensuremath{#1^-_#2}}%
+
+\newcommand{\Tab}[1]{\ensuremath{\text{C-Tabs}}}
+
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\graphicspath{{./1-figs/}{./1-plots/}}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+%
+%required for \cupdot
+% AAAI 
+% \usepackage{MnSymbol} 
+
+%\urlstyle{same}
+\usepackage{microtype}
+
+% TABLE EXTRAS
+\usepackage{array}
+\newcolumntype{H}{>{\setbox0=\hbox\bgroup}c<{\egroup}@{}}
+\usepackage{multirow}
+
+% footnotemark for non-article and non-amsart styles
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
+
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\renewcommand*{\algorithmcfname}{Listing}
+\SetKwInput{KwData}{In}
+\SetKwInput{KwResult}{Out}
+\setlength{\textfloatsep}{1em}
+\SetAlFnt{\small}
+\SetAlCapFnt{\small}
+\SetAlCapNameFnt{\small}
+\SetAlCapHSkip{0pt}
+\SetEndCharOfAlgoLine{}
+\IncMargin{-0.4em}
+\makeatletter
+\newcommand{\algorithmfootnote}[2][\footnotesize]{
+  \let\old@algocf@finish\@algocf@finish
+  \def\@algocf@finish{\old@algocf@finish
+    \leavevmode\rlap{\begin{minipage}{\linewidth}
+    #1#2
+    \end{minipage}}
+  }
+}
+\makeatother
+
+
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,intersections}
+\usetikzlibrary{fit,petri,topaths,calc}
+\usetikzlibrary{shapes,decorations}
+\usetikzlibrary{patterns}
+\usetikzlibrary{positioning}
+\tikzstyle{tdnode} = [draw,rounded corners,top color=vertexTopColor,bottom color=vertexBottomColor,minimum size=1.5em]
+\tikzstyle{stdnode} = [tdnode, font=\scriptsize]
+\tikzstyle{stdnodenum} = [minimum size=1.5em, font=\scriptsize]
+\tikzstyle{tdlabel} = [draw=none, rectangle, fill=none, inner sep=0pt, font=\scriptsize]
+\colorlet{vertexTopColor}{white}
+%\colorlet{vertexBottomColor}{blue!20!black!15}
+\colorlet{vertexBottomColor}{black!10}
+%\newcommand{\captionfonts}{\small}%
+
+
+\usepackage{rotating}
+\usepackage{xspace}
+
+% *****************************************************
+%     MATH
+% *****************************************************
+%    Basics
+\def\hy{\hbox{-}\nobreak\hskip0pt}
+\def\hyph{-\penalty0\hskip0pt\relax}
+
+\newcommand{\SB}{\{\,}%
+\newcommand{\SM}{\;{|}\;}%
+\newcommand{\SE}{\,\}}%
+
+% ----------------------------------------------------
+%    COMPLEXITY CLASSES
+\newcommand{\sharpP}{\#P\xspace}
+\newcommand{\sharpPc}{\#\ensuremath{\cdot}P\hy complete\xspace}
+
+\newcommand{\ta}[1]{\ensuremath{2^{#1}}}
+\newcommand{\eqdef}{\ensuremath{\,\mathrel{\mathop:}=}}
+\newcommand{\TTT}{\mathcal{T}}
+\newcommand{\Card}[1]{|#1|}
+\let\phi=\varphi
+\let\epsilon=\varepsilon
+
+\newcommand{\SAT}{\textsc{Sat}\xspace}%
+\newcommand{\CSP}{\textsc{Csp}\xspace}%
+\newcommand{\cSAT}{\textsc{\#Sat}\xspace}%
+\newcommand{\WMC}{\textsc{WMC}\xspace}%
+\DeclareMathOperator{\tw}{tw}
+\DeclareMathOperator{\width}{width}
+\DeclareMathOperator{\inctw}{inctw}
+\DeclareMathOperator{\primtw}{primtw}
+\DeclareMathOperator{\dualtw}{dualtw}
+
+\newcommand{\citex}[1]{\citeauthor{#1}~\shortcite{#1}}
+\newcommand{\citey}[1]{\citeauthor{#1},~\citeyear{#1}}
+
+
+%\newcommand{\todo}[1]{\marginpar{\small\color{red}#1}}
+%\newcommand{\ntodo}[2]{{\color{red}(#1): #2}}
+%\newcommand{\johannes}[1]{\TODO{J: #1}}
+%\newcommand{\FIX}[1]{{\color{blue}#1}}
+%\newcommand{\FIX}[1]{{#1}}
+
+\newcommand{\gpusat}{{\small\textsf{gpusat}}\xspace}
+\newcommand{\gpusatnu}{{\small\textsf{gpusat2}}\xspace}
+\newcommand{\gpusatnuv}[1]{{\small\textsf{gpusat2({\textit{#1}})}}\xspace}
+\newcommand{\gpusatone}{{\small\textsf{gpusat1}}\xspace}
+
+%\newcommand{\ts}[1]{\textit{#1}}
+\newcommand{\tm}[1]{\textbf{#1}}
+
+\newcommand{\instances}[1]{\texttt{#1}}
+%\newcommand{\set}[1]{{\footnotesize\textsf{#1}}}
+\newcommand{\set}[1]{\emph{#1}}
+
+%\newcommand{\FIX}[1]{\FIXED{#1}}
+
+\newcommand{\etal}{et~al.\@\xspace}
+\newcommand{\AlgNone}{None\xspace}
+
+\newcommand{\footnoteitext}[1]{\stepcounter{footnote}
+  \footnotetext[\thefootnote]{#1}}
+
+
+\newcommand{\algo}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\ops}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\tab}[1]{\ensuremath{\rho_{#1}}}
+
+\newcommand{\CTabs}[1]{\ensuremath{\text{C-Tabs}}}
+
+\DeclareMathOperator{\var}{var}
+\newcommand{\Ft}[1]{\ensuremath{F_{\hspace{-0.05em}\leq\hspace{-0.05em}#1}}}
+
+\DeclareMathOperator{\type}{type}
+\newcommand{\intr}{\textit{intr}}
+\newcommand{\leaf}{\textit{leaf}}
+\newcommand{\rem}{\textit{rem}}
+\newcommand{\join}{\textit{join}}
+%\newtheorem{example}{Example}
+
+\begin{document}
+\begin{algorithm}[t]
+%\centering
+  \KwData{Node~$t$, bag $\chi_t$, clauses~$F_t$,
+    $\langle \tab{1},\ldots \tab{\ell}\rangle$ is the sequence of
+    tables for child nodes~$\langle t_1,\ldots,t_\ell\rangle$ of~$t$, set~$R\subseteq 2^{\chi_t \rightarrow \{0,1\}}$ of assignments.{~\bf Out:} Local Storage~$\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
+   %
+  {$\type(t) = \leaf$}{%
+    $\tab{t} \eqdef \{ \langle
+    \tuplecolor{\inputPredColor}{\emptyset},
+    \tuplecolor{\statePredColor}{1} \rangle \mid \tuplecolor{\inputPredColor}{\emptyset}\in R \}$%
+  }%
+  \uElseIf{$\type(t) = \intr$, and
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi_t$ is introduced}{ %
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
+      \tuplecolor{\inputPredColor}{\beta},
+      \tuplecolor{\statePredColor}{c} \rangle$
+       %
+    }%
+    $|\;\langle \tuplecolor{\inputPredColor}{\alpha},
+    \tuplecolor{\statePredColor}{c} \rangle \in \tab{1}, \tuplecolor{\inputPredColor}{\beta \in \{\MAIR{\alpha}{a\mapsto 0}, \MAIR{\alpha}{a\mapsto 1}\}},
+    F_t(\tuplecolor{\inputPredColor}{\beta})=\emptyset, 
+    \tuplecolor{\inputPredColor}{\beta} \in R \}\hspace{-5em}$\vspace{-0.05em}
+       % 
+  }\vspace{-0.05em}%
+  % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi_t$ is removed}{%
+    \makebox[5.425cm][l]{$\tab{t} \eqdef \{ \langle
+      \tuplecolor{\inputPredColor}{\MAR{\alpha}},
+      \tuplecolor{\statePredColor}{\Sigma_{\langle {\beta}, {c}\rangle
+          \in \tab{1}: \MAR{\alpha} = \MAR{\beta}}{c}}
+      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{\alpha},
+    \tuplecolor{\statePredColor}{\cdot} \rangle \in \tab{1}, \tuplecolor{\inputPredColor}{\MAR{\alpha}}\in R
+    \}\hspace{-5em}$ \vspace{-0.1em}
+     %
+  } %
+  \uElseIf{$\type(t) = \join$}{%
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
+      \tuplecolor{\inputPredColor}{\alpha},
+      \tuplecolor{\statePredColor}{c_1 \cdot c_2}
+      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{\alpha},
+    \tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
+    \tuplecolor{\inputPredColor}{\alpha},
+    \tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}, \tuplecolor{\inputPredColor}{\alpha} \in R
+    \}\hspace{-5em}$
+    % 
+    \vspace{-0.1em}
+    % 
+  } %
+  \Return $\tab{t}$ \vspace{-0.25em}
+  \caption{Algorithm~$\algo{K}(t,\chi_t,F_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle, R)$ for Step~3 (DP) and nice TDs.}
+  \label{alg:prim}
+  \algorithmfootnote{%
+    \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
+    \label{foot:sigma}\label{foot:abrevtwo}
+    %\vspace{-0.3em}
+    $\MARR{\alpha}{e} \eqdef \alpha \setminus \{e \mapsto 0, e \mapsto
+    1\}$, $\MAIR{\alpha}{e\mapsto b} \eqdef \alpha \cup \{e \mapsto b\}$.
+    %\vspace{-1em}
+    % 
+  }%
+\end{algorithm}%
+\end{document}
