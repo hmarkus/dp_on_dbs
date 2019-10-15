@@ -73,7 +73,7 @@ def solve_problem(cfg, cls, file, **kwargs):
     # solve it
     logger.info("Parsing tree decomposition")
     td = TreeDecomp(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, tdr.adjacency_list)
-    logger.debug(f"#bags: {td.num_bags} tree_width: {td.tree_width} #vertices: {td.num_orig_vertices} #leafs: {len(td.leafs)} #edges: {len(td.edges)}")
+    logger.info(f"#bags: {td.num_bags} tree_width: {td.tree_width} #vertices: {td.num_orig_vertices} #leafs: {len(td.leafs)} #edges: {len(td.edges)}")
     if "td_file" in kwargs and kwargs["td_file"]:
         with FileWriter(kwargs["td_file"]) as fw:
             fw.write_td(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, td.edges)
