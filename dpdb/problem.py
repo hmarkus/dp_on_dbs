@@ -246,27 +246,36 @@ class Problem(object):
 
         def create_tables():
             logger.debug("Creating tables")
-            self.db.create_table("td_node_status", [
-                ("node", "INTEGER NOT NULL PRIMARY KEY"),
-                ("start_time", "TIMESTAMP"),
-                ("end_time", "TIMESTAMP"),
-                ("rows", "INTEGER")
-            ])
-            self.db.create_table("td_edge", [("node", "INTEGER NOT NULL"), ("parent", "INTEGER NOT NULL")])
-            self.db.create_table("td_bag", [("bag", "INTEGER NOT NULL"),("node", "INTEGER")])
-            for n in self.td.postorder():
-                # create all columns and insert null if values are not used in parent
-                # this only works in the current version of manual inserts without procedure calls in worker
-                self.db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
-                if self.candidate_store == "table":
-                    self.db.create_table(f"td_node_{n.id}_candidate", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
-                    candidate_view = self.candidates_select(n)
-                    candidate_view = self.db.replace_dynamic_tabs(candidate_view)
-                    self.db.create_view(f"td_node_{n.id}_candidate_v", candidate_view)
-                ass_view = self.assignment_view(n)
-                ass_view = self.db.replace_dynamic_tabs(ass_view)
-                self.db.create_view(f"td_node_{n.id}_v", ass_view)
+            workers = {}
 
+            with ThreadPoolExecutor(self.max_worker_threads) as executor:
+                for n in self.td.nodes:
+                    e = executor.submit(create_tables_for_node,n,workers)
+                    workers[n.id] = e
+
+        def create_tables_for_node(n, workers):
+            for c in n.children:
+                if not self.interrupted:
+                    workers[c.id].result()
+
+            if self.interrupted:
+                return
+
+            db = DB.from_pool(self.pool)
+            db.set_praefix(f"p{self.id}_")
+            # create all columns and insert null if values are not used in parent
+            # this only works in the current version of manual inserts without procedure calls in worker
+            db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
+            if self.candidate_store == "table":
+                db.create_table(f"td_node_{n.id}_candidate", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
+                candidate_view = self.candidates_select(n)
+                candidate_view = db.replace_dynamic_tabs(candidate_view)
+                db.create_view(f"td_node_{n.id}_candidate_v", candidate_view)
+            ass_view = self.assignment_view(n)
+            ass_view = db.replace_dynamic_tabs(ass_view)
+            db.create_view(f"td_node_{n.id}_v", ass_view)
+            db.close()
+            
         def insert_data():
             logger.debug("Inserting problem data")
             self.db.ignore_next_praefix(3)
@@ -289,8 +298,9 @@ class Problem(object):
         init_problem()
         self.db.ignore_next_praefix()
         self.db.update("problem",["setup_start_time"],["statement_timestamp()"],[f"ID = {self.id}"])
+        self.db.commit()
         #drop_tables()
-        #create_tables()
+        create_tables()
         #insert_data()
 
         self.setup_extra()
@@ -322,6 +332,9 @@ class Problem(object):
         self.db.ignore_next_praefix()
         self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
         self.db.commit()
+        self.db.ignore_next_praefix()
+        elapsed = self.db.select("problem",["end_time-calc_start_time","calc_start_time-setup_start_time"],[f"ID = {self.id}"])
+        logger.info("Setup time: %s; Calc time: %s", elapsed[1], elapsed[0])
         self.db.close()
 
     def interrupt(self):
@@ -356,17 +369,16 @@ class Problem(object):
         self.before_solve_node(node, db)
         if self.candidate_store == "table":
             db.persist_view(f"td_node_{node.id}_candidate")
-        #select = f"SELECT * from td_node_{node.id}_v"
-        #if self.randomize_rows:
-        #    select += " ORDER BY RANDOM()"
-        #if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
-        #    select += f" LIMIT {self.limit_result_rows}"
-        # TODO: create_select
-        #db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
-        ass_view = self.assignment_view(node)
-        ass_view = self.db.replace_dynamic_tabs(ass_view)
+        select = f"SELECT * from td_node_{node.id}_v"
+        if self.randomize_rows:
+            select += " ORDER BY RANDOM()"
+        if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
+            select += f" LIMIT {self.limit_result_rows}"
+        db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
+        #ass_view = self.assignment_view(node)
+        #ass_view = self.db.replace_dynamic_tabs(ass_view)
         #self.db.create_view(f"td_node_{n.id}_v", ass_view)
-        db.create_select(f"td_node_{node.id}", ass_view)
+        #db.create_select(f"td_node_{node.id}", ass_view)
         if self.interrupted:
             return
         #row_cnt = db.last_rowcount
