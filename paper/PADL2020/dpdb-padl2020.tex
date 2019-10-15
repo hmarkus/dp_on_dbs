@@ -694,17 +694,45 @@ Finally, for a node~$t$ with~$\type(t)=\join$, we use again $\theta$-joins (and 
 %
 %
 In this section, we present a general architecture to model table algorithms
-by means of a procedural \emph{generator template} that describes 
-how to dynamically obtain SQL code, which is a specific implementation standard of relational algebra, for each node~$t$, which heavily depends on~$\chi(t)$.
-The generated SQL code is then used for manipulation of 
+by means of database management systems.
+The architecture is influenced by the DP approach of the previous section
+and works as depicted in Figure~\ref{fig:arch},
+where the steps highlighted in yellow and blue need to be specified
+depending on the problem~$\mathcal{P}$. Steps outside Step~3 are mainly setup tasks,
+the yellow ``E''s indicate \emph{events} that might be needed to solve more complex problems
+on the polynomial hierarchy. 
+For example, one could create and drop sub-tables for each node during Step~3 within such events.
+Observe that Step~2b automatically creates tables~$\tab{t}$ for each node~$t$,
+where the corresponding table schema of~$\tab{t}$ is specified in the blue part, i.e., 
+within~$\algo{A_{RAlg}}$. 
+The default schema of such a table~$\tab{t}$ foresees (if used) one column for each element of the bag~$\chi(t)$, where also additional columns can be added.
+
+Actually, the core of this architecture is focused then on the table algorithm~$\algo{A_{RAlg}}$, shown in blue. 
+Besides the definition of table schemes, the blue part concerns specification of the table algorithm by means of a procedural \emph{generator template} that describes 
+how to dynamically obtain SQL code\footnote{Recall that SQL is a specific set of implementation standards of relational algebra.} for each node~$t$ thereby oftentimes depending on~$\chi(t)$.
+This generated SQL code is then used internally for manipulation of 
 tables~$\tab{t}$ during the tree decomposition 
-traversal of dynamic programming.
+traversal in Step~3 of dynamic programming.
+%
+In particular, although the whole architecture does not depend 
+on certain normalization of TDs, i.e., whether it is nice or not, 
+%the architecture foresees 
+this table algorithm is simply specified by handling \emph{problem-specific} implementations
+of the following cases similar to the ones of nice TDs, cf., Listings~\ref{alg:prim},\ref{alg:primdb}, that can occur within a node~$t$.
+
+\begin{itemize}
+	\item Introduce~$\chi(t)\setminus\{\bigcup_{children t' of t}\chi(t')\}$: One defines initial table $itab$ and parts of~$\theta$ of the $\theta$-join~$\sigma_{\theta}(itab \times \cdots \times itab)$.
+	\item $\type(t)=\rem$:
+	\item $\type(t)=\join$:
+\end{itemize}
+
 %
 %
 \begin{figure*}[t]%
 \centering
   {\noindent\includegraphics[]{1-figs/figure.pdf}}
-  \caption{Architecture of Dynamic Programming with Databases.}
+  \caption{Architecture of Dynamic Programming with Databases. Steps highlighted in red are provided by the system depending on specification of yellow and blue parts, which is given by the user for specific problems~$\mathcal{P}$. The yellow ``E''s represent events that can be intercepted and handled by the user. 
+  The blue part concentrates on the table algorithm, where the user partly specifies how SQL code~is~generated in a modular~way.}
   \label{fig:arch}
 %
 \end{figure*}
