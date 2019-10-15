@@ -7,14 +7,15 @@
 
 \usepackage[USenglish]{babel}
 \usepackage[novbox]{pdfsync}
-
+\usepackage{todonotes}
 %
 %
 \usepackage[hyphens,spaces]{url}
 \usepackage{hyperref}
-\usepackage[table]{xcolor}
+\usepackage[]{xcolor}
 \renewcommand\UrlFont{\color{blue}\rmfamily} 
 \usepackage{accsupp}
+
 %
 \newcommand{\tuplecolor}[1]{\textcolor{#1}}
 \newcommand{\inputPredColor}{orange!55!red}
@@ -54,6 +55,9 @@
 \makeatletter
 \newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
 \makeatother
+
+\newcommand{\cid}[1]{\ensuremath{[\![#1]\!]}}
+
 
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 \renewcommand*{\algorithmcfname}{Listing}
@@ -126,6 +130,9 @@
 \newcommand{\cSAT}{\textsc{\#Sat}\xspace}%
 \newcommand{\WMC}{\textsc{WMC}\xspace}%
 \DeclareMathOperator{\tw}{tw}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\attr}{att}
+\DeclareMathOperator{\ass}{ass}
 \DeclareMathOperator{\width}{width}
 \DeclareMathOperator{\inctw}{inctw}
 \DeclareMathOperator{\primtw}{primtw}
@@ -141,6 +148,7 @@
 %
 %
 
+\newcommand{\dpdb}{{\small\textsf{dpdb}}\xspace}
 \newcommand{\gpusat}{{\small\textsf{gpusat}}\xspace}
 \newcommand{\gpusatnu}{{\small\textsf{gpusat2}}\xspace}
 \newcommand{\gpusatnuv}[1]{{\small\textsf{gpusat2({\textit{#1}})}}\xspace}
@@ -186,17 +194,16 @@
 \usepackage{multirow}
 
 
-\title{An Improved GPU-based SAT Model Counter%
+\title{Exploiting Database Management Systems and Treewidth for Counting%
   %
   \thanks{%
-    Our system~\gpusatnu is available under GPL3 license
-    at~\href{https://github.com/daajoe/GPUSAT/releases/tag/v2.001-pre}{\nolinkurl{github.com/daajoe/GPUSAT}}.
+    Our tool~\gpusatnu is available under GPL3 license
+    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/TODOv1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.
     %
   %
-    A preliminary version has been presented at the workshop
-    Pragmatics of SAT 2019. The work has been supported by the
-    Austrian Science Fund (FWF), Grants Y698 and P26696, and the
-    German Science Fund (DFG), Grant HO 1294/11-1.
+    %The work has been supported by the
+    %Austrian Science Fund (FWF), Grants Y698 and P26696, and the
+    %German Science Fund (DFG), Grant HO 1294/11-1.
     %
     %
     %
@@ -214,15 +221,16 @@
 %
 \usepackage[misc,geometry]{ifsym} 
 
-\author{Johannes K. Fichte$^{\text{\Letter},}$\inst{1}\orcidID{0000-0002-8681-7470}%
-  \and Markus Hecher\inst{2,3}\orcidID{0000-0003-0131-6771} \and
-  Markus Zisser\inst{2}%
+\author{Johannes K. Fichte\inst{1}\orcidID{0000-0002-8681-7470}%
+  \and Markus Hecher\inst{2,3}\orcidID{0000-0003-0131-6771} 
+  \and Patrick Thier\inst{2}\orcidID{TODO0000-0003-0131-6771}
+  \and Stefan Woltran\inst{2}\orcidID{TODO0000-0003-0131-6771}
 }%
 %
 \institute{TU Dresden, %
   Germany \email{johannes.fichte@tu-dresden.de} %
   \and TU Wien, %
-  Austria \email{markus.\{hecher,zisser\}@tuwien.ac.at} \and %
+  Austria \email{\{hecher,woltran,thier\}@dbai.tuwien.ac.at} \and %
   University of
   Potsdam, %
   %
@@ -241,31 +249,19 @@
 \maketitle
 
 \begin{abstract}
-  In this paper, we present and evaluate a new parallel propositional
-  model counter, called \gpusatnu, which is based on dynamic
-  programming (DP) on tree decompositions using log-counters.
+Bounded treewidth is one of the most cited combinatorial invariants, which was applied in the literature for solving several counting problems efficiently. Counting problems in the counting complexity class \#P are considered to be extremely hard, since one can solve any problem of the polynomial hierarchy
+by means of a polynomial number of calls to a \#P oracle.
+A canonical \#P-complete problem is \cSAT, which asks to count the satisfying assignments of a propositional formula. Recent work shows that benchmarking instances for \cSAT often have reasonably small treewidth. Hence, algorithms that exploit small treewidth are particularly suited to solve \cSAT.
+This paper deals with counting problems for instances of small treewidth. We introduce a general framework to solve counting questions based on state-of-the-art database management systems (DBMS). Our framework takes explicitly advantage of small treewidth by solving instances using dynamic programming (DP) on tree decompositions (TD). Therefore, we implement the concept of DP into a DBMS (PostgreSQL), since DP algorithms are already often given in terms of table manipulations in theory. This allows for elegant specifications of DP algorithms and the use of SQL to manipulate records and tables, which gives us a natural approach to bring DP algorithms into practice. To the best of our knowledge, we present the first
+approach to employ a DBMS for algorithms on TDs. A key advantage of our approach is that DBMS naturally allow to deal with huge tables with a limited amount of main memory (RAM), parallelization, as well as suspending and resuming computation.
   %
-  %
-  \gpusatnu extends its predecessor by a novel architecture for DP
-  that includes using customized tree decompositions, storing
-  solutions to parts of the input instance during the computation
-  variably in arrays or binary search trees, and compressing solution
-  parts. In addition, we avoid data transfer between the RAM and the
-  VRAM whenever possible and employ extended preprocessing by means of
-  state-of-the-art preprocessors for propositional model counting.
-
-  %
-  Our novel architecture allows \gpusatnu to be competitive with
-  modern model counters when we also take preprocessing into
-  consideration. As a side result, we observe that state-of-the-art
-  preprocessors allow to produce tree decompositions of significantly
-  smaller width.
-  %
-  \keywords{Propositional Model Counting \and Dynamic Programming \and
-    Parameterized Algorithmics \and Bounded Treewidth}
+  \keywords{Dynamic Programming \and
+    Parameterized Algorithmics \and Bounded Treewidth \and
+    Counting \and Database Management Systems}
 \end{abstract}
 
 \section{Introduction}
+\todo{write following part before ``Contribution''}
 The \emph{model counting problem} (\cSAT) asks to compute the number
 of solutions of a propositional formula.
 %
@@ -359,86 +355,59 @@ other~assignments~during~DP. } %
 %
 
 %
-\paragraph{Contribution.}  For our new solver~\gpusatnu, we implement
-a variety of techniques and introduce an innovative architecture for
-DP.
+\paragraph{Contribution.}  
+We implement a solver \dpdb for solving counting problems based on dynamic programming on tree decompositions,
+and present the following contributions.
+(i) Our solver \dpdb uses database management systems to efficiently handle table operations needed
+for performing dynamic programming efficiently. The system \dpdb is written in Python and employs PostgreSQL as DBMS,
+but can work with other DBMSs easily.
+(ii) The architecture of \dpdb allows to solve general problems of bounded treewidth that can be solved by
+by means of table operations (in form of SQL) on tree decompositions. As a result, \dpdb is a generalized framework 
+for dynamic programming on tree decompositions, where one only needs to specify the essential and problem-specific parts of dynamic programming
+in order to solve (counting) problems.
+(iii) Finally, we show how to solve the canonical problem \cSAT with the help of \dpdb, 
+where it seems that the architecture of \dpdb
+is particularly well-suited. In particular, we compare the runtime of
+our system with state-of-the-art model counters, where we observe competitive behavior.
 %
-(i)~We employ extended
-preprocessing~\cite{LagniezLoncaMarquis16a,LagniezMarquis14a}.
-(ii)~We use customized TDs~\cite{AbseherMusliuWoltran17a}. (iii) We
-split the DP computation if we cannot ensure that all resulting data
-(as well as previously computed data) fit into the VRAM.
-%
-(iv)~We implement width dependent data structures and compression for
-storing counts during the computation,~i.e., arrays or binary search
-trees.
-%
-(v)~We store the model count during the computation by floating
-\emph{log-counters}, which increases the accuracy and applicability of
-our solver to instances with very high solution count. Storing values
-by the log of the value is a common technique in the domain of
-probabilistic inference.
-%
-In addition, we avoid data transfer between the RAM and the VRAM
-whenever possible.
-%
-%
-Finally, we present experimental work, where we compare the runtime of
-our system with state-of-the-art model counters and observe a
-competitive behavior. In fact, \gpusatnu solves about 200 \#SAT
-instances more than its predecessor if we also take
-preprocessing for both solvers into account.
-%
-As a side result, we observe that state-of-the-art preprocessors allow
-to produce TDs~of~significantly~smaller~width.
 
-
-
+\paragraph{Related Work.} \todo{lots of it}
 
 
 \section{Preliminaries}
 
 \refstepcounter{algocf}\label{fig:prim1}%
-\paragraph*{Propositional Satisfiability.}
-\shortversion{%
-  We define (propositional) formulas and their evaluation in the usual
-  way and assume familiarity with standard notations, including
-  satisfiability. For basic literature, we refer to introductory
-  work~\cite{GomesKautzSabharwalSelman08a,KleineBuningLettman99}.
+\paragraph*{Boolean Satisfiability.}
+  We define Boolean formulas and their evaluation in the usual
+  way, cf., ~\cite{GomesKautzSabharwalSelman08a,KleineBuningLettman99}.
   %
   %
-  \emph{Formulas} are sets of \emph{clauses}, which are sets of
-  variables or the negation thereof. For a formula or clause~$X$, we
+  A literal is a Boolean variable~$x$ or its negation~$\neg
+  x$.
+  A \emph{CNF formula}~$\varphi$ is a set of \emph{clauses}, interpreted as conjunction, which are sets of literals
+  interpreted as disjunction. For a formula or clause~$X$, we
   abbreviate by $\var(X)$ the variables that occur~in~$X$.
 %
-  The problem \cSAT asks to output the number of satisfying
-  assignments of~a~formula.  It can be generalized to \WMC by
-  assigning weights between 0 and 1 to each literal and taking the sum
-  of weights for satisfying assignments.
-%
-}
-%
-\longversion{%
-  A literal is a propositional variable~$x$ or its negation~$\neg
-  x$. A \emph{clause} is a finite set of literals, interpreted as the
-  disjunction of these literals.
+  %
+%\longversion{%
+%   A \emph{clause} is a finite set of literals, interpreted as the
+%  disjunction of these literals.
 %
 %
 %
-A \emph{(CNF) formula}
+%A \emph{Boolean formula}
+%%
+%is a finite set of clauses, interpreted as a conjunction of the clauses.
 %
-is a finite set of clauses, interpreted as a conjunction of the clauses.
-%
-Let $F$ be a formula. A \emph{sub-formula~$S$} of~$F$ consists of
-subsets of clauses of~$F$.
-%
+%Let $F$ be a formula. 
+%A \emph{sub-formula~$S$} of~$F$ consists of
+%subsets of clauses of~$F$.
 %
 %
-For a clause~$c \in F$, $\var(c)$ consists of all variables that occur
-in~$c$ and $\var(F)\eqdef\bigcup_{c \in F} \var(c)$.
 %
-A \emph{(partial) assignment} is a mapping
-$\sigma: \var(F) \rightarrow \{0,1\}$.
+%
+An \emph{assignment} of~$\varphi$ is a mapping
+$I: \var(\varphi) \rightarrow \{0,1\}$.
 %
 %
 %
@@ -446,21 +415,18 @@ $\sigma: \var(F) \rightarrow \{0,1\}$.
 %
 %
 %
-The formula~$F(\sigma)$ \emph{under assignment~$\sigma$} is obtained
-by removing all clauses~$c$ from $F$ that contain a literal set to~$1$
-by $\sigma$ and removing from the remaining clauses all literals set
-to~$0$ by~$\sigma$. An assignment~$\sigma$ is \emph{satisfying} if
-$F(\sigma)=\emptyset$.
+The formula~$\varphi(I)$ \emph{under assignment~$I$} is obtained
+by removing every clause~$c$ from $\varphi$ that contains a literal set to~$1$
+by $I$, and removing from every remaining clause of~$\varphi$ all literals set
+to~$0$ by~$I$. An assignment~$I$ is \emph{satisfying} if
+$\varphi(I)=\emptyset$.
 %
-The problem \cSAT asks to output the number of satisfying assignments
+\emph{Problem \cSAT} asks to output the number of satisfying assignments
 of a formula.
 %
 %
-This problem can be generalized with weights of literals by assigning
-weights between 0 and 1 to each literal and taking the sum of weights
-for satisfying assignments.
 %
-}
+%}
 %
 %
 %
@@ -491,12 +457,16 @@ for satisfying assignments.
 A \emph{tree decomposition (TD)} of a given graph~$G$ is a pair
 $\TTT=(T,\chi)$ where $T$ is a rooted tree and $\chi$ is a mapping
 which assigns to each node $t\in V(T)$ a set~$\chi(t)\subseteq V(G)$,
-called \emph{bag}, such that: (i) $V(G)=\bigcup_{t\in V(T)}\chi(t)$
+called \emph{bag}, such that (i) $V(G)=\bigcup_{t\in V(T)}\chi(t)$
 and
 $E(G)\subseteq\SB \{u,v\} \SM t\in V(T), \{u,v\}\subseteq \chi(t)\SE$;
 and (ii) for each $r, s, t\in V(T)$, such that $s$ lies on the path
 from~$r$ to $t$, we have $\chi(r) \cap \chi(t) \subseteq \chi(s)$. We
 let $\width(\TTT) \eqdef \max_{t\in V(T)}\Card{\chi(t)}-1$.
+%
+The
+\emph{treewidth} $\tw(G)$ of $G$ is the minimum $\width({\TTT})$ over
+all TDs~$\TTT$ of $G$.
 %
 For a node~$t \in V(T)$, we say that $\type(t)$ is $\leaf$ if $t$ has
 no children and~$\chi(t)=\emptyset$; $\join$ if $t$ has children~$t'$ and $t''$ with
@@ -508,638 +478,264 @@ $\chi(t') \supseteq \chi(t)$ and $|\chi(t')| = |\chi(t)| + 1$. If for
 every node $t\in N$, %
 $\type(t) \in \{ \leaf, \join, \intr, \rem\}$, then the TD is called \emph{nice}.
 %
-The
-\emph{treewidth} $\tw(G)$ of $G$ is the minimum $\width({\TTT})$ over
-all TDs~$\TTT$ of $G$.
 %
 %
-The \emph{primal graph}~$P_F$~\cite{SamerSzeider10b} of a formula~$F$
-has as vertices its variables and two variables are joined by an edge
-if they occur together in a clause of~$F$.  For brevity, we refer
-by~\emph{treewidth} \emph{of} a \emph{formula} to the treewidth of its
-primal graph. For a given node~$t \in T$ of the primal graph~$P_F$, we
-let $F_t \eqdef \SB c \SM c \in F, \var(c) \subseteq \chi(t)\SE$ be
-the clauses entirely covered by~$\chi(t)$.
 %
-The formula~$F_{\leq s}$ denotes the union over all~$F_t$ for all
-descendant nodes~$t\in V(T)$ of~$s$. In other words, $F_{\leq s}$ is
-the sub-formula of~$F$ that contains all clauses that have been
-entirely covered by a bag~$\chi(s)$ for $t$ and any of its descendant
-nodes.
+%The formula~$F_{\leq s}$ denotes the union over all~$F_t$ for all
+%descendant nodes~$t\in V(T)$ of~$s$. In other words, $F_{\leq s}$ is
+%the sub-formula of~$F$ that contains all clauses that have been
+%entirely covered by a bag~$\chi(s)$ for $t$ and any of its descendant
+%nodes.
+%
+
+\paragraph*{Relational Algebra.}%
+We use relational algebra~\cite{Codd70} for manipulation of relations,
+which forms the theoretical basis of its the well-known implementation database standard 
+\emph{Structured Query Language (SQL)}~\cite{} on tables.
+An \emph{attribute}~$a$ is of a certain finite \emph{domain~$\dom(a)$}.
+Then, a \emph{tuple}~$r$ over set~$\attr(r)$ of attributes,
+is a set of pairs of the form~$(a, v)$ with~$a\in\attr(r),v\in \dom(a)$ s.t.\ for each~$a\in \attr(r)$, there is exactly one~$v\in\dom(a)$ with~$(a,v)\in r$.
+A \emph{relation~$R$} is a finite set of tuples~$r$ over set~$\attr(R)\eqdef\attr(r)$ of attributes.
+Given a relation~$R$ over~$\attr(R)$.
+Then, we let~$\dom(R)\eqdef \bigcup_{a\in \attr(R)}\dom(a)$, and let relation~$R$ \emph{projected to~$A\subseteq \attr(R)$} be given by $\Pi_{A}(R)\eqdef \{r_A \mid r\in R\}$, where~$r_A \eqdef \{(a, v) \mid (a, v) \in r, a \in A\}$.
+\todo{mh:extended projection}
+%This can be lifted to \emph{extended projection~$\dot\Pi_{E}(R)$}, where
+We define \emph{renaming} of~$R$ given set~$A$ of attributes, and a bijective mapping~$m:\attr(R) \rightarrow A$ s.t.\ $\dom(a)=\dom(m(a))$ for~$a\in\attr(R)$, by~$\rho_m(R) \eqdef \{(m(a),v) \mid (a,v)\in R\}$.
+\emph{Selection} of rows in $R$ according to a given Boolean formula~$\varphi$ with equality\footnote{We allow for~$\varphi$ to contain expressions~$v{\approx}v'$ as variables for $v,v'\in\dom(R)\cup\attr(R)$, and we abbreviate for $v\in\attr(R)$ with~$\dom(v)=\{0,1\}$, $v{\approx}1$ by~$v$ and~$v{\approx}0$ by~$\neg v$.} is defined by~$\sigma_{\varphi}(R)\eqdef \{ r \mid r\in R, \varphi(r^E)=\emptyset \}$, where~$r^{E}$ is a truth assignment over~$\var(\varphi)$ such that for each~$v,v',v''\in\dom(R)\cup\attr(R)$ (1) $r^E(v{\approx}v')=1$ if $(v, v')\in r$, (2) $r^E(v{\approx}v)=1$, (3) $r^E(v{\approx}v')=r^E(v'{\approx}v)$, and (4) if $r^E(v{\approx}v')=1$, and $r^E(v'{\approx}v'')=1$, then $r^E(v{\approx}v'')=1$.
+Given a relation~$R'$ with~$\attr(R')\cap\attr(R)=\emptyset$. Then, we refer to the \emph{Cartesian product} by~$R\times R'\eqdef \{ r\cup r' \mid r\in R, r'\in R'\}$.
+Further, wet let \emph{$\theta$-join} correspond to~$R \bowtie_\varphi R' \eqdef \sigma_\varphi(R\times R')$.
+\todo{mh: group by}
+
+
+\section{Dynamic Programming on TDs with Relational~Algebra}
+A solver based on \emph{dynamic programming (DP)} %for formulas
+evaluates the input~$\mathcal{I}$ in parts along a given TD of a graph representation~$G$
+of the input.
+%primal graph~$P_F$.  
+Thereby, for each node~$t$ of the TD, intermediate results are %usually
+stored in a \emph{table}~$\tab{t}$. %
+This is achieved by running a so-called \emph{table algorithm}~$\algo{A}$,
+which is designed for a certain graph representation, 
+and stores in~$\tab{t}$ results of problem parts of~$\mathcal{I}$,
+thereby considering tables~$\tab{t'}$ for child nodes~$t'$ of~$t$. %solves for each node~$t$ 
+%
+The DP approach works for many problems~$\mathcal{P}$ as follows. %proceeds in four steps.
+\begin{enumerate}%
+\item Construct a graph representation~$G$ of the given input instance~$\mathcal{I}$.
+\item Heuristically compute a tree decomposition~$\TTT=(T,\chi)$ of~$G$.
+\item\label{step:dp} Traverse the nodes in~$V(T)$ in
+  post-order, i.e., perform a bottom-up traversal of~$T$.
+  At every node~$t$ during post-order traversal, execute a table algorithm~$\algo{A}$ 
+  that takes as input $t$, bag $\chi(t)$, a \emph{local problem}~$\mathcal{P}(t,\mathcal{I})$ depending on~$\mathcal{P}$, as well as previously computed tables of
+  children of~$t$ and stores the result in~$\tab{t}$.
+  %, which in turn is used by the table algorithm at
+  %the parent (if exists). 
+\item Interpret table~$\tab{n}$ for the root~$n$ of~$T$ in order to output the solution of~$\mathcal{I}$.
+\end{enumerate}
+
+\begin{algorithm}[t]
+%\centering
+  \KwData{Node~$t$, bag $\chi(t)$, clauses~$\varphi_t$,
+    sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table~$\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
+   %
+  {$\type(t) = \leaf$}{%
+    $\tab{t} \eqdef \{ \langle
+    \tuplecolor{\inputPredColor}{\emptyset},
+    \tuplecolor{\statePredColor}{1} \rangle \}$%
+  }%
+  \uElseIf{$\type(t) = \intr$, and
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
+      \tuplecolor{\inputPredColor}{J},
+      \tuplecolor{\statePredColor}{c} \rangle$
+       %
+    }%
+    $|\;\langle \tuplecolor{\inputPredColor}{I},
+    \tuplecolor{\statePredColor}{c} \rangle \in \tab{1}, \tuplecolor{\inputPredColor}{J \in \{\MAIR{I}{a\mapsto 0}, \MAIR{I}{a\mapsto 1}\}},
+    \varphi_t(\tuplecolor{\inputPredColor}{J})=\emptyset\}\hspace{-5em}$\vspace{-0.05em}
+       % 
+  }\vspace{-0.05em}%
+  % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{%
+    \makebox[5.425cm][l]{$\tab{t} \eqdef \{ \langle
+      \tuplecolor{\inputPredColor}{\MAR{I}},
+      \tuplecolor{\statePredColor}{\Sigma_{\langle {J}, {c}\rangle
+          \in \tab{1}: \MAR{I} = \MAR{J}}{c}}
+      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{I},
+    \tuplecolor{\statePredColor}{\cdot} \rangle \in \tab{1}
+    \}\hspace{-5em}$ \vspace{-0.1em}
+     %
+  } %
+  \uElseIf{$\type(t) = \join$}{%
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
+      \tuplecolor{\inputPredColor}{I},
+      \tuplecolor{\statePredColor}{c_1 \cdot c_2}
+      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{I},
+    \tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
+    \tuplecolor{\inputPredColor}{I},
+    \tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}
+    \}\hspace{-5em}$
+    % 
+    \vspace{-0.1em}
+    % 
+  } %
+  %\Return $\tab{t}$ \vspace{-0.25em}
+  \caption{Table algorithm~$\algo{S}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT using nice TDs.}
+  \label{alg:prim}
+  \algorithmfootnote{%
+    \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
+    \label{foot:sigma}\label{foot:abrevtwo}
+    %\vspace{-0.3em}
+    $\MARR{I}{e} \eqdef I \setminus \{e \mapsto 0, e \mapsto
+    1\}$, $\MAIR{I}{e} \eqdef I \cup \{e\}$.
+    %\vspace{-1em}
+    % 
+  }%
+\end{algorithm}%
+\noindent For solving problem~$\mathcal{P}=\cSAT$, we need the following graph representation.
+The \emph{primal graph}~$G_\varphi$~\cite{SamerSzeider10b} of a formula~$\varphi$
+has as vertices its variables, where two variables are joined by an edge
+if they occur together in a clause of~$\varphi$.
+Given formula~$\varphi$, a TD~$\mathcal{T}=(T,\chi)$ of~$G_\varphi$
+and a node~$t\in T$.
+%For brevity, we refer
+%by~\emph{treewidth} \emph{of} a \emph{formula} to the treewidth of its
+%primal graph. 
+Then, we
+let local problem~$\cSAT(t, \varphi)$ be $\varphi_t \eqdef \SB c \SM c \in \varphi, \var(c) \subseteq \chi(t)\SE$, which are the clauses entirely covered by~$\chi(t)$.
+
+
+%
+%\begin{figure*}[t]%
+%  {\noindent\includegraphics[trim={4.7cm 11.35cm 5cm 11.64cm},clip,page=1]{2-includes/prim.pdf}}
+%%
+%\end{figure*}
+
+\begin{example}
+Table algorithm~$\algo{S}$ as presented in Listing~\ref{alg:prim} shows all the cases that are needed to solve~\cSAT by means of DP of nice TDs.
+Each table~$\tab{t}$ consist of rows of the form~$\langle \alpha, c\rangle$,
+where~$\alpha$ is an assignment of~$\varphi_t$ and~$c$ is a counter. %within a table~$\tab{t}
+Nodes~$t$ with~$\type(t)=\leaf$ consist of the empty assignment and counter~$1$, cf., Line~1.
+For a node~$t$ with introduced variable~$a\in\chi(t)$, we guess in Line~3 for each assignment~$\beta$ of the child table, whether~$a$ is set to true or to false, and ensure that~$\varphi_t$ is satisfied.
+When an atom~$a$ is removed in node~$t$, we project assignments of child tables to~$\chi(t)$, cf., Line~5, and counters of the same assignments are summed up.
+For join nodes~$t$, counters of common assignments in the child tables are multiplied as in Line~7.
+\end{example}
+
+\begin{algorithm}[t]
+%\centering
+  \KwData{Node~$t$, bag $\chi(t)$, clauses~$\varphi_t$,
+    sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table $\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
+   %
+  {$\type(t) = \leaf$}{\label{line:leaf}%
+    $\tab{t} \eqdef \{ \{\tuplecolor{\statePredColor}{(cnt, 1)}\} \}$%
+  }%
+  \uElseIf{$\type(t) = \intr$, and
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ \label{line:intr}%
+    $\tab{t}\eqdef \tab{1} \bowtie_{\varphi_t} \{\{(\cid{a},0)\},\{(\cid{a},1)\}\}$
+    \hspace{-5em}\vspace{-0.05em}
+       % 
+  }\vspace{-0.05em}%
+  % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{\label{line:rem}%
+    $\tab{t} \eqdef {_{\chi(t)}G}_{\text{SUM}(cnt)}(\Pi_{\MAIR{\chi(t)}{cnt}}\tab{1})$ \hspace{-5em} \vspace{-0.1em}
+     %
+  } %
+  \uElseIf{$\type(t) = \join$}{\label{line:join}%
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\MAIR{\chi(t)}{cnt}}[\dot\Pi_{\{cnt \leftarrow cnt_1 \cdot cnt'\}}(\rho_{\{cnt \mapsto cnt_1\}}\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}a\approx a'} \rho_{\hspace{-1.3em}\bigcup\limits_{a\in \MAIR{\chi(t)}{cnt}}\hspace{-1.35em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$}  %\{ \langle
+      %\tuplecolor{\inputPredColor}{I},
+      %\tuplecolor{\statePredColor}{c_1 \cdot c_2}
+      %\rangle
+      %$}%$|\;\langle \tuplecolor{\inputPredColor}{I},
+    %\tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
+    %\tuplecolor{\inputPredColor}{I},
+    %\tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}
+    %\}
+    \hspace{-5em}%$
+    % 
+    \vspace{-0.1em}
+    % 
+  } %
+  %\Return $\tab{t}$ \vspace{-0.25em}
+  \caption{Table algorithm~$\algo{S_{RAlg}}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT using~nice~TDs.}
+  \label{alg:primdb}
+   \algorithmfootnote{%
+    \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
+    \label{foot:sigma}\label{foot:abrevtwo}
+    %\vspace{-0.3em}
+    %$\MARR{I}{e} \eqdef I \setminus \{e \mapsto 0, e \mapsto
+    %1\}$, 
+    $\MAIR{I}{e} \eqdef I \cup \{e\}$.
+    %\vspace{-1em}
+    % 
+  }%
+\end{algorithm}%
+
+
+\paragraph*{Towards Relational Algebra.}
+\noindent Instead of using set theory to describe how tables are obtained during dynamic programming 
+are performed, one could alternatively use relational algebra. % or equivalent.
+There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
+Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute $cnt$ for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
+Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
+This step from set notation to relational algebra is driven by the observation that in these table algorithms one can identify recurring patterns.
+In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fresh initial table $\tab{t}$, cf., Line~\ref{line:leaf} of Listing~\ref{alg:primdb}.
+Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins with a fresh initial table for the introduced variable~$a$ that represent potential values~$a$ can have. In Line~\ref{line:intr} the selection of the $\theta$-join is performed by ensuring~$\varphi_t$, corresponding to the local problem of~\cSAT.
+Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms oftentimes need projection. 
+In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
+Finally, for a node~$t$ with~$\type(t)=\join$, we use again $\theta$-joins (and extended projection for maintaining counters), which allows us to leverage database technology of the last decades.
+
+\section{Dynamic Programming on TDs using Databases~\&~SQL}
+%
+%\begin{figure*}[t]%
+%  {\noindent\includegraphics[trim={4.7cm 11.35cm 5cm 11.64cm},clip,page=1]{2-includes/prmdp.pdf}}
+%
+%\end{figure*}
+%\paragraph*{Dynamic Programming on TDs.} %
+%
+%
+In this section, we present a general architecture to model table algorithms
+by means of a procedural \emph{generator template} that describes 
+how to dynamically obtain SQL code, which is a specific implementation standard of relational algebra, for each node~$t$, which heavily depends on~$\chi(t)$.
+The generated SQL code is then used for manipulation of 
+tables~$\tab{t}$ during the tree decomposition 
+traversal of dynamic programming.
 %
 %
 \begin{figure*}[t]%
-  {\noindent\includegraphics[trim={4.7cm 11.35cm 5cm 11.64cm},clip,page=1]{2-includes/prim.pdf}}
-%
-\end{figure*}
-
-
-\paragraph*{Dynamic Programming on TDs.} %
-%
-%
-A solver based on \emph{dynamic programming (DP)} for formulas
-evaluates the input formula~$F$ in parts along a given TD of the
-primal graph~$P_F$.  For each node~$t$ of the TD, results are usually
-stored in a \emph{local storage}~$\rho_t$.
-%
-The approach works in four steps as follows:
-\begin{enumerate}%
-\item Construct the primal graph~$P_F$ of the input formula~$F$.
-\item Heuristically compute a tree decomposition~$\TTT=(T,\chi)$ of
-  the primal graph~$P_F$.
-\item\label{step:dp} DP: Traverse the nodes in~$V(T)$ in
-  post-order~$O$.\\
-  At every node~$t \in O$, run an algorithm~$\algo{K}$ that takes as input %
-  $t$, $\chi(t)$, the sub-formula~$F_t$ and previously computed results of its
-  children and stores the results in~$\rho_t$, which in turn is used by the algorithm at
-  the parent (if exists). 
-\item Print the (weighted) model count by interpreting the
-  result~$\rho_n$, which has been computed for the root~$n$ of~$T$.
-\end{enumerate}
-
-\noindent Algorithm~$\algo{K}$ in Step~\ref{step:dp} for nice TDs is depicted in Listing~\ref{fig:prim1}, cf.,~\cite{FichteEtAl18c,SamerSzeider10b}. Let therefore parameter~$R$ (``range'') of~\algo{K}
-be a set of assignments, i.e., $R\subseteq 2^{\chi(t) \rightarrow \{0,1\}}$.
-We assume~$R=2^{\chi(t) \rightarrow \{0,1\}}$ for sequential DP.
-Then, algorithm~\algo{K} stores in~$\rho_t$ pairs of the form~$\langle\alpha,c\rangle$
-consisting of an assignment~$\alpha: \chi(t) \rightarrow \{0,1\}$ together with a counter~$c$. %
-Each pair~$\langle \alpha, c\rangle$ indicates that there are~$c$ many satisfying assignments restricted to~${\chi(t)}$ of~$F_{\leq t}$.
-These pairs are carefully maintained for all the different types of nodes of nice TDs in Listing~1.
-%
-For details, we refer to the
-literature~\cite{FichteEtAl18c,SamerSzeider10b}.
-%
-%
-
-While in theory we often prefer nice TDs, due to simpler cases
-distinctions, in an actual implementation of~\algo{K} one handles also
-interleaved cases.  Note that a very compact way to represent~$\rho_t$
-is simply by taking a sequence of model counts~$c$ for the
-sub-formula~$F_{\leq t}$ without explicitly storing~$\alpha$ for a
-fixed ordering of the considered assignments.
-%
-Each counter in the sequence is entirely independent of another
-counter in the sequence as each counter in~$\rho_t$ depends only on
-results previously computed at the children. This allows directly to
-parallelize the computation of the counts in~$\rho_t$.
-%
-%
-Since we have $2^{\Card{\chi(t)}}$ many assignments at each node~$t$, for
-which we can compute the (potentially zero) counters by the very same
-operations, we can immediately parallelize the operations on the
-GPU~\cite{FichteEtAl18c} by employing a \emph{single instruction on
-  multiple threads (SIMT)} computation model.
-%
-More detailed, $\algo{K}$ in Step~\ref{step:dp} refers
-to a program that can be executed by a GPU thread, taking a small set
-of instructions but multiple input data, e.g., different ranges~$R$.
-Then, for each node~$t$ one can compute~$\rho_t$
-for $\Card{2^{\chi(t)}}$ many (singular) ranges in parallel. 
-Such a procedure is also
-called \emph{(GPU-)kernel} for this hardware architecture.
-%
-The simplest possible data structure for~$\rho_t$ is an \emph{array} that just
-contains the counts, where an assignment is addressed by the memory
-address (index) of an entry in the array.
-%
-However, this data structure has to be allocated on the \emph{video
-  RAM (VRAM)} prior to running the kernel on the GPU.
-There, one has to take care of %
-%
-out-of-memory issues caused by huge space requirements.
-%
-
-\section{An Improved GPU-based DP Architecture}
-%
-In this section, we build upon the idea above and
-present an innovative architecture for parallel
-dynamic programming on the GPU, which is outlined in Figure~\ref{fig:gpudp}.
-%
-%
-%
-Novel parts of the architecture are the
-\emph{preprocessors}, tree \emph{decomposition selection} heuristics
-(customized TDs), generalization to allow for adaptable, more advanced
-\emph{data structures}, \emph{caching} intermediate results on the
-GPU, and the idea of \emph{compressing} counters for assignments.
-%
-%
-%
-%
-Note that the architecture is independent from the underlying data
-structures, i.e., in Step~\ref{step:dp} we refer by~$\rho_t$ to a
-storage for data in the RAM, which can be an array or another data structure.
-Analogously, $\iota_t$ also denotes a storage, that caches results in
-the VRAM for GPU computations.  In the following, we discuss the novel
-steps of the architecture, whereas details on data structures are
-presented in Section~\ref{sec:implementation}.
-%
-%
-
-\paragraph*{Step 0: Instance Preprocessing.}
-Before we decompose our instance, we \emph{simplify the formula~$F$}
-by a preprocessor for 
-formulas~\cite{LagniezLoncaMarquis16a,LagniezMarquis14a}. There, we
-preserve the number of satisfying assignments and potentially decrease
-the treewidth of~$F$. For weighted model counting,
-vivification and literal elimination can be
-applied~\cite{LagniezMarquis14a}.
-
-\begin{figure*}[t]
-   \resizebox{1\columnwidth}{!}{%
-     \includegraphics{1-figs/figure_gpu.pdf}
-     %
-   }
 \centering
-\caption{%
-  Architecture of our DP-based solver for parallel execution. Yellow
-  colored boxes indicate tasks that are required as initial step for
-  the DP-run or to finally read the model count from the computed
-  results.  The parts framed by a dashed box illustrate the DP-part.
-  Boxes colored in red indicate computations that run on the
-  CPU. Boxes colored in blue indicate computations that are executed
-  on the GPU (with waiting~CPU).}
-\label{fig:gpudp}
+  {\noindent\includegraphics[]{1-figs/figure.pdf}}
+  \caption{Architecture of Dynamic Programming with Databases.}
+  \label{fig:arch}
+%
 \end{figure*}
 
-\paragraph*{Step 2: Tree Decomposition Computation.}
-%
-In Step~2.I, we heuristically compute a tree decomposition for the
-dynamic programming.
-%
-Various recent literature
-suggests~\cite{AbseherMusliuWoltran17b,CharwatWoltran17,JegouNdiayeTerrioux05}
-that tree decompositions for practical solving require in addition to
-``small'' width other criteria to speed up the performance of a
-solver. Such tree decompositions are frequently called
-\emph{customized tree decompositions}.
-%
-We compute $m$ different tree decompositions via
-heuristics~\cite{AbseherMusliuWoltran17a} and then select among
-the~$m$ decompositions one decomposition according to a selection criterion. In the
-implementation, we use the library \emph{htd} version~1.2 with default
-settings~\cite{AbseherMusliuWoltran17a} where $m = 30$. The selection
-criterion is as follows. We first try to minimize the width. Then, if
-several decompositions of the same width are found, we select the
-decomposition with the smallest maximal cardinality~$v(\TTT)$ of the
-intersection of bags of any node with its children, i.e.,
-$v(\TTT)=\max\SB \Card{\chi_t \cap (\chi_{t_1} \cup \chi_{t_2} \cup
-  \ldots \cup \chi_{t_\ell}) } \SM t \in V(T), t_1,t_2, \ldots, t_\ell
-\text{ are children of } t \text{ in } T \SE$ where
-$\TTT =(T, \chi)$.
-%
-The idea of the selection is to balance the \emph{trade-off} between
-runtime and space requirements in the worst-case as outlined in
-earlier work~\cite{JegouNdiayeTerrioux05}. In that way, we first
-improve on the worst-case \emph{runtime (and VRAM consumption)} and
-then on the number of IO operations required to copy data between RAM
-and VRAM.
-%
-%
-%
-%
-%
-%
-After the selection of tree decomposition~$\mathcal{T}$, we
-\emph{preprocess~$\mathcal{T}$} (Step~2.II).  There, we combine nodes to
-obtain bags of size~$s$, which is the largest number such that on the
-chosen hardware~$2^s$ GPU threads can still run in parallel. This 
-reduces the overhead of copying onto VRAM, and GPU
-thread allocation.
+\paragraph*{Problem}
 
+\begin{itemize}
+	\item events: before solve (table erstellen), after solve (table drop)
+	\item dynamic sql: introduce (table), filter (where condition), join (where inside), assignment view (for forgetting), candidate extra cols (describe how to add them)
+	\item setup: prepare input / graph, prepare tables
+	\item candidates: grundmenge
 
-\subsection*{Step \ref{step:dp}: Dynamic Programming
-}
-The more involved architecture of Step~\ref{step:dp} %
-consists of multiple parts as follows.
-%
-%
-%
-%
+\end{itemize}
 
-\paragraph*{Step \ref{step:dp}.I: Search Space Partitioning.}
-%
-As described in the preliminaries, the DP proceeds by traversing a tree
-decomposition in post-order. %
-%
-At each node, we consider assignments restricted to the variables in
-$\chi(t)$ and its corresponding counters. Overall we can have at
-most~$2^{\Card{\chi(t)}}$ assignments (``local search space'' at a
-node). Thus, the number of assignments can simply be too large to even
-store just one counter per assignment in the VRAM.
-%
-In practice, we would expect that plenty of these assignments result
-in a counter that is zero and hence we could actually avoid the
-out-of-memory issue as data can be compressed. However, on the VRAM we
-have to allocate memory prior to the computation and hence it would
-require to detect the point where we run out-of-memory then to copy the
-data back to the RAM resulting in turn in an unutilized GPU.
-%
-To avoid this situation, we simply split in Step~\ref{step:dp}.I all
-possible assignments that are considered together at once on the GPU
-into several disjoint subsets~$S_1, S_2, \ldots, S_k$
-of~$2^{\Card{\chi(t)}}$, which we call \emph{search space
-  partitioning}.
-%
-%
-%
-%
-On these grounds, we do the solution space splitting before the GPU kernels are
-even executed to ensure that no out-of-memory issue occurs.
-%
-Splitting is independent of the actually used data structure and
-can, e.g., be used if we store counters in an array similar to~\gpusatone.
-%
+\section{System~\dpdb: Dynamic Programming with Databases}
 
+We implemented the proposed architecture of the previous section in the \dpdb system.
 
-\paragraph*{Step \ref{step:dp}.II: Splitting Input Result from Children
-  and Compression.}
-%
-In the next step, we systematically process each set~$S_i$ for
-$1 \leq i \leq k$. Therefore, we consider the assignments in~$S_i$ and
-the corresponding counters for the children, i.e., the counters and
-corresponding assignments at the children which we need to compute the
-counter for an assignment at the currently considered node~$t$.
-%
-Since we have both to copy these relevant assignments of the children
-onto the VRAM and still allocate enough VRAM for~$S_i$, we might
-run into the situation that both would not fit into the VRAM.
-%
-Hence, we need to split for the counts and its corresponding
-assignments in~$S_i$ the relevant results
-in~$\rho_{t_1}, \ldots, \rho_{t_\ell}$ computed at the child
-nodes~$t_1, \ldots, t_{\ell}$ of~$t$ into
-subsets~$C_1\subseteq \rho_{t_1}$, $\ldots$,
-$C_{\ell} \subseteq \rho_{t_\ell}$.  We call a
-tuple~$\vec C=\langle C_1$, $\ldots$, $C_\ell\rangle$ of these subsets
-\emph{chunk}.  Then, the \emph{chunk handler} systematically takes
-each tuple~$\vec C$ relevant for~$S_i$ and executes a kernel in a GPU
-thread for each element in~$S_i$ using~$\vec C$.
-%
-Subsequently, the resulting counts are summed up accordingly and kept
-inside cache storage~$\iota_t$ on the VRAM.
-%
-This allows to reduce the number of IO operations between RAM and VRAM
-for tree decompositions of larger width.
-%
-Finally, if all chunks are processed for~$S_i$, the memory
-region~$\iota_t$ is merged into the RAM~$\rho_t$ for node~$t$.
-%
-There, depending on the data structure, it can be beneficial to merge
-and \emph{compress} resulting solutions obtained for two different
-solution spaces~$S_i$ and $S_j$.
-For this task, we use a \emph{(support) kernel} on the GPU,
-where one can merge two regions, say $\iota^{(i)}_t$ and $\iota^{(j)}_t$,
-into memory~$\rho_t$, with the same idea for parallelization as in~\algo{K},
-in parallel. In turn, this
-might decrease the number of child chunks needed at the parent of~$t$.
-%
-%
-%
-In other words, for the parent node of~$t$,
-one might prevent splitting results~from~children.
+In the following, we discuss implementation specifics that are crucial.
 
-\section{Data Representation}
-\label{sec:implementation}
-%
-We implemented our
-solver~\gpusatnu{} %
-based on the architecture presented in the previous section.
-%
-In this section, we describe advancements in the implementation of the
-solver such as \emph{data structures} optimized for GPUs, and improved
-accuracy in form of \emph{log-counters}.
-%
-%
+\paragraph*{Target Database.}
 
-\subsection{Binary Search Tree on the GPU}
-A naive approach to store counters on the VRAM~$\iota_t$ is simply to
-exhaustively consider all possible assignments in $2^{\chi(t)}$ and
-store for each assignment a counter, even if zero, in an array.
-%
-%
-In order to compactly store assignments at a node~$t$ in the VRAM, we
-propose a new data structure, which is in a broader sense a
-\emph{binary search tree (BST)} for assignments on a very low level
-architecture.
-%
-The binary search tree contains only assignments to~$F_t$ whose
-corresponding counter is non-zero, i.e., only counters for
-assignments that can be extended\footnote{Extending an assignment can be
-  done by recursively considering previously computed assignments at
-  the children that correspond to an assignment at the node.} to
-satisfying assignments of~$F_{\leq t}$.
-%
-%
-The BST data structure allows us to allocate memory on the VRAM in
-advance, which is required by~OpenCL~1.2, as kernels itself are not
-allowed to allocate memory on the VRAM during the execution.
-%
-Further, it allows us to avoid of synchronization between threads.
-%
+\paragraph*{Normalization.}
+First of all, for reasons of solving performance later, we need to interleave the/
 
-%
-Internally, a BST consists of a continuous sequence of \emph{cells}
-that are implemented as 64-bit unsigned integers.  We have three types
-of cells, namely \emph{empty cells}, \emph{value cells}, and
-\emph{index cells}.  An empty cell contains a zero whereas a value
-cell contains an integer greater than zero.  For value cells the
-64-bit integer corresponds to a counter that is internally actually
-interpreted as a double floating point type. We discuss details in the
-next paragraph.
-%
-Index cells have either one or two successors in the tree and refer to
-a value or index cell.
- %
-For an index cell, the \emph{lower 32 bits} of the integer represent the
-\emph{index} to the next cell, where a corresponding variable is set to
-false.  Symmetrically, the \emph{upper 32 bits} form an index to the cell if
-the variable is set to true.  Note that either the lower or upper bits
-can be zero indicating that the respective index is empty.
-%
-In Example~\ref{ex:bst} we illustrate BST memory allocation including
-the three types of cells by a simple example where an assignment is
-inserted into a non-empty previously BST.
+\paragraph*{Node Workers.}
 
+\paragraph*{JOIN Kinder.}
 
-\begin{figure}[t]
-  \centering %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  %
-  \resizebox{0.3\textwidth}{!}{
-    \setlength\tabcolsep{0.5em}
-    \begin{tabular}{{c|c||cc}}
-      \toprule
-      \multirow{2}{*}{(index)} & \multirow{2}{*}{(var)} & \multicolumn{2}{c}{cell}\\
-                               & & low & high \\
-      \midrule
-      0 & $x$ & $\epsilon$ & 1\\
-      1 & $y$ & 3 & 2\\
-      %
-      2 & - & \multicolumn{2}{c}{\textbf{23}}\\
-      3 & - & \multicolumn{2}{c}{\textbf{42}}\\
-      4 & & \multicolumn{2}{c}{$\epsilon$}\\
-      $\ldots$ & $\ldots$ & \multicolumn{2}{c}{$\ldots$}\\
-      &&\\
-      &&\\
-    \end{tabular}
-  }
-  \hspace{4em}
-  %
-  \resizebox{0.3\textwidth}{!}{
-    \setlength\tabcolsep{0.5em}
-    \begin{tabular}{{c|c||cc}}
-      \toprule
-      \multirow{2}{*}{(index)} & \multirow{2}{*}{(var)} & \multicolumn{2}{c}{cell}\\
-                               & & low & high \\
-      \midrule
-      0 & $x$ & 4 & 1\\
-      1 & $y$ & 3 & 2\\
-      %
-      2 & - & \multicolumn{2}{c}{\textbf{23}}\\
-      3 & - & \multicolumn{2}{c}{\textbf{42}}\\
-      4 & $y$ & $\epsilon$ & 5\\
-      5 & - & \multicolumn{2}{c}{\textbf{1}}\\
-      6 & & \multicolumn{2}{c}{$\epsilon$}\\
-      $\ldots$ & $\ldots$ & \multicolumn{2}{c}{$\ldots$}
-    \end{tabular}
-    %
-  }%
-\caption{Initial BST~$\mathcal{B}$ (left) and BST~$\mathcal{B}'$ (right),
-which was obtained after inserting assignment $\{x\mapsto0, y\mapsto1\}$.
-Value cells are depicted in bold. Both empty cells and empty indices are
-indicated by the symbol~$\epsilon$. Note: We store \emph{only} cells (``low'', ``high'').}
-\label{fig:treeexample}
-\end{figure}
+\paragraph*{Query Plan Optimizer.}
 
-
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-
-%
-
-\begin{example}\label{ex:bst}
-  Figure~\ref{fig:treeexample} (left) illustrates a binary search
-  tree~$\mathcal{B}$, where value cells are depicted in \textbf{bold}
-  face. Both empty cells and empty indices are represented by the
-  symbol~``$\epsilon$''.
-%
-  %
-  %
-  In the
-  BST~$\mathcal{B}$ we assume $x<y$.
- %
-  In Figure~\ref{fig:treeexample} (right), we can see the
-  BST~$\mathcal{B}'$ obtained by inserting the
-  assignment~$\alpha\eqdef\{x\mapsto0, y\mapsto1\}$
-  into~$\mathcal{B}$.
-%
-  %
-%
-  In order to insert~$\alpha$, we recursively search for~$\alpha$ in~$\mathcal{B}$
-  by traversing~$\mathcal{B}$ according to the variable order,
-  beginning at start index~$0$.  Then, depending on the assignment of
-  the variable at index~$0$ in~$\alpha$, we continue searching using
-  the next variable at the respective index.
-%
-%
-  As soon as an empty index is found, %
-  %
-  new index cells for the remaining variables are
-  subsequently inserted, followed by an inserted value cell of
-  value~\textbf{1}.  As a result, the search for~$\alpha$
-  in~$\mathcal{B}$ stops at the lower 32 bits of the index cell at
-  index~$0$. In turn, these bits refer to a new index cell
-  for~$y$ at index~$4$, whose upper 32 bits point to a new value
-  cell at index~$5$.
-\end{example}
-%
-%
-Note that we need some \emph{fixed order on the variables}
-in~$\chi(t)$, to distinguish index and value cells in order to
-search, insert, update, and delete counters for a given assignment
-over the variables.
-%
-The binary search tree enables us to address~$2^{32}-1$ many 64-bit
-integers, which can be changed to relative indices (offsets) if more
-address space is required.
-%
-%
-%
-%
-Further, for a given number~$b$ of
-variables, the tree requires in the worst-case at most~$2^{b+1}-1$
-many 64-bit integers, since there are at most~$2^b$ many value cells
-(all assignments have non-zero counters) and~$2^b-1$ index cells
-(perfectly balanced BST) needed.
-%
-%
-
-Obviously, our data structure has to be manipulated by several GPU
-threads in parallel.  In contrast to the array data structure, where
-each GPU thread has unique access to one entry, the BST has to
-\emph{prevent race conditions} between threads.  Our strategy is
-to allow atomic write access only to non-empty cells.
-To this end, we keep track of the number of non-empty cells of the tree, and 
-assign indices of non-empty cells in ascending order. 
-Then, we need (i) to atomically reserve free (empty) indices and (ii) to run only synchronized updates on existing value cells.
-%
-In the actual implementation this is efficiently done by \emph{atomic
-  operations} for 32-bit and 64-bit data types provided by the OpenCL
-framework~\cite{MunshiGasterMattson11a}.
-%
-In Case~(i) we rely on \ops{atomic\_cmpxchg} for inserting into the index, but only if it is empty (atomic operation).
-In Case~(ii) we use \ops{atomic\_add} for concurrently~updating~counters.
-
-\paragraph{Balancing between BST and Arrays.}
-It is easy to see that the BST data structure introduces an overhead
-in the computation. For instances of small width where all
-possible partial truth assignments (and the counts even if 0) easily
-fit into the VRAM using an array, the BST might not pay off.
-%
-Hence, one can also design an implementation that uses the array up to
-a threshold and then switches to BST as a data structure. We
-implemented this option into our solver and call the resulting variant
-\gpusatnuv{A+B}.
-Further, whenever \gpusatnu{} has to combine BSTs %
-for a node with more than one child node, we use a support kernel
-for transforming BSTs into arrays. Kernel~\algo{K} then combines the arrays into a BST.
-%
-%
-
-
-
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-
-
-\subsection{Accuracy of Large-Scale Counters}
-In order to be able to apply our solver to instances with very high
-solution count while still preserving a high accuracy, we store the
-model count during the dynamic programming by the log of the value.
-%
-This technique is common in the domain of probabilistic inference and
-also known as \emph{log-counter}.
-
-
-In more detail, we described in the previous paragraph that one could
-take 64-bit floating point numbers to store the values of a
-counters. While IEEE 64-bit floating point numbers allow to represent
-only values below~$10^{308}$~\cite{ieee754}, counters can have a
-significantly higher value.
-%
-Therefore, we need an extended data type for each counter~$c$. We
-store the value of~$c$ in relation to~$2^{e}$ for a 64-bit integer~$e$.
-%
-%
-%
-We start with significant digit~$1$ before the decimal point where
-$c=1.x \cdot 2^e$ and chosen $e$ accordingly. Then, we store $1.x$ and
-$e$ to reconstruct the value of~$c$.
-%
-In the implementation, we start with $e = 0$ and increase it
-dynamically during the computation at a node~$t$ whenever
-necessary. We normalize the largest counter~$c$ at a node~$t$ as
-decribed above and all other counters computed at node~$t$ are
-represented with the same exponent~$e$, i.e., we need only one
-exponent per node. We call the resulting $e$ the \emph{largest
-  exponent for~$t$}.
-%
-In that way, we remain highest accuracy while still being
-able to represent high values.
-%
-The largest exponent is carefully maintained on the GPU during
-computation of~$\rho_t$ in kernel~$\algo{K}$ and passed along to
-parent nodes.
-%
-For the largest exponents at a node, which has more than one child
-(join node), we may have to combine counters with respect to different
-largest exponents for child nodes of~$t$.
-In more details, algorithm~\algo{K} additionally takes the sum~$e$ of the largest %
-exponents~$e_1$, $e_2$, $\ldots$ of its children as parameter,
-which represent the counters. %
-%
-Exponent~$e$ is then also used to represent counters at~$t$, however,
-it might increase during the computation and therefore~\algo{K}
-returns an updated exponent after the computation.
-
-%
 
 \section{Experiments}
 \label{sec:experiments}

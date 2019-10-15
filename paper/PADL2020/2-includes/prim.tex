@@ -84,6 +84,7 @@
 \makeatother
 
 
+%\newcommand{\cSAT}{\textsc{\#Sat}\xspace}%
 
 \usepackage{tikz}
 \usetikzlibrary{arrows,intersections}
@@ -170,12 +171,12 @@
 
 \newcommand{\algo}[1]{\ensuremath{\mathsf{#1}}}
 \newcommand{\ops}[1]{\ensuremath{\mathsf{#1}}}
-\newcommand{\tab}[1]{\ensuremath{\rho_{#1}}}
+\newcommand{\tab}[1]{\ensuremath{\tau_{#1}}}
 
 \newcommand{\CTabs}[1]{\ensuremath{\text{C-Tabs}}}
 
 \DeclareMathOperator{\var}{var}
-\newcommand{\Ft}[1]{\ensuremath{F_{\hspace{-0.05em}\leq\hspace{-0.05em}#1}}}
+\newcommand{\Ft}[1]{\ensuremath{\varphi_{\hspace{-0.05em}\leq\hspace{-0.05em}#1}}}
 
 \DeclareMathOperator{\type}{type}
 \newcommand{\intr}{\textit{intr}}
@@ -187,61 +188,59 @@
 \begin{document}
 \begin{algorithm}[t]
 %\centering
-  \KwData{Node~$t$, bag $\chi_t$, clauses~$F_t$,
-    $\langle \tab{1},\ldots \tab{\ell}\rangle$ is the sequence of
-    tables for child nodes~$\langle t_1,\ldots,t_\ell\rangle$ of~$t$, set~$R\subseteq 2^{\chi_t \rightarrow \{0,1\}}$ of assignments.{~\bf Out:} Local Storage~$\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
+  \KwData{Node~$t$, bag $\chi(t)$, clauses~$\varphi_t$,
+    sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table~$\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
    %
   {$\type(t) = \leaf$}{%
     $\tab{t} \eqdef \{ \langle
     \tuplecolor{\inputPredColor}{\emptyset},
-    \tuplecolor{\statePredColor}{1} \rangle \mid \tuplecolor{\inputPredColor}{\emptyset}\in R \}$%
+    \tuplecolor{\statePredColor}{1} \rangle \}$%
   }%
   \uElseIf{$\type(t) = \intr$, and
-    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi_t$ is introduced}{ %
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
     \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
-      \tuplecolor{\inputPredColor}{\beta},
+      \tuplecolor{\inputPredColor}{J},
       \tuplecolor{\statePredColor}{c} \rangle$
        %
     }%
-    $|\;\langle \tuplecolor{\inputPredColor}{\alpha},
-    \tuplecolor{\statePredColor}{c} \rangle \in \tab{1}, \tuplecolor{\inputPredColor}{\beta \in \{\MAIR{\alpha}{a\mapsto 0}, \MAIR{\alpha}{a\mapsto 1}\}},
-    F_t(\tuplecolor{\inputPredColor}{\beta})=\emptyset, 
-    \tuplecolor{\inputPredColor}{\beta} \in R \}\hspace{-5em}$\vspace{-0.05em}
+    $|\;\langle \tuplecolor{\inputPredColor}{I},
+    \tuplecolor{\statePredColor}{c} \rangle \in \tab{1}, \tuplecolor{\inputPredColor}{J \in \{\MAIR{I}{a\mapsto 0}, \MAIR{I}{a\mapsto 1}\}},
+    \varphi_t(\tuplecolor{\inputPredColor}{J})=\emptyset\}\hspace{-5em}$\vspace{-0.05em}
        % 
   }\vspace{-0.05em}%
   % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
-  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi_t$ is removed}{%
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{%
     \makebox[5.425cm][l]{$\tab{t} \eqdef \{ \langle
-      \tuplecolor{\inputPredColor}{\MAR{\alpha}},
-      \tuplecolor{\statePredColor}{\Sigma_{\langle {\beta}, {c}\rangle
-          \in \tab{1}: \MAR{\alpha} = \MAR{\beta}}{c}}
-      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{\alpha},
-    \tuplecolor{\statePredColor}{\cdot} \rangle \in \tab{1}, \tuplecolor{\inputPredColor}{\MAR{\alpha}}\in R
+      \tuplecolor{\inputPredColor}{\MAR{I}},
+      \tuplecolor{\statePredColor}{\Sigma_{\langle {J}, {c}\rangle
+          \in \tab{1}: \MAR{I} = \MAR{J}}{c}}
+      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{I},
+    \tuplecolor{\statePredColor}{\cdot} \rangle \in \tab{1}
     \}\hspace{-5em}$ \vspace{-0.1em}
      %
   } %
   \uElseIf{$\type(t) = \join$}{%
     \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
-      \tuplecolor{\inputPredColor}{\alpha},
+      \tuplecolor{\inputPredColor}{I},
       \tuplecolor{\statePredColor}{c_1 \cdot c_2}
-      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{\alpha},
+      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{I},
     \tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
-    \tuplecolor{\inputPredColor}{\alpha},
-    \tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}, \tuplecolor{\inputPredColor}{\alpha} \in R
+    \tuplecolor{\inputPredColor}{I},
+    \tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}
     \}\hspace{-5em}$
     % 
     \vspace{-0.1em}
     % 
   } %
-  \Return $\tab{t}$ \vspace{-0.25em}
-  \caption{Algorithm~$\algo{K}(t,\chi_t,F_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle, R)$ for Step~3 (DP) and nice TDs.}
+  %\Return $\tab{t}$ \vspace{-0.25em}
+  \caption{Table algorithm~$\algo{S}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT using nice TDs.}
   \label{alg:prim}
   \algorithmfootnote{%
     \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
     \label{foot:sigma}\label{foot:abrevtwo}
     %\vspace{-0.3em}
-    $\MARR{\alpha}{e} \eqdef \alpha \setminus \{e \mapsto 0, e \mapsto
-    1\}$, $\MAIR{\alpha}{e\mapsto b} \eqdef \alpha \cup \{e \mapsto b\}$.
+    $\MARR{I}{e} \eqdef I \setminus \{e \mapsto 0, e \mapsto
+    1\}$, $\MAIR{I}{e\mapsto b} \eqdef I \cup \{e \mapsto b\}$.
     %\vspace{-1em}
     % 
   }%
