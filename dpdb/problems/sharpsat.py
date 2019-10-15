@@ -58,7 +58,7 @@ class SharpSat(Problem):
             #if self.store_formula:
             #    store_clause_table(self.db, self.clauses)
 
-        #create_tables()
+        create_tables()
         insert_data()
 
     def after_solve(self):

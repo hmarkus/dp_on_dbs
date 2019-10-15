@@ -97,7 +97,7 @@ class Problem(object):
 
     # if you overwrite this, make sure to alias the introduced value as "val"
     def introduce(self,node):
-        return "SELECT true val UNION SELECT false"
+        return "SELECT true val UNION ALL SELECT false"
 
     def join(self,node):
         joins = []
@@ -285,7 +285,7 @@ class Problem(object):
             for edge in self.td.edges:
                 self.db.insert("td_edge",("node","parent"),(edge[1],edge[0]))
 
-        #create_base_tables()
+        create_base_tables()
         init_problem()
         self.db.ignore_next_praefix()
         self.db.update("problem",["setup_start_time"],["statement_timestamp()"],[f"ID = {self.id}"])
@@ -319,9 +319,9 @@ class Problem(object):
 
         self.after_solve()
 
-        #self.db.ignore_next_praefix()
-        #self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
-        #self.db.commit()
+        self.db.ignore_next_praefix()
+        self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
+        self.db.commit()
         self.db.close()
 
     def interrupt(self):
