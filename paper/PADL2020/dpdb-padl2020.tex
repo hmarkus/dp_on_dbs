@@ -736,6 +736,55 @@ First of all, for reasons of solving performance later, we need to interleave th
 
 \paragraph*{Query Plan Optimizer.}
 
+\paragraph*{TODO:}
+\begin{itemize}
+	\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
+	\item htd
+	\item child limit (required for optimizer to find a (good) execution plan)
+	\item limit result rows (+ possibly randomize) of each node for faster approximations.
+	\item approximate memory used by db for one of the largest problems solved
+	\item mention candidate store options? (table, common table expression (CTE), subquery). We use subquery per default (fastest on postgres), CTE might be faster on oracle)
+	\item Advantages of our system: fast prototyping, results easily reproducable and comprehensible, ...
+	\item Supported DIMACS formats: cnf, td, tw, edge
+	\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
+\end{itemize}
+
+Pseudocode for sharpsat:
+
+\begin{algorithm}[h]
+  \KwData{Node~$t${~\bf Out:} SQL query}
+  \KwRet{\{0,1\}}\;
+  \caption{introduce}
+  \label{alg:introduce}
+\end{algorithm}
+
+\begin{algorithm}[h]
+  \KwData{Node~$t${~\bf Out:} SQL expression}
+  \KwRet{"sum(cnt)"}\;
+  \caption{aggregate}
+  \label{alg:aggregate}
+\end{algorithm}
+
+\begin{algorithm}[h]
+  \KwData{Node~$t${~\bf Out:} SQL WHERE-condition}
+  \KwRet{$\varphi_t$}\;
+  \caption{filter}
+  \label{alg:filter}
+\end{algorithm}
+
+\begin{algorithm}[h]
+  \KwData{Node~$t$, sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} SQL expression}
+  \KwRet{"$\tab{1}.cnt * \ldots * \tab{\ell}.cnt$"}\;
+  \caption{extra\_projection}
+  \label{alg:extraprojection}
+\end{algorithm}
+
+\if 0
+["{} AS model_count".format(
+                " * ".join(set([var2cnt(node,v) for v in node.vertices] +
+                               [node2cnt(n) for n in node.children])) if node.vertices or node.children else "1"
+                )]
+\fi
 
 \section{Experiments}
 \label{sec:experiments}
