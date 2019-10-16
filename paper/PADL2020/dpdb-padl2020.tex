@@ -1156,7 +1156,9 @@ i.e., each join covers at most 5 child tables.
 Although this paper presents the algorithms for nice TDs (mainly due to simplicity),
 the system \dpdb interleaves these cases as presented in 
 Listing~\ref{alg:template} automatically.
-Concretely, the system executes one query per table~$\tab{t}$ for each node~$t$ during the TD traversal.
+Concretely, the system executes one query per table~$\tab{t}$ for each node~$t$ during the TD traversal. 
+This query consists of serveral parts. 
+First of all, 
 
 %In other words, for each table~$\tab{t}$ of each node~$t$ of~$T$
 
@@ -1169,28 +1171,30 @@ In our system \dpdb, we currently allow
 for at most 24 worker threads for table computations and 24 database connections at the same time (both pooled and configurable).
 On top of that we have 2 additional threads and database connections for job assignments to workers, as well as one dedicated watcher thread for clean-up and termination of connections, respectively.
 
+\paragraph*{Logging and Debugging.} Currently, we currently have two versions of the \dpdb system implemented. 
+One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances).
+In particular, in the latter we keep all the intermediate results, we record database timestamps before and after certain nodes, provide statistics as, e.g., width, number of rows, etc.
+Further, since for each table~$\tab{t}$, exactly one SQL statement is executed for filling this table, we also have a dedicated view of the SQL SELECT statement, whose result was inserted.
+Together with the power and flexibility of SQL queries, we observed that this really helps in finding errors in the table algorithm specifications.
 
+\paragraph*{Configurations and Extensions.} Within one node~$t$ the computation of~$\tab{t}$ uses child tables of~$t$.
 
 \paragraph*{Query Plan Optimizer.}
-
-
-\paragraph*{Target Database.}
 
 
 \paragraph*{TODO:}
 \begin{itemize}
 	\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
-	\item htd
-	\item child limit (required for optimizer to find a (good) execution plan)
 	\item limit result rows (+ possibly randomize) of each node for faster approximations.
 	\item approximate memory used by db for one of the largest problems solved
 	\item mention candidate store options? (table, common table expression (CTE), subquery). We use subquery per default (fastest on postgres), CTE might be faster on oracle)
-	\item Advantages of our system: fast prototyping, results easily reproducable and comprehensible, ...
 	\item Supported DIMACS formats: cnf, td, tw, edge
 	\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
 \end{itemize}
 
 \subsection{Table algorithms with~\dpdb for selected problems}
+
+The system \dpdb allows for \emph{easy protyping}
 
 Pseudocode for sharpsat:
 
