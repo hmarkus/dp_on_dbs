@@ -9,6 +9,7 @@
 \usepackage[novbox]{pdfsync}
 \usepackage{todonotes}
 %
+\usepackage{colortbl}
 %
 \usepackage[hyphens,spaces]{url}
 \usepackage{hyperref}
@@ -25,7 +26,7 @@
 
 \newcommand{\MAIR}[2]{\ensuremath{#1^+_{#2}}}%
 \newcommand{\MAR}[1]{\ensuremath{#1^-_a}}%
-\newcommand{\MARR}[2]{\ensuremath{#1^-_#2}}%
+\newcommand{\MARR}[2]{\ensuremath{#1^-_{#2}}}%
 
 \newcommand{\Tab}[1]{\ensuremath{\text{C-Tabs}}}
 
@@ -177,7 +178,7 @@
 \newcommand{\CTabs}[1]{\ensuremath{\text{C-Tabs}}}
 
 \DeclareMathOperator{\var}{var}
-\newcommand{\Ft}[1]{\ensuremath{F_{\hspace{-0.05em}\leq\hspace{-0.05em}#1}}}
+%\newcommand{\Ft}[1]{\ensuremath{\varphi_{\hspace{-0.05em}\leq\hspace{-0.05em}#1}}}
 
 \DeclareMathOperator{\type}{type}
 \newcommand{\intr}{\textit{intr}}
@@ -249,11 +250,13 @@
 \maketitle
 
 \begin{abstract}
-Bounded treewidth is one of the most cited combinatorial invariants, which was applied in the literature for solving several counting problems efficiently. Counting problems in the counting complexity class \#P are considered to be extremely hard, since one can solve any problem of the polynomial hierarchy
-by means of a polynomial number of calls to a \#P oracle.
-A canonical \#P-complete problem is \cSAT, which asks to count the satisfying assignments of a propositional formula. Recent work shows that benchmarking instances for \cSAT often have reasonably small treewidth. Hence, algorithms that exploit small treewidth are particularly suited to solve \cSAT.
+Bounded treewidth is one of the most cited combinatorial invariants, which was applied in the literature for solving several counting problems efficiently. 
+%Counting problems %in the counting complexity class \#P are considered to be extremely hard, since one can solve any problem of the polynomial hierarchy
+%by means of a polynomial number of calls to a \#P oracle.
+A canonical counting problem is \cSAT, which asks to count the satisfying assignments of a Boolean formula. Recent work shows that benchmarking instances for \cSAT often have reasonably small treewidth. %Hence, algorithms that exploit small treewidth are particularly suited to solve \cSAT.
 This paper deals with counting problems for instances of small treewidth. We introduce a general framework to solve counting questions based on state-of-the-art database management systems (DBMS). Our framework takes explicitly advantage of small treewidth by solving instances using dynamic programming (DP) on tree decompositions (TD). Therefore, we implement the concept of DP into a DBMS (PostgreSQL), since DP algorithms are already often given in terms of table manipulations in theory. This allows for elegant specifications of DP algorithms and the use of SQL to manipulate records and tables, which gives us a natural approach to bring DP algorithms into practice. To the best of our knowledge, we present the first
-approach to employ a DBMS for algorithms on TDs. A key advantage of our approach is that DBMS naturally allow to deal with huge tables with a limited amount of main memory (RAM), parallelization, as well as suspending and resuming computation.
+approach to employ a DBMS for algorithms on TDs. A key advantage of our approach is that DBMS naturally allow to deal with huge tables with a limited amount of main memory (RAM), parallelization, as well as suspending %and resuming 
+computation.
   %
   \keywords{Dynamic Programming \and
     Parameterized Algorithmics \and Bounded Treewidth \and
@@ -454,6 +457,45 @@ of a formula.
 %
 \paragraph*{Tree Decomposition and Treewidth.} %
 %
+
+\begin{figure}[t]%
+\centering
+\begin{tikzpicture}[node distance=7mm,every node/.style={fill,circle,inner sep=2pt}]
+\node (a) [label={[text height=1.5ex,yshift=0.0cm,xshift=0.05cm]left:$d$}] {};
+\node (b) [right of=a,label={[text height=1.5ex]right:$a$}] {};
+\node (c) [below left of=b,label={[text height=1.5ex,yshift=0.09cm,xshift=0.05cm]left:$b$}] {};
+\node (d) [below right of=b,label={[text height=1.5ex,yshift=0.09cm,xshift=-0.05cm]right:$c$}] {};
+%
+\draw (a) to (b);
+%
+\draw (b) to (c);
+\draw (b) to (d);
+\draw (c) to (d);
+%
+\end{tikzpicture}\hspace{1em}%
+\begin{tikzpicture}[node distance=0.5mm]
+%
+\tikzset{every path/.style=thick}
+
+\node (leaf1) [tdnode,label={[yshift=-0.25em,xshift=0.5em]above left:$t_1$}] {$\{a,b,c\}$};
+\node (leaf2) [tdnode,label={[xshift=-1.0em, yshift=-0.15em]above right:$t_2$}, right = 0.1cm of leaf1]  {$\{a,d\}$};
+\coordinate (middle) at ($ (leaf1.north east)!.5!(leaf2.north west) $);
+\node (join) [tdnode,ultra thick,label={[]left:$t_3$}, above  = 1mm of middle] {$\{a\}$};
+
+\coordinate (top) at ($ (join.north east)+(3.5em,0) $);
+\coordinate (bot) at ($ (top)+(0,-4em) $);
+
+%
+\draw [->] (join) to (leaf1);
+\draw [->] (join) to (leaf2);
+\end{tikzpicture}%
+\caption{Graph~$G$ %from Example~\ref{ex:running0}
+  (left) with a TD~${\cal T}$ of graph~$G$
+  (right).}%
+\label{fig:graph-td}%
+\end{figure}
+
+
 A \emph{tree decomposition (TD)} of a given graph~$G$ is a pair
 $\TTT=(T,\chi)$ where $T$ is a rooted tree and $\chi$ is a mapping
 which assigns to each node $t\in V(T)$ a set~$\chi(t)\subseteq V(G)$,
@@ -477,6 +519,14 @@ $\chi(t') \subseteq \chi(t)$ and $|\chi(t)| = |\chi(t')| + 1$; $\rem$
 $\chi(t') \supseteq \chi(t)$ and $|\chi(t')| = |\chi(t)| + 1$. If for
 every node $t\in N$, %
 $\type(t) \in \{ \leaf, \join, \intr, \rem\}$, then the TD is called \emph{nice}.
+
+\begin{example}
+Figure~\ref{fig:graph-td} depicts a graph~$G$
+and a TD~$\TTT$ of~$G$ of width~$2$.
+  The treewidth of~$G$ is also~$2$ since~$G$ contains~\cite{Kloks94a} a complete graph with~$3$ vertices.
+ % are depicted in
+ % Figure~\ref{fig:graph-td}. 
+\end{example}
 %
 %
 %
@@ -507,7 +557,7 @@ Further, wet let \emph{$\theta$-join} correspond to~$R \bowtie_\varphi R' \eqdef
 \todo{mh: group by}
 
 
-\section{Dynamic Programming on TDs with Relational~Algebra}
+\section{Relating Dynamic Programming and~Relational~Algebra}
 A solver based on \emph{dynamic programming (DP)} %for formulas
 evaluates the input~$\mathcal{I}$ in parts along a given TD of a graph representation~$G$
 of the input.
@@ -526,8 +576,7 @@ The DP approach works for many problems~$\mathcal{P}$ as follows. %proceeds in f
 \item\label{step:dp} Traverse the nodes in~$V(T)$ in
   post-order, i.e., perform a bottom-up traversal of~$T$.
   At every node~$t$ during post-order traversal, execute a table algorithm~$\algo{A}$ 
-  that takes as input $t$, bag $\chi(t)$, a \emph{local problem}~$\mathcal{P}(t,\mathcal{I})$ depending on~$\mathcal{P}$, as well as previously computed tables of
-  children of~$t$ and stores the result in~$\tab{t}$.
+  that takes as input $t$, bag $\chi(t)$, a \emph{local problem}~$\mathcal{P}(t,\mathcal{I})=\mathcal{I}_t$ depending on~$\mathcal{P}$, as well as previously computed child tables of~$t$ and stores the result in~$\tab{t}$.
   %, which in turn is used by the table algorithm at
   %the parent (if exists). 
 \item Interpret table~$\tab{n}$ for the root~$n$ of~$T$ in order to output the solution of~$\mathcal{I}$.
@@ -540,39 +589,39 @@ The DP approach works for many problems~$\mathcal{P}$ as follows. %proceeds in f
    %
   {$\type(t) = \leaf$}{%
     $\tab{t} \eqdef \{ \langle
-    \tuplecolor{\inputPredColor}{\emptyset},
+    \tuplecolor{\specialPredColor}{\emptyset},
     \tuplecolor{\statePredColor}{1} \rangle \}$%
   }%
   \uElseIf{$\type(t) = \intr$, and
     $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
     \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
-      \tuplecolor{\inputPredColor}{J},
+      \tuplecolor{\specialPredColor}{J},
       \tuplecolor{\statePredColor}{c} \rangle$
        %
     }%
-    $|\;\langle \tuplecolor{\inputPredColor}{I},
-    \tuplecolor{\statePredColor}{c} \rangle \in \tab{1}, \tuplecolor{\inputPredColor}{J \in \{\MAIR{I}{a\mapsto 0}, \MAIR{I}{a\mapsto 1}\}},
-    \varphi_t(\tuplecolor{\inputPredColor}{J})=\emptyset\}\hspace{-5em}$\vspace{-0.05em}
+    $|\;\langle \tuplecolor{\specialPredColor}{I},
+    \tuplecolor{\statePredColor}{c} \rangle \in \tab{1}, \tuplecolor{\specialPredColor}{J \in \{\MAIR{I}{a\mapsto 0}, \MAIR{I}{a\mapsto 1}\}},
+    \varphi_t(\tuplecolor{\specialPredColor}{J})=\emptyset\}\hspace{-5em}$\vspace{-0.05em}
        % 
   }\vspace{-0.05em}%
   % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
   \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{%
     \makebox[5.425cm][l]{$\tab{t} \eqdef \{ \langle
-      \tuplecolor{\inputPredColor}{\MAR{I}},
+      \tuplecolor{\specialPredColor}{\MAR{I}},
       \tuplecolor{\statePredColor}{\Sigma_{\langle {J}, {c}\rangle
           \in \tab{1}: \MAR{I} = \MAR{J}}{c}}
-      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{I},
+      \rangle$}$|\;\langle \tuplecolor{\specialPredColor}{I},
     \tuplecolor{\statePredColor}{\cdot} \rangle \in \tab{1}
     \}\hspace{-5em}$ \vspace{-0.1em}
      %
   } %
   \uElseIf{$\type(t) = \join$}{%
     \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
-      \tuplecolor{\inputPredColor}{I},
+      \tuplecolor{\specialPredColor}{I},
       \tuplecolor{\statePredColor}{c_1 \cdot c_2}
-      \rangle$}$|\;\langle \tuplecolor{\inputPredColor}{I},
+      \rangle$}$|\;\langle \tuplecolor{\specialPredColor}{I},
     \tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
-    \tuplecolor{\inputPredColor}{I},
+    \tuplecolor{\specialPredColor}{I},
     \tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}
     \}\hspace{-5em}$
     % 
@@ -580,18 +629,200 @@ The DP approach works for many problems~$\mathcal{P}$ as follows. %proceeds in f
     % 
   } %
   %\Return $\tab{t}$ \vspace{-0.25em}
-  \caption{Table algorithm~$\algo{S}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT using nice TDs.}
+  \caption{Table algorithm~$\algo{S}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT~\cite{SamerSzeider10b} using nice TDs.}
   \label{alg:prim}
   \algorithmfootnote{%
     \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
     \label{foot:sigma}\label{foot:abrevtwo}
     %\vspace{-0.3em}
-    $\MARR{I}{e} \eqdef I \setminus \{e \mapsto 0, e \mapsto
-    1\}$, $\MAIR{I}{e} \eqdef I \cup \{e\}$.
+    $\MARR{S}{e} \eqdef S \setminus \{e \mapsto 0, e \mapsto
+    1\}$, $\MAIR{S}{s} \eqdef S \cup \{s\}$.
     %\vspace{-1em}
     % 
   }%
 \end{algorithm}%
+
+
+\begin{figure}[t]
+%\centering
+\hspace{-0.5em}\begin{tikzpicture}[node distance=0.5mm]
+%
+\tikzset{every path/.style=thick}
+
+%
+\node (l1) [stdnode,label={[tdlabel, xshift=0em,yshift=+0em]right:${t_1}$}]{$\emptyset$};
+\node (i1) [stdnode, above=of l1, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_2}$}]{$\{a\}$};
+\node (i12) [stdnode, above=of i1, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_3}$}]{$\{a,c\}$};
+\node (i13) [stdnode, above=of i12, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_4}$}]{$\{a,b,c\}$};
+\node (r1) [stdnode, above=of i13, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_5}$}]{$\{a,b\}$};
+\node (r12) [stdnode, above=of r1, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_6}$}]{$\{a\}$};
+\node (l2) [stdnode, right=2.5em of i12, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_7}$}]{$\emptyset$};
+\node (i2) [stdnode, above=of l2, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_8}$}]{$\{d\}$};
+\node (i22) [stdnode, above=of i2, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_9}$}]{$\{a,d\}$};
+\node (r2) [stdnode, above=of i22, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_{10}}$}]{$\{a\}$};
+\node (j) [stdnode, above left=of r2, yshift=-0.25em, label={[tdlabel, xshift=0em,yshift=+0.15em]right:${t_{11}}$}]{$\{a\}$};
+\node (rt) [stdnode,ultra thick, above=of j, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_{12}}$}]{$\emptyset$};
+\node (label) [font=\scriptsize,left=of rt]{${\cal T}'$:};
+%
+\node (leaf1) [stdnode, left=1.25em of i1, yshift=0.5em, label={[tdlabel, xshift=2.75em,yshift=+.1em]above left:$\tab{4}$}]{%
+	\begin{tabular}{l}%
+		\multicolumn{1}{l}{$\langle \tuplecolor{\inputPredColor}{I_{4.i}}, \tuplecolor{\statePredColor}{c_{4.i}} \rangle$}\\
+		%
+		\hline\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 0, c\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 1, c\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		\rowcolor{yellow}$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 1, c\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 0, c\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 0,c\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 1,c\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\
+	\end{tabular}%
+};
+\node (leaf1b) [stdnodenum,left=of leaf1,xshift=0.6em,yshift=0pt]{%
+	\begin{tabular}{c}%
+		\multirow{1}{*}{$i$}\\ %
+		%
+		\hline\hline
+		$1$ \\\hline
+		$2$ \\\hline
+		$3$ \\\hline
+		$4$ \\\hline
+		$5$ \\\hline
+		$6$
+	\end{tabular}%
+};
+\node (leaf0x) [stdnode, left=-0.1em of leaf1b, yshift=1.5em, label={[tdlabel, xshift=2em,yshift=+.5em]above left:$\tab{5}$}]{%
+	\begin{tabular}{l}%
+		\multicolumn{1}{l}{$\langle \tuplecolor{\inputPredColor}{I_{5.i}}, \tuplecolor{\statePredColor}{c_{5.i}} \rangle$}\\
+		%
+		\hline\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 0\}}, \tuplecolor{\statePredColor}{2}\rangle$\\\hline
+		%
+		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1, b\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 0,b\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		\rowcolor{yellow}$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 1\}}, \tuplecolor{\statePredColor}{2}\rangle$\\
+	\end{tabular}%
+};
+\node (leaf0b) [stdnodenum,left=of leaf0x,xshift=0.6em,yshift=0pt]{%
+	\begin{tabular}{c}%
+		\multirow{1}{*}{$i$}\\ %
+		%
+		\hline\hline
+		$1$ \\\hline
+		$2$ \\\hline
+		$3$ \\\hline
+		$4$ %
+	\end{tabular}%
+};
+\node (leaf2b) [stdnodenum,right=2.5em of j,xshift=-0.75em,yshift=+0.25em]  {%
+	\begin{tabular}{c}%
+		\multirow{1}{*}{$i$}\\ %
+		%
+		\hline\hline
+		$1$\\\hline
+		$2$\\%\hline
+		%
+	\end{tabular}%
+};
+\node (leaf2) [stdnode,right=-0.4em of leaf2b, label={[tdlabel, xshift=0em,yshift=-0.25em]below:$\tab{9}$}]  {%
+	\begin{tabular}{l}%
+		\multirow{1}{*}{$\langle \tuplecolor{\inputPredColor}{I_{9.i}}, \tuplecolor{\statePredColor}{c_{9.i}} \rangle$}\\ %
+		%
+		\hline\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 1, d\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		%
+		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 1,d\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\
+	\end{tabular}%
+};
+\coordinate (middle) at ($ (leaf1.north east)!.5!(leaf2.north west) $);
+\node (join) [stdnode,left=6.5em of r12, yshift=0.5em, label={[tdlabel, xshift=2em,yshift=+0.25em]above left:$\tab{{11}}$}] {%
+	\begin{tabular}{l}%
+		\multirow{1}{*}{$\langle \tuplecolor{\inputPredColor}{I_{11.i}}, \tuplecolor{\statePredColor}{c_{11.i}} \rangle$}\\
+		\hline\hline
+		%
+		%
+		%
+		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 1\}}, \tuplecolor{\statePredColor}{6} \rangle$\\
+	\end{tabular}%
+};
+\node (joinb) [stdnodenum,left=-0.45em of join] {%
+	\begin{tabular}{c}
+		\multirow{1}{*}{$i$}\\
+		\hline\hline
+		%
+		%
+		%
+		$1$\\
+	\end{tabular}%
+};
+\node (rtx) [stdnode,left=0.0em of r12, yshift=2.75em, label={[tdlabel, xshift=0em,yshift=-1em]right:$\tab{{12}}$}] {%
+	\begin{tabular}{l}%
+		\multirow{1}{*}{$\langle \tuplecolor{\inputPredColor}{I_{12.i}}, \tuplecolor{\statePredColor}{c_{12.i}} \rangle$}\\
+		\hline\hline
+		%
+		%
+		%
+		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\emptyset}, \tuplecolor{\statePredColor}{6} \rangle$\\
+	\end{tabular}%
+};
+\node (rtb) [stdnodenum,left=-0.45em of rtx] {%
+	\begin{tabular}{c}
+		\multirow{1}{*}{$i$}\\
+		\hline\hline
+		%
+		%
+		%
+		$1$\\
+	\end{tabular}%
+};
+\node (leaf0n) [stdnodenum,yshift=0.5em, right=2.5em of l1] {%
+	\begin{tabular}{c}%
+		\multirow{1}{*}{$i$}\\ %
+		%
+		\hline\hline
+		$1$
+	\end{tabular}%
+};
+%
+\node (leaf0) [stdnode,right=-0.5em of leaf0n, label={[tdlabel, xshift=-1em,yshift=0.15em]above right:$\tab{1}$}] {%
+	\begin{tabular}{l}%
+		\multicolumn{1}{l}{$\langle \tuplecolor{\inputPredColor}{I_{1.i}}, \tuplecolor{\statePredColor}{c_{1.i}} \rangle$}\\
+		%
+		\hline\hline
+		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\emptyset}, \tuplecolor{\statePredColor}{1} \rangle$
+	\end{tabular}%
+};
+\coordinate (top) at ($ (leaf2.north east)+(0.6em,-0.5em) $);
+\coordinate (bot) at ($ (top)+(0,-12.9em) $);
+
+\draw [<-] (j) to (rt);
+\draw [->] (j) to ($ (r12.north)$);
+%
+%
+\draw [->] (j) to ($ (r2.north)$);
+\draw [->](r2) to (i22);
+\draw [<-](i2) to (i22);
+\draw [<-](l2) to (i2);
+\draw [<-](l1) to (i1);
+\draw [->](i12) to (i1);
+\draw [->](i13) to (i12);
+\draw [->](r1) to (i13);
+\draw [->](r12) to (r1);
+
+\draw [dashed, bend left=0] (j) to (join);
+\draw [dashed, bend right=15] (rtx) to (rt);
+\draw [dashed, bend right=20] (i22) to (leaf2);
+\draw [dashed, bend right=40] (i13) to (leaf1);
+%
+\draw [dashed, bend left=22] (leaf0) to (l1);
+\draw [dashed, bend left=14] (leaf0x) to (r1);
+%
+%
+\end{tikzpicture}
+\caption{Selected tables obtained by DP on~${\cal T}'$ for~$\varphi$ of Example~\ref{ex:running0} using algorithm~\algo{S}.}
+\label{fig:running1}
+\end{figure}
+
+
 \noindent For solving problem~$\mathcal{P}=\cSAT$, we need the following graph representation.
 The \emph{primal graph}~$G_\varphi$~\cite{SamerSzeider10b} of a formula~$\varphi$
 has as vertices its variables, where two variables are joined by an edge
@@ -602,7 +833,7 @@ and a node~$t\in T$.
 %by~\emph{treewidth} \emph{of} a \emph{formula} to the treewidth of its
 %primal graph. 
 Then, we
-let local problem~$\cSAT(t, \varphi)$ be $\varphi_t \eqdef \SB c \SM c \in \varphi, \var(c) \subseteq \chi(t)\SE$, which are the clauses entirely covered by~$\chi(t)$.
+let local problem~$\cSAT(t, \varphi)=\varphi_t$ be $\varphi_t \eqdef \SB c \SM c \in \varphi, \var(c) \subseteq \chi(t)\SE$, which are the clauses entirely covered by~$\chi(t)$.
 
 
 %
@@ -611,15 +842,132 @@ let local problem~$\cSAT(t, \varphi)$ be $\varphi_t \eqdef \SB c \SM c \in \varp
 %%
 %\end{figure*}
 
-\begin{example}
 Table algorithm~$\algo{S}$ as presented in Listing~\ref{alg:prim} shows all the cases that are needed to solve~\cSAT by means of DP of nice TDs.
-Each table~$\tab{t}$ consist of rows of the form~$\langle \alpha, c\rangle$,
-where~$\alpha$ is an assignment of~$\varphi_t$ and~$c$ is a counter. %within a table~$\tab{t}
+Each table~$\tab{t}$ consist of rows of the form~$\langle I, c\rangle$,
+where~$I$ is an assignment of~$\varphi_t$ and~$c$ is a counter. %within a table~$\tab{t}
 Nodes~$t$ with~$\type(t)=\leaf$ consist of the empty assignment and counter~$1$, cf., Line~1.
 For a node~$t$ with introduced variable~$a\in\chi(t)$, we guess in Line~3 for each assignment~$\beta$ of the child table, whether~$a$ is set to true or to false, and ensure that~$\varphi_t$ is satisfied.
 When an atom~$a$ is removed in node~$t$, we project assignments of child tables to~$\chi(t)$, cf., Line~5, and counters of the same assignments are summed up.
 For join nodes~$t$, counters of common assignments in the child tables are multiplied as in Line~7.
-\end{example}
+
+\vspace{-1em}
+\begin{example}\label{ex:running0}
+  Consider
+  formula~$\varphi\eqdef \{\overbrace{\{\neg a, b, c\}}^{c_1},
+  \overbrace{\{a, \neg b, \neg c\}}^{c_2}, \overbrace{\{a,
+    d\}}^{c_3}, \overbrace{\{a, \neg d\}}^{c_4}\}$.
+    %
+  %
+  %
+  Satisfying assignments of formula~$\varphi$ are, e.g., 
+  $\{a\mapsto 1,b\mapsto 1, c\mapsto 0, d\mapsto 0\}$, $\{a\mapsto 1, b\mapsto 0,c\mapsto 1, d\mapsto 0\}$ or $\{a\mapsto 1, b\mapsto 1,c\mapsto 1, d\mapsto 1\}$.
+  %
+  %
+  %
+  In total, there are 6 satisfying assignments of~$\varphi$. 
+  %
+  %
+%
+%
+%
+%
+%
+%
+  %
+  %
+  Observe that graph~$G$ of Figure~\ref{fig:graph-td} actually depicts
+  the primal graph~$G_\varphi$ of~$\varphi$.
+  %The primal graph~$G_\varphi$ of formula~$F$ and a tree
+  %decomposition~$\TTT$ of~$G_\varphi$ are depicted in
+  %Figure~\ref{fig:graph-td}. 
+  Intuitively, ${\cal T}$ of Figure~\ref{fig:graph-td} allows to
+  evaluate formula~$\varphi$ in parts. 
+  %When evaluating $F_{\leq t_3}$, we
+  %split into $F_{\leq t_1}=\{c_1,c_2\}$ and
+  %$F_{\leq t_2}=\{c_3, c_4\}$, respectively.
+%
+%
+%
+%
+%
+  %
+%
+  %
+  Figure~\ref{fig:running1} illustrates a nice TD~$\TTT'=(\cdot, \chi)$ of the 
+  primal graph~$G_\varphi$ and
+  tables~$\tab{1}$, $\ldots$, $\tab{12}$ that are obtained during the
+  execution of~${\algo{S}}$ on nodes~$t_1,\ldots,t_{12}$.
+  %
+  %
+  We assume that each row in a table $\tab{t}$ is identified by a
+  number,~i.e., row $i$ corresponds to
+  $\vec{u_{t.i}} = \langle I_{t.i}, c_{t.i} \rangle$.
+
+  %
+  Table~$\tab{1}=\SB \langle\emptyset, 1\rangle \SE$ as
+  $\type(t_1) = \leaf$.
+  %
+  Since $\type(t_2) = \intr$, we construct table~$\tab{2}$
+  from~$\tab{1}$ by taking~$I_{1.i}\cup\{a\mapsto 0\}$ and $I_{1.i}\cup \{a \mapsto 1\}$ for
+  each~$\langle I_{1.i}, c_{1.i}\rangle \in \tab{1}$. Then,
+  $t_3$ introduces $c$ and $t_4$ introduces $b$.
+  $\varphi_{t_1}=\varphi_{t_2}=\varphi_{t_3} = \emptyset$, but since
+  $\chi(t_4) \subseteq \var(c_1)$ we have
+  $\varphi_{t_4} = \{c_1,c_2\}$ for $t_4$.
+  %
+  %
+  %
+  In consequence, for each~$I_{4.i}$ of table~$\tab{4}$, we have
+  $\{c_1,c_2\}({{I_{4.i}}})=\emptyset$ since \algo{S} enforces
+  satisfiability of $\varphi_t$ in node~$t$.  
+  %
+  %
+  Since $\type(t_5) = \rem$, we remove variable~$c$ from all
+  elements in $\tab{4}$ and sum up counters accordingly to construct $\tab{5}$. 
+  Note that we have
+  already seen all rules where $c$ occurs and hence $c$ can no
+  longer affect interpretations during the remaining traversal. We
+  similarly create $\tab{6}=\{\langle \{a\mapsto 0\}, 3 \rangle, \langle \{a \mapsto 1\}, 3 \rangle\}$
+  and~$\tab{{10}}=\{\langle \{a \mapsto 1\}, 2 \rangle\}$.
+  %
+  Since $\type(t_{11})=\join$, we build table~$\tab{11}$ by taking
+  the intersection of $\tab{6}$ and $\tab{{10}}$. Intuitively, this
+  combines assignments agreeing on~$a$, where counters are multiplied accordingly.
+  %
+  %
+  %
+  By definition (primal graph and TDs), for every~$c \in \varphi$,
+  variables~$\var(c)$ occur together in at least one common bag.
+  %
+  Hence, %$\varphi=\Ft{t_{12}}$ and 
+  since
+  $\tab{12} = \{\langle \emptyset, 6 \rangle \}$, we can reconstruct for example
+  model~$\{a\mapsto 1,b \mapsto 1, c\mapsto 0, d\mapsto 1\} = I_{11.1} \cup I_{5.4} \cup I_{9.2}$ of~$\varphi$ using highlighted (yellow) rows in Figure~\ref{fig:running1}.
+  On the other hand, if~$\varphi$ was unsatisfiable, $\tab{12}$ would be empty ($\emptyset$). %
+  %
+  %
+  %
+%
+%
+%
+\end{example}%
+
+
+\paragraph*{Towards Relational Algebra.}
+\noindent Instead of using set theory to describe how tables are obtained during dynamic programming 
+are performed, one could alternatively use relational algebra. % or equivalent.
+There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
+Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute $cnt$ for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
+Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
+This step from set notation to relational algebra is driven by the observation that in these table algorithms one can identify recurring patterns, and one mainly has to adjust problem-specific parts of it (highlighted by coloring in Listing~\ref{alg:prim}).
+%
+%
+In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fresh initial table $\tab{t}$, cf., Line~\ref{line:leaf} of Listing~\ref{alg:primdb}.
+Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins with a fresh initial table for the introduced variable~$a$ that represent potential values~$a$ can have. In Line~\ref{line:intr} the selection of the $\theta$-join is performed by ensuring~$\varphi_t$, corresponding to the local problem of~\cSAT.
+Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms oftentimes need projection. 
+In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
+Finally, for a node~$t$ with~$\type(t)=\join$, we use again $\theta$-joins (and extended projection for maintaining counters), which allows us later to leverage database technology of the last decades.
+
 
 \begin{algorithm}[t]
 %\centering
@@ -627,21 +975,21 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
     sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table $\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
    %
   {$\type(t) = \leaf$}{\label{line:leaf}%
-    $\tab{t} \eqdef \{ \{\tuplecolor{\statePredColor}{(cnt, 1)}\} \}$%
+    $\tab{t} \eqdef \tuplecolor{\inputPredColor}{\{ \{{(cnt, 1)}\} \}}$%
   }%
   \uElseIf{$\type(t) = \intr$, and
     $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ \label{line:intr}%
-    $\tab{t}\eqdef \tab{1} \bowtie_{\varphi_t} \{\{(\cid{a},0)\},\{(\cid{a},1)\}\}$
+    $\tab{t}\eqdef \tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\varphi_t}} \tuplecolor{\inputPredColor}{\{\{(\cid{a},0)\},\{(\cid{a},1)\}\}}$
     \hspace{-5em}\vspace{-0.05em}
        % 
   }\vspace{-0.05em}%
   % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
   \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{\label{line:rem}%
-    $\tab{t} \eqdef {_{\chi(t)}G}_{\text{SUM}(cnt)}(\Pi_{\MAIR{\chi(t)}{cnt}}\tab{1})$ \hspace{-5em} \vspace{-0.1em}
+    $\tab{t} \eqdef {_{\chi(t)}G}_{\tuplecolor{\inputPredColor}{\text{SUM}(cnt)}}(\Pi_{{\attr(\tab{1})\setminus\{\cid{a}}\}}\tab{1})$ \hspace{-5em} \vspace{-0.1em}
      %
   } %
   \uElseIf{$\type(t) = \join$}{\label{line:join}%
-    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\MAIR{\chi(t)}{cnt}}[\dot\Pi_{\{cnt \leftarrow cnt_1 \cdot cnt'\}}(\rho_{\{cnt \mapsto cnt_1\}}\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}a\approx a'} \rho_{\hspace{-1.3em}\bigcup\limits_{a\in \MAIR{\chi(t)}{cnt}}\hspace{-1.35em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$}  %\{ \langle
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\attr(\tab{1})}[\dot\Pi_{\tuplecolor{\inputPredColor}{\{cnt \leftarrow cnt \cdot cnt'\}}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$}  %\{ \langle
       %\tuplecolor{\inputPredColor}{I},
       %\tuplecolor{\statePredColor}{c_1 \cdot c_2}
       %\rangle
@@ -658,31 +1006,18 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
   %\Return $\tab{t}$ \vspace{-0.25em}
   \caption{Table algorithm~$\algo{S_{RAlg}}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT using~nice~TDs.}
   \label{alg:primdb}
-   \algorithmfootnote{%
-    \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
-    \label{foot:sigma}\label{foot:abrevtwo}
-    %\vspace{-0.3em}
-    %$\MARR{I}{e} \eqdef I \setminus \{e \mapsto 0, e \mapsto
-    %1\}$, 
-    $\MAIR{I}{e} \eqdef I \cup \{e\}$.
-    %\vspace{-1em}
-    % 
-  }%
+   %\algorithmfootnote{%
+   % \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
+   % \label{foot:sigma}\label{foot:abrevtwo}
+   % %\vspace{-0.3em}
+   % %$\MARR{I}{e} \eqdef I \setminus \{e \mapsto 0, e \mapsto
+   % %1\}$, 
+   % $\MAIR{S}{s} \eqdef S \cup \{s\}$.
+   % %\vspace{-1em}
+   % % 
+  %}%
 \end{algorithm}%
 
-
-\paragraph*{Towards Relational Algebra.}
-\noindent Instead of using set theory to describe how tables are obtained during dynamic programming 
-are performed, one could alternatively use relational algebra. % or equivalent.
-There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
-Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute $cnt$ for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
-Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
-This step from set notation to relational algebra is driven by the observation that in these table algorithms one can identify recurring patterns.
-In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fresh initial table $\tab{t}$, cf., Line~\ref{line:leaf} of Listing~\ref{alg:primdb}.
-Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins with a fresh initial table for the introduced variable~$a$ that represent potential values~$a$ can have. In Line~\ref{line:intr} the selection of the $\theta$-join is performed by ensuring~$\varphi_t$, corresponding to the local problem of~\cSAT.
-Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms oftentimes need projection. 
-In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
-Finally, for a node~$t$ with~$\type(t)=\join$, we use again $\theta$-joins (and extended projection for maintaining counters), which allows us to leverage database technology of the last decades.
 
 \section{Dynamic Programming on TDs using Databases~\&~SQL}
 %
@@ -701,30 +1036,26 @@ where the steps highlighted in yellow and blue need to be specified
 depending on the problem~$\mathcal{P}$. Steps outside Step~3 are mainly setup tasks,
 the yellow ``E''s indicate \emph{events} that might be needed to solve more complex problems
 on the polynomial hierarchy. 
-For example, one could create and drop sub-tables for each node during Step~3 within such events.
+For example, one could create and drop auxiliary sub-tables for each node during Step~3 within such events.
 Observe that Step~2b automatically creates tables~$\tab{t}$ for each node~$t$,
 where the corresponding table schema of~$\tab{t}$ is specified in the blue part, i.e., 
 within~$\algo{A_{RAlg}}$. 
-The default schema of such a table~$\tab{t}$ foresees (if used) one column for each element of the bag~$\chi(t)$, where also additional columns can be added.
+The \emph{default schema} of such a table~$\tab{t}$ that is assumed in this section foresees one column for each element of the bag~$\chi(t)$, where additional columns such as counters or costs can be added.
 
-Actually, the core of this architecture is focused then on the table algorithm~$\algo{A_{RAlg}}$, shown in blue. 
+Actually, the core of this architecture is focused on the table algorithm~$\algo{A_{RAlg}}$, shown in blue. 
 Besides the definition of table schemes, the blue part concerns specification of the table algorithm by means of a procedural \emph{generator template} that describes 
-how to dynamically obtain SQL code\footnote{Recall that SQL is a specific set of implementation standards of relational algebra.} for each node~$t$ thereby oftentimes depending on~$\chi(t)$.
+how to dynamically obtain SQL code\footnote{Recall that SQL is a specific implementation standard (set) of relational algebra.} for each node~$t$ thereby oftentimes depending on~$\chi(t)$.
 This generated SQL code is then used internally for manipulation of 
 tables~$\tab{t}$ during the tree decomposition 
 traversal in Step~3 of dynamic programming.
 %
-In particular, although the whole architecture does not depend 
-on certain normalization of TDs, i.e., whether it is nice or not, 
+Listing~\ref{alg:template} presents a general template, where parts of table algorithms for problems that are typically problem-specific are replaced by colored placeholders of the form~$\textcolor{\inputPredColor}{\#\mathsf{placeHolder}\#}$, cf., Listing~\ref{alg:primdb}.
+Note, however, that the whole architecture does not depend 
+on certain normalization or forms of TDs, i.e., whether it is nice or not.
 %the architecture foresees 
-this table algorithm is simply specified by handling \emph{problem-specific} implementations
-of the following cases similar to the ones of nice TDs, cf., Listings~\ref{alg:prim},\ref{alg:primdb}, that can occur within a node~$t$.
-
-\begin{itemize}
-	\item Introduce~$\chi(t)\setminus\{\bigcup_{children t' of t}\chi(t')\}$: One defines initial table $itab$ and parts of~$\theta$ of the $\theta$-join~$\sigma_{\theta}(itab \times \cdots \times itab)$.
-	\item $\type(t)=\rem$:
-	\item $\type(t)=\join$:
-\end{itemize}
+Instead, a table algorithm of any TD is simply specified by 
+handling \emph{problem-specific} implementations of the placeholders of Listings~\ref{alg:template}, where the system following this architecture is responsible for interleaving and overlapping these cases within a node~$t$.
+In fact, we discuss an implementation of a system according to this architecture next, where for efficiency it is crucial to implement non-nice TDs.
 
 %
 %
@@ -737,19 +1068,62 @@ of the following cases similar to the ones of nice TDs, cf., Listings~\ref{alg:p
 %
 \end{figure*}
 
-\paragraph*{Problem}
+\begin{algorithm}[t]
+%\centering
+  \KwData{Node~$t$, bag $\chi(t)$, problem~$\mathcal{I}_t$,
+    sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table $\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
+   %
+  {$\type(t) = \leaf$}{\label{line:leaf}%
+    $\tab{t} \eqdef \tuplecolor{\inputPredColor}{\#\epsilon\mathsf{Tab}\#}$%
+  }%
+  \uElseIf{$\type(t) = \intr$, and
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ \label{line:intr}%
+    $\tab{t}\eqdef \tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\#\mathsf{localProbFilter}\#}} \tuplecolor{\inputPredColor}{\#\mathsf{intrTab}\#}$
+    \hspace{-5em}\vspace{-0.05em}
+       % 
+  }\vspace{-0.05em}%
+  % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{\label{line:rem}%
+    $\tab{t} \eqdef {_{\chi(t)}G}_{\tuplecolor{\inputPredColor}{\#\mathsf{aggrExp}\#}}(\Pi_{\attr(\tab{1})\setminus\{\cid{a}\}}\tab{1})$ \hspace{-5em} \vspace{-0.1em}
+     %
+  } %
+  \uElseIf{$\type(t) = \join$}{\label{line:join}%
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\attr(\tab{1})}[\dot\Pi_{\tuplecolor{\inputPredColor}{\#\mathsf{extProj}\#}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$}  %\{ \langle
+      %\tuplecolor{\inputPredColor}{I},
+      %\tuplecolor{\statePredColor}{c_1 \cdot c_2}
+      %\rangle
+      %$}%$|\;\langle \tuplecolor{\inputPredColor}{I},
+    %\tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
+    %\tuplecolor{\inputPredColor}{I},
+    %\tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}
+    %\}
+    \hspace{-5em}%$
+    % 
+    \vspace{-0.1em}
+    % 
+  }
+  %\Return $\tab{t}$ \vspace{-0.25em}
+  \caption{Template of~$\algo{A_{RAlg}}(t,\chi(t),\mathcal{I}_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for instance~$\mathcal{I}$ of $\mathcal{P}$.}
+  \label{alg:template}
+\end{algorithm}%
 
-\begin{itemize}
-	\item events: before solve (table erstellen), after solve (table drop)
-	\item dynamic sql: introduce (table), filter (where condition), join (where inside), assignment view (for forgetting), candidate extra cols (describe how to add them)
-	\item setup: prepare input / graph, prepare tables
-	\item candidates: grundmenge
 
-\end{itemize}
 
-\section{System~\dpdb: Dynamic Programming with Databases}
+%\paragraph*{Problem}
+%
+%\begin{itemize}
+%	\item events: before solve (table erstellen), after solve (table drop)
+%	\item dynamic sql: introduce (table), filter (where condition), join (where inside), assignment view (for forgetting), candidate extra cols (describe how to add them)
+%	\item setup: prepare input / graph, prepare tables
+%	\item candidates: grundmenge
+%
+%\end{itemize}
+
+\subsection{System~\dpdb: Dynamic Programming with Databases}
 
 We implemented the proposed architecture of the previous section in the \dpdb system.
+The system is open-source, written in Python 3 and uses PostgreSQL as database.
+
 
 In the following, we discuss implementation specifics that are crucial.
 
@@ -1538,7 +1912,7 @@ model counting~\cite{FichteEtAl18d,FichteHecher19,FichteHecherMeier19}.
 \clearpage
 %
 \bibliographystyle{splncs04}
-\bibliography{gpusat2-2019}
+\bibliography{dpdb-padl2020.bib}
 %
 
 
@@ -1547,610 +1921,3 @@ model counting~\cite{FichteEtAl18d,FichteHecher19,FichteHecherMeier19}.
 
 \end{document}
 
-\appendix
-\cleardoublepage
-\section{Supplemental Material}
-
-
-\subsection{Dynamic Programming Algorithm for Model Counting}
-\renewcommand{\eqdef}{\leftarrow}
-%
-%
-%
-\renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
-
-Listing~\ref{alg:prim} presents the algorithm~\algo{K} for Step~\ref{step:dp} (dynamic programming),
-which
-works on a nice tree decomposition of the primal graph.
-
-\begin{example}\label{ex:running0}
-  Consider
-  formula~$F\eqdef \{\overbrace{\neg a \vee b \vee c}^{c_1},
-  \overbrace{a\vee \neg b \vee \neg c}^{c_2}, \overbrace{a \vee
-    d}^{c_3}, \overbrace{a \vee \neg d}^{c_4}\}$.
-    %
-  %
-  %
-  The models of formula~$F$ are $\{a,b\}$, $\{a,c\}$,
-  $\{a,b,c\}$,$\{a,b,d\}$, $\{a,c,d\}$, and $\{a,b,c,d\}$.
-  %
-  %
-  %
-  Hence, the model count of~$F$ is 6. 
-  %
-  %
-%
-%
-
-%
-
-%
-  %
-  %
-  The primal graph~$P_F$ of formula~$F$ and a tree
-  decomposition~$\TTT$ of~$P_F$ are depicted in
-  Figure~\ref{fig:graph-td}. Intuitively, ${\cal T}$ allows to
-  evaluate formula~$F$ in parts. When evaluating $F_{\leq t_3}$, we
-  split into $F_{\leq t_1}=\{c_1,c_2\}$ and
-  $F_{\leq t_2}=\{c_3, c_4\}$, respectively.
-%
-%
-%
-
-%
-  %
-%
-  %
-  Figure~\ref{fig:running1} illustrates a nice tree
-  decomposition~$\TTT'=(\cdot, \chi)$ of the primal graph~$P_F$ and
-  tables~$\tab{1}$, $\ldots$, $\tab{12}$ that are obtained during the
-  execution of~${\algo{K}}$ on nodes~$t_1,\ldots,t_{12}$.
-  %
-  %
-  We assume that each row in a table $\tab{t}$ is identified by a
-  number,~i.e., row $i$ corresponds to
-  $\vec{u_{t.i}} = \langle \alpha_{t.i}, i_{t.i} \rangle$.
-
-  %
-  Table~$\tab{1}=\SB \langle\emptyset, 1\rangle \SE$ as
-  $\type(t_1) = \leaf$.
-  %
-  Since $\type(t_2) = \intr$, we construct table~$\tab{2}$
-  from~$\tab{1}$ by taking~$\alpha_{1.i}\cup\{a\mapsto 0\}$ and $\alpha_{1.i}\cup \{a \mapsto 1\}$ for
-  each~$\langle \alpha_{1.i}\rangle \in \tab{1}$. Then,
-  $t_3$ introduces $c$ and $t_4$ introduces $b$.
-  $F_{t_1}=F_{t_2}=F_{t_3} = \emptyset$, but since
-  $\chi(t_4) \subseteq \var(c_1)$ we have
-  $F_{t_4} = \{c_1,c_2\}$ for $t_4$.
-  %
-  %
-  %
-  In consequence, for each~$\alpha_{4.i}$ of table~$\tab{4}$, we have
-  $\{c_1,c_2\}({{\alpha_{4.i}}})=\emptyset$ since \algo{K} enforces
-  satisfiability of $F_t$ in node~$t$.  
-  %
-  %
-  Since $\type(t_5) = \rem$, we remove variable~$c$ from all
-  elements in $\tab{4}$ and sum up counters accordingly to construct $\tab{5}$. 
-  Note that we have
-  already seen all rules where $c$ occurs and hence $c$ can no
-  longer affect interpretations during the remaining traversal. We
-  similarly create $\tab{6}=\{\langle \{a\mapsto 0\}, 3 \rangle, \langle \{a \mapsto 1\}, 3 \rangle\}$
-  and~$\tab{{10}}=\{\langle \{a \mapsto 1\}, 2 \rangle\}$.
-  %
-  Since $\type(t_{11})=\join$, we build table~$\tab{11}$ by taking
-  the intersection of $\tab{6}$ and $\tab{{10}}$. Intuitively, this
-  combines assignments agreeing on~$a$, where counters are multiplied accordingly.
-  %
-  %
-  %
-  By definition (primal graph and TDs), for every~$c \in F$,
-  variables~$\var(c)$ occur together in at least one common bag.
-  %
-  Hence, $F=\Ft{t_{12}}$ and since
-  $\tab{12} = \{\langle \emptyset, 6 \rangle \}$, we can reconstruct for example
-  model~$\{a\mapsto 1,b \mapsto 1, c\mapsto 0, d\mapsto 1\} = \alpha_{11.1} \cup \alpha_{5.4} \cup \alpha_{9.2}$ of~$F$ using highlighted (yellow) rows in Figure~\ref{fig:running1}.
-  On the other hand, if~$F$ was unsatisfiable, $\tab{12}$ would be empty ($\emptyset$). %
-  %
-  %
-  %
-%
-%
-%
-\end{example}%
-
-\begin{figure}[t]%
-\centering
-\begin{tikzpicture}[node distance=7mm,every node/.style={fill,circle,inner sep=2pt}]
-\node (a) [label={[text height=1.5ex,yshift=0.0cm,xshift=0.05cm]left:$d$}] {};
-\node (b) [right of=a,label={[text height=1.5ex]right:$a$}] {};
-\node (c) [below left of=b,label={[text height=1.5ex,yshift=0.09cm,xshift=0.05cm]left:$b$}] {};
-\node (d) [below right of=b,label={[text height=1.5ex,yshift=0.09cm,xshift=-0.05cm]right:$c$}] {};
-%
-\draw (a) to (b);
-%
-\draw (b) to (c);
-\draw (b) to (d);
-\draw (c) to (d);
-%
-\end{tikzpicture}\hspace{1em}%
-\begin{tikzpicture}[node distance=0.5mm]
-%
-\tikzset{every path/.style=thick}
-
-\node (leaf1) [tdnode,label={[yshift=-0.25em,xshift=0.5em]above left:$t_1$}] {$\{a,b,c\}$};
-\node (leaf2) [tdnode,label={[xshift=-1.0em, yshift=-0.15em]above right:$t_2$}, right = 0.1cm of leaf1]  {$\{a,d\}$};
-\coordinate (middle) at ($ (leaf1.north east)!.5!(leaf2.north west) $);
-\node (join) [tdnode,ultra thick,label={[]left:$t_3$}, above  = 1mm of middle] {$\{a\}$};
-
-\coordinate (top) at ($ (join.north east)+(3.5em,0) $);
-\coordinate (bot) at ($ (top)+(0,-4em) $);
-
-%
-\draw [->] (join) to (leaf1);
-\draw [->] (join) to (leaf2);
-\end{tikzpicture}%
-\caption{Primal graph~$P_F$ of~$F$ from Example~\ref{ex:running0}
-  (left) with a TD~${\cal T}$ of graph~$P_F$
-  (right).}%
-\label{fig:graph-td}%
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[node distance=0.5mm]
-%
-\tikzset{every path/.style=thick}
-
-%
-\node (l1) [stdnode,label={[tdlabel, xshift=0em,yshift=+0em]right:${t_1}$}]{$\emptyset$};
-\node (i1) [stdnode, above=of l1, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_2}$}]{$\{a\}$};
-\node (i12) [stdnode, above=of i1, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_3}$}]{$\{a,c\}$};
-\node (i13) [stdnode, above=of i12, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_4}$}]{$\{a,b,c\}$};
-\node (r1) [stdnode, above=of i13, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_5}$}]{$\{a,b\}$};
-\node (r12) [stdnode, above=of r1, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_6}$}]{$\{a\}$};
-\node (l2) [stdnode, right=2.5em of i12, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_7}$}]{$\emptyset$};
-\node (i2) [stdnode, above=of l2, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_8}$}]{$\{d\}$};
-\node (i22) [stdnode, above=of i2, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_9}$}]{$\{a,d\}$};
-\node (r2) [stdnode, above=of i22, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_{10}}$}]{$\{a\}$};
-\node (j) [stdnode, above left=of r2, yshift=-0.25em, label={[tdlabel, xshift=0em,yshift=+0.15em]right:${t_{11}}$}]{$\{a\}$};
-\node (rt) [stdnode,ultra thick, above=of j, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_{12}}$}]{$\emptyset$};
-\node (label) [font=\scriptsize,left=of rt]{${\cal T}'$:};
-%
-\node (leaf1) [stdnode, left=1.25em of i1, yshift=0.5em, label={[tdlabel, xshift=2.75em,yshift=+.1em]above left:$\tab{4}$}]{%
-	\begin{tabular}{l}%
-		\multicolumn{1}{l}{$\langle \tuplecolor{\inputPredColor}{\alpha_{4.i}}, \tuplecolor{\statePredColor}{c_{4.i}} \rangle$}\\
-		%
-		\hline\hline
-		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 0, c\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
-		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 1, c\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
-		\rowcolor{yellow}$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 1, c\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
-		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 0, c\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
-		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 0,c\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
-		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 1,c\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\
-	\end{tabular}%
-};
-\node (leaf1b) [stdnodenum,left=of leaf1,xshift=0.6em,yshift=0pt]{%
-	\begin{tabular}{c}%
-		\multirow{1}{*}{$i$}\\ %
-		%
-		\hline\hline
-		$1$ \\\hline
-		$2$ \\\hline
-		$3$ \\\hline
-		$4$ \\\hline
-		$5$ \\\hline
-		$6$
-	\end{tabular}%
-};
-\node (leaf0x) [stdnode, left=0.75em of leaf1b, yshift=1.5em, label={[tdlabel, xshift=2em,yshift=+.5em]above left:$\tab{5}$}]{%
-	\begin{tabular}{l}%
-		\multicolumn{1}{l}{$\langle \tuplecolor{\inputPredColor}{\alpha_{5.i}}, \tuplecolor{\statePredColor}{c_{5.i}} \rangle$}\\
-		%
-		\hline\hline
-		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 0\}}, \tuplecolor{\statePredColor}{2}\rangle$\\\hline
-		%
-		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1, b\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
-		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 0,b\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
-		\rowcolor{yellow}$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 1\}}, \tuplecolor{\statePredColor}{2}\rangle$\\
-	\end{tabular}%
-};
-\node (leaf0b) [stdnodenum,left=of leaf0x,xshift=0.6em,yshift=0pt]{%
-	\begin{tabular}{c}%
-		\multirow{1}{*}{$i$}\\ %
-		%
-		\hline\hline
-		$1$ \\\hline
-		$2$ \\\hline
-		$3$ \\\hline
-		$4$ %
-	\end{tabular}%
-};
-\node (leaf2b) [stdnodenum,right=2.5em of j,xshift=-0.75em,yshift=+0.25em]  {%
-	\begin{tabular}{c}%
-		\multirow{1}{*}{$i$}\\ %
-		%
-		\hline\hline
-		$1$\\\hline
-		$2$\\%\hline
-		%
-	\end{tabular}%
-};
-\node (leaf2) [stdnode,right=-0.4em of leaf2b, label={[tdlabel, xshift=0em,yshift=-0.25em]below:$\tab{9}$}]  {%
-	\begin{tabular}{l}%
-		\multirow{1}{*}{$\langle \tuplecolor{\inputPredColor}{\alpha_{9.i}}, \tuplecolor{\statePredColor}{c_{9.i}} \rangle$}\\ %
-		%
-		\hline\hline
-		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 1, d\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
-		%
-		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 1,d\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\
-	\end{tabular}%
-};
-\coordinate (middle) at ($ (leaf1.north east)!.5!(leaf2.north west) $);
-\node (join) [stdnode,left=6.5em of r12, yshift=0.5em, label={[tdlabel, xshift=2em,yshift=+0.25em]above left:$\tab{{11}}$}] {%
-	\begin{tabular}{l}%
-		\multirow{1}{*}{$\langle \tuplecolor{\inputPredColor}{\alpha_{11.i}}, \tuplecolor{\statePredColor}{c_{11.i}} \rangle$}\\
-		\hline\hline
-		%
-		%
-		%
-		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 1\}}, \tuplecolor{\statePredColor}{6} \rangle$\\
-	\end{tabular}%
-};
-\node (joinb) [stdnodenum,left=-0.45em of join] {%
-	\begin{tabular}{c}
-		\multirow{1}{*}{$i$}\\
-		\hline\hline
-		%
-		%
-		%
-		$1$\\
-	\end{tabular}%
-};
-\node (rtx) [stdnode,left=0.0em of r12, yshift=2.75em, label={[tdlabel, xshift=0em,yshift=-1em]right:$\tab{{12}}$}] {%
-	\begin{tabular}{l}%
-		\multirow{1}{*}{$\langle \tuplecolor{\inputPredColor}{\alpha_{12.i}}, \tuplecolor{\statePredColor}{c_{12.i}} \rangle$}\\
-		\hline\hline
-		%
-		%
-		%
-		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\emptyset}, \tuplecolor{\statePredColor}{6} \rangle$\\
-	\end{tabular}%
-};
-\node (rtb) [stdnodenum,left=-0.45em of rtx] {%
-	\begin{tabular}{c}
-		\multirow{1}{*}{$i$}\\
-		\hline\hline
-		%
-		%
-		%
-		$1$\\
-	\end{tabular}%
-};
-\node (leaf0n) [stdnodenum,yshift=0.5em, right=2.5em of l1] {%
-	\begin{tabular}{c}%
-		\multirow{1}{*}{$i$}\\ %
-		%
-		\hline\hline
-		$1$
-	\end{tabular}%
-};
-%
-\node (leaf0) [stdnode,right=-0.5em of leaf0n, label={[tdlabel, xshift=-1em,yshift=0.15em]above right:$\tab{1}$}] {%
-	\begin{tabular}{l}%
-		\multicolumn{1}{l}{$\langle \tuplecolor{\inputPredColor}{\alpha_{1.i}}, \tuplecolor{\statePredColor}{c_{1.i}} \rangle$}\\
-		%
-		\hline\hline
-		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\emptyset}, \tuplecolor{\statePredColor}{1} \rangle$
-	\end{tabular}%
-};
-\coordinate (top) at ($ (leaf2.north east)+(0.6em,-0.5em) $);
-\coordinate (bot) at ($ (top)+(0,-12.9em) $);
-
-\draw [<-] (j) to (rt);
-\draw [->] (j) to ($ (r12.north)$);
-%
-%
-\draw [->] (j) to ($ (r2.north)$);
-\draw [->](r2) to (i22);
-\draw [<-](i2) to (i22);
-\draw [<-](l2) to (i2);
-\draw [<-](l1) to (i1);
-\draw [->](i12) to (i1);
-\draw [->](i13) to (i12);
-\draw [->](r1) to (i13);
-\draw [->](r12) to (r1);
-
-\draw [dashed, bend left=0] (j) to (join);
-\draw [dashed, bend right=15] (rtx) to (rt);
-\draw [dashed, bend right=20] (i22) to (leaf2);
-\draw [dashed, bend right=40] (i13) to (leaf1);
-%
-\draw [dashed, bend left=22] (leaf0) to (l1);
-\draw [dashed, bend left=14] (leaf0x) to (r1);
-%
-%
-\end{tikzpicture}
-\caption{Selected tables obtained by dynamic programming of instance~$F$ in Example~\ref{ex:running0} using algorithm~${\algo{K}}$ on tree decomposition~${\cal T}'$.}
-\label{fig:running1}
-\end{figure}
-
-
-
-
-\subsection{Detailed Results}
-
-\begin{table}
-  \resizebox{\columnwidth}{!}{%
-    \begin{tabular}{{l|rr|rr||rrr||rrr||rrrrr|rrrr}}
-      \toprule
-      set & N & pre & vMdn& cMdn & t[s] Mdn & t[s] Max & to & t[s] Mdn pre & t[s] Max pre & to & Mdn & 50\% & 80\% & 90\% & 95\% & min & max & mdn & mean \\
-      \midrule
-      \# Proj. & 308 & w/o pre & 68056 & 74016 & 65.39 & 1800.0 & 6 & 0.0 & 0.0 & 0 & 302 & 328 & 1084 & 1872 & ??? & 0 & 0 & 0.0 & 0 \\
-      &  & pmc, B+E & 35762 & 49417 & 29.4 & 1800.0 & 6 & 900.0 & 900.0 & 192 & 179 & 192 & 922 & 1609 & 2225 & -72 & 755 & 0 & 46.33 \\
-      &  & pmc & 35762 & 43769 & 28.27 & 1800.0 & 6 & 211.81 & 900.0 & 103 & 178 & 200 & 988 & 1888 & 2662 & -1839 & 547 & 31 & 10.59 \\
-      &  & B+E & 35762 & 49601 & 29.08 & 1800.0 & 6 & 900.0 & 900.0 & 189 & 178 & 183 & 949 & 1609 & 2225 & 0 & 633 & 0.0 & 48.05 \\
-      \# Weig. & 1080 & w/o pre & 200 & 518 & 0.05 & 1.31 & 0 & 0.0 & 0.0 & 0 & 28 & 28 & 40 & 43 & 48 & 0 & 0 & 0.0 & 0 \\
-      &  & pmc, B+E & 200 & 250 & 0.02 & 0.46 & 0 & 0.02 & 35.84 & 0 & 3 & 3 & 9 & 12 & 15 & 2 & 79 & 23.0 & 25.6 \\
-      &  & pmc & 200 & 123 & 0.02 & 0.58 & 0 & 0.01 & 13.91 & 0 & 3 & 3 & 9 & 13 & 16 & 1 & 81 & 23.0 & 25.11 \\
-      &  & B+E & 200 & 128 & 0.02 & 0.48 & 0 & 0.01 & 33.36 & 0 & 3 & 3 & 9 & 13 & 16 & 2 & 80 & 24 & 26.19 \\
-      \# Basic & 92 & w/o pre & 604 & 1680 & 0.12 & 9.31 & 0 & 0.0 & 0.0 & 0 & 26 & 26 & 63 & 85 & 110 & 0 & 0 & 0.0 & 0 \\
-      &  & pmc, B+E & 604 & 615 & 0.03 & 1.75 & 0 & 0.07 & 35.67 & 0 & 9 & 9 & 18 & 30 & 40 & -2 & 351 & 21.5 & 37.66 \\
-      &  & pmc & 604 & 794 & 0.04 & 8.58 & 0 & 0.05 & 24.05 & 0 & 14 & 15 & 44 & 61 & 88 & 0 & 324 & 9.0 & 24.87 \\
-      &  & B+E & 604 & 701 & 0.03 & 1.51 & 0 & 0.05 & 45.52 & 0 & 9 & 9 & 18 & 27 & 35 & -2 & 349 & 22.0 & 37.3 \\
-      \# Mixed & 14 & w/o pre & 1286 & 11370 & 1.36 & 16.01 & 0 & 0.0 & 0.0 & 0 & 57 & 63 & 399 & 442 & 540 & 0 & 0 & 0.0 & 0 \\
-      &  & pmc, B+E & 1286 & 3196 & 0.23 & 4.12 & 0 & 0.74 & 3.5 & 0 & 41 & 50 & 112 & 133 & 158 & 0 & 428 & 32.5 & 123.71 \\
-      &  & pmc & 1286 & 3760 & 0.38 & 4.25 & 0 & 0.41 & 1.58 & 0 & 41 & 50 & 137 & 164 & 183 & 0 & 403 & 34.0 & 115.86 \\
-      &  & B+E & 1286 & 3278 & 0.27 & 4.28 & 0 & 0.48 & 2.52 & 0 & 52 & 54 & 117 & 141 & 190 & 0 & 423 & 8.0 & 112 \\
-      \bottomrule
-    \end{tabular}
-  }
-  \caption{Detailed results on upper bounds of the primal treewidth for the considered~\cSAT benchmark sets before and after preprocessing.}
-  \label{tab:det}
-\end{table}
-
-Table~\ref{tab:det} contains detailed results grouped by benchmark set
-and shows significant improvements for all benchmark sets.
-%
-Even when considering the hard set~\set{\#Proj}, we observe that we
-could significantly reduce the treewidth upper bounds and could
-decompose more than~95\% of those instances.  Note that we could
-decompose almost all the instances within 1800 seconds, only 6
-instances of set~\set{\#Proj} timed out during decomposition (both
-before and after preprocessing). %
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-
-
-
-\end{document}
-
-%
-
-
-
-
-
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-
-
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-
-%
-Intuitively, algorithm~\algo{K} stores in table~$\tab{t}$ only
-assignments restricted to bag~$\chi_t$, %
-%
-and its counters.
-%
-%
-%
-%
-The stored counters allow to reconstruct the number of
-%
-%
-satisfying assignments of the \emph{formula~$F_{\leq t}$ below~$t$},
-which consists of~$F_{t'}$ for each descendant~$t'$ of~$t$ in~$T$.
-%
-In the end, we can simply read the solution from the table at the root.
-
-
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-
-
-%
-
-%
-%
-%
-%
-%
-
-%
-
-%
-%
-
-%
-
-
-%
-%
-%
-%
-%
-%
-%
-%
-%
-
-
-
-%
-
-%
-%
-%
-%
-%
-%
-%
-
-
-%
-%
-
-%
-%
-%
-%
-
-%
-%
-%
-%
