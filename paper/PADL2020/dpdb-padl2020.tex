@@ -129,7 +129,7 @@
 \newcommand{\SAT}{\textsc{Sat}\xspace}%
 \newcommand{\CSP}{\textsc{Csp}\xspace}%
 \newcommand{\cSAT}{\textsc{\#Sat}\xspace}%
-\newcommand{\cTCOL}{\textsc{\#3Col}\xspace}%
+\newcommand{\cTCOL}{\textsc{\#$o$-Col}\xspace}%
 \newcommand{\VC}{\textsc{MinVC}\xspace}%
 \newcommand{\cVC}{\textsc{\#MinVC}\xspace}%
 \newcommand{\WMC}{\textsc{WMC}\xspace}%
@@ -1235,13 +1235,14 @@ according to the template in Listing~\ref{alg:template}, cf., Listing~\ref{alg:p
 
 \paragraph*{Problem~$\cSAT$.}
 
-Specific parts for~$\cSAT$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$,
-where {\ttfamily ti} refers to the database table~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
+Specific parts for~$\cSAT$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$ and $\varphi_t = \{\{l_{1,1},\ldots,l_{1,k_1}\}, \ldots, \{l_{n,1},\ldots,l_{n,k_n}\}\}$,
+where {\ttfamily ti} refers to the \emph{database table}~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
 \begin{itemize}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}\qquad\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:\; $\varphi_t$
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily $(l_{1,1}$ OR $\ldots$ OR $l_{1,k_1})$ AND $\ldots$ AND $(l_{n,1}$ OR $\ldots$ OR $l_{n,k_n})$}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
 \end{itemize}
 
 Observe that for the corresponding decision problem~$\SAT$, where the goal is to decide only the existence of a satisfying assignment for given formula~$\varphi$, 
@@ -1251,21 +1252,22 @@ since there is no counter needed.
 
 
 \paragraph*{Problem~$\cTCOL$.}
-Given a graph~$G=(V,E)$, a \emph{3-coloring} is a mapping~$\iota: V \rightarrow \{1,2,3\}$
+Given a graph~$G=(V,E)$, a \emph{$o$-coloring} is a mapping~$\iota: V \rightarrow \{1,\ldots,o\}$
 such that for each edge~$\{u,v\}\in E$, we have~$\iota(u)\neq \iota(v)$.
-Problem~$\cTCOL$ asks to count the number of 3-colorings of~$G$.
+Problem~$\cTCOL$ asks to count the number of $o$-colorings of~$G$.
 Local problem~$\cTCOL(t,G)$ is defined by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
 
 Specific parts for~$\cTCOL$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$
-are as follows.
+are as follows, where~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$.
 %
 %where {\ttfamily ti} refers to the database table~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
 \begin{itemize}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 2 UNION ALL 3}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL $\ldots$ UNION ALL $u$}
 	%\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily \cid{u1} OR \cid{ SELECT 1 AS val UNION ALL 2 UNION ALL 3}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily NOT $(\cid{u_1}=\cid{v_1})$ AND $\ldots$ AND NOT $(\cid{u_n}=\cid{v_n})$}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
 \end{itemize}
 
 
@@ -1278,13 +1280,20 @@ Local problem~$\VC(t,G)\eqdef G_t$ is defined as above.
 %by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
 To this end, we use an additional column {\ttfamily card} for storing cardinalities.
 
+Problem $\VC$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$, where~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$ can be specified as follows.
+
 \begin{itemize}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 0 AS card}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}\qquad\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:\; $\varphi_t$
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily MIN(card) AS card}
-	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 0 AS card}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily $(\cid{u_1}$ OR $\cid{v_1})$ AND $\ldots$ AND $(\cid{u_n}$ OR $\cid{v_n})$}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily MIN(card) AS card}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}%{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
 \end{itemize}
 
+Similar to \VC and \cTCOL one can model several other (graph) problems.
+One could also think of counting the number of solutions of problem \VC,
+where both a column for cardinalities and one for counting is used. 
+There, in addition to grouping with {\ttfamily GROUP BY} in \dpdb, we additionally could use the {\ttfamily HAVING} construct of SQL.
 
 
 %#\begin{algorithm}[h]
@@ -2058,7 +2067,7 @@ model counting~\cite{FichteEtAl18d,FichteHecher19,FichteHecherMeier19}.
 \clearpage
 %
 \bibliographystyle{splncs04}
-\bibliography{dpdb-padl2020.bib}
+\bibliography{dpdb-padl2020}
 %
 
 
