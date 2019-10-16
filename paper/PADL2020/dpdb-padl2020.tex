@@ -198,7 +198,7 @@
 \title{Exploiting Database Management Systems and Treewidth for Counting%
   %
   \thanks{%
-    Our tool~\gpusatnu is available under GPL3 license
+    Our system~\dpdb is available under GPL3 license
     at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/TODOv1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.
     %
   %
@@ -557,7 +557,7 @@ Further, wet let \emph{$\theta$-join} correspond to~$R \bowtie_\varphi R' \eqdef
 \todo{mh: group by}
 
 
-\section{Relating Dynamic Programming and~Relational~Algebra}
+\section{Towards Relational Algebra for Dynamic Programming}
 A solver based on \emph{dynamic programming (DP)} %for formulas
 evaluates the input~$\mathcal{I}$ in parts along a given TD of a graph representation~$G$
 of the input.
@@ -629,7 +629,7 @@ The DP approach works for many problems~$\mathcal{P}$ as follows. %proceeds in f
     % 
   } %
   %\Return $\tab{t}$ \vspace{-0.25em}
-  \caption{Table algorithm~$\algo{S}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT~\cite{SamerSzeider10b} using nice TDs.}
+  \caption{Table algorithm~$\algo{S}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT~\cite{SamerSzeider10b} using nice~TD.}
   \label{alg:prim}
   \algorithmfootnote{%
     \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
@@ -828,7 +828,7 @@ The \emph{primal graph}~$G_\varphi$~\cite{SamerSzeider10b} of a formula~$\varphi
 has as vertices its variables, where two variables are joined by an edge
 if they occur together in a clause of~$\varphi$.
 Given formula~$\varphi$, a TD~$\mathcal{T}=(T,\chi)$ of~$G_\varphi$
-and a node~$t\in T$.
+and a node~$t$ of $T$.
 %For brevity, we refer
 %by~\emph{treewidth} \emph{of} a \emph{formula} to the treewidth of its
 %primal graph. 
@@ -953,7 +953,7 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
 \end{example}%
 
 
-\paragraph*{Towards Relational Algebra.}
+\paragraph*{Alternative: Relational Algebra.}
 \noindent Instead of using set theory to describe how tables are obtained during dynamic programming 
 are performed, one could alternatively use relational algebra. % or equivalent.
 There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
@@ -1004,7 +1004,7 @@ Finally, for a node~$t$ with~$\type(t)=\join$, we use again $\theta$-joins (and 
     % 
   } %
   %\Return $\tab{t}$ \vspace{-0.25em}
-  \caption{Table algorithm~$\algo{S_{RAlg}}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT using~nice~TDs.}
+  \caption{Alternative table algorithm~$\algo{S_{RAlg}}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT.}
   \label{alg:primdb}
    %\algorithmfootnote{%
    % \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
@@ -1037,12 +1037,13 @@ depending on the problem~$\mathcal{P}$. Steps outside Step~3 are mainly setup ta
 the yellow ``E''s indicate \emph{events} that might be needed to solve more complex problems
 on the polynomial hierarchy. 
 For example, one could create and drop auxiliary sub-tables for each node during Step~3 within such events.
-Observe that Step~2b automatically creates tables~$\tab{t}$ for each node~$t$,
+Observe that after the generation of a TD~$\mathcal{T}=(T,\chi)$, 
+Step~2b automatically creates tables~$\tab{t}$ for each node~$t$ of~$T$,
 where the corresponding table schema of~$\tab{t}$ is specified in the blue part, i.e., 
 within~$\algo{A_{RAlg}}$. 
 The \emph{default schema} of such a table~$\tab{t}$ that is assumed in this section foresees one column for each element of the bag~$\chi(t)$, where additional columns such as counters or costs can be added.
 
-Actually, the core of this architecture is focused on the table algorithm~$\algo{A_{RAlg}}$, shown in blue. 
+Actually, the core of this architecture is focused on the table algorithm~$\algo{A_{RAlg}}$ executed for each node~$t$ of~$T$ of TD~$\mathcal{T}=(T,\chi)$. 
 Besides the definition of table schemes, the blue part concerns specification of the table algorithm by means of a procedural \emph{generator template} that describes 
 how to dynamically obtain SQL code\footnote{Recall that SQL is a specific implementation standard (set) of relational algebra.} for each node~$t$ thereby oftentimes depending on~$\chi(t)$.
 This generated SQL code is then used internally for manipulation of 
@@ -1051,7 +1052,7 @@ traversal in Step~3 of dynamic programming.
 %
 Listing~\ref{alg:template} presents a general template, where parts of table algorithms for problems that are typically problem-specific are replaced by colored placeholders of the form~$\textcolor{\inputPredColor}{\#\mathsf{placeHolder}\#}$, cf., Listing~\ref{alg:primdb}.
 Note, however, that the whole architecture does not depend 
-on certain normalization or forms of TDs, i.e., whether it is nice or not.
+on certain normalization or forms of TDs, e.g., whether it is nice or not.
 %the architecture foresees 
 Instead, a table algorithm of any TD is simply specified by 
 handling \emph{problem-specific} implementations of the placeholders of Listings~\ref{alg:template}, where the system following this architecture is responsible for interleaving and overlapping these cases within a node~$t$.
@@ -1063,14 +1064,14 @@ In fact, we discuss an implementation of a system according to this architecture
 \centering
   {\noindent\includegraphics[]{1-figs/figure.pdf}}
   \caption{Architecture of Dynamic Programming with Databases. Steps highlighted in red are provided by the system depending on specification of yellow and blue parts, which is given by the user for specific problems~$\mathcal{P}$. The yellow ``E''s represent events that can be intercepted and handled by the user. 
-  The blue part concentrates on the table algorithm, where the user partly specifies how SQL code~is~generated in a modular~way.}
+  The blue part concentrates on table algorithm~$\algo{A_{RAlg}}$, where the user specifies how SQL code~is~generated in a modular~way.}
   \label{fig:arch}
 %
 \end{figure*}
 
 \begin{algorithm}[t]
 %\centering
-  \KwData{Node~$t$, bag $\chi(t)$, problem~$\mathcal{I}_t$,
+  \KwData{Node~$t$, bag $\chi(t)$, instance~$\mathcal{I}_t$,
     sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table $\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
    %
   {$\type(t) = \leaf$}{\label{line:leaf}%
@@ -1103,7 +1104,7 @@ In fact, we discuss an implementation of a system according to this architecture
     % 
   }
   %\Return $\tab{t}$ \vspace{-0.25em}
-  \caption{Template of~$\algo{A_{RAlg}}(t,\chi(t),\mathcal{I}_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for instance~$\mathcal{I}$ of $\mathcal{P}$.}
+  \caption{Template of~$\algo{A_{RAlg}}(t,\chi(t),\mathcal{I}_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ of Figure~\ref{fig:arch} for problem~$\mathcal{P}$.}
   \label{alg:template}
 \end{algorithm}%
 
@@ -1121,22 +1122,60 @@ In fact, we discuss an implementation of a system according to this architecture
 
 \subsection{System~\dpdb: Dynamic Programming with Databases}
 
-We implemented the proposed architecture of the previous section in the \dpdb system.
-The system is open-source, written in Python 3 and uses PostgreSQL as database.
+We implemented the proposed architecture of the previous section in the prototypical \dpdb system.
+The system is open-source\footnote{Our system~\dpdb is available under GPL3 license
+    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/TODOv1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.}, written in Python 3 and uses PostgreSQL as database.
+We are convinced though that one can easily replace PostgreSQL by any other state-of-the-art relational database that uses SQL.
+%
+%
+In the following, we discuss implementation specifics that are crucial for a performant system that is still extendable and flexible.
 
 
-In the following, we discuss implementation specifics that are crucial.
+
+\paragraph*{Computing TDs.}
+TDs are computed with the library \emph{htd} version~1.2 with default
+settings~\cite{AbseherMusliuWoltran17a}, which works extremely quick
+also for interesting instances~\cite{FichteHecherZisser19} due to heuristics.
+Thereby, it is crucial to not enforce htd to compute nice TDs, as this would cause a lot of overhead later in \dpdb for copying tables.
+However, in order to benefit from the implementation of $\theta$-joins,
+query optimization and state-of-the-art database technology in general, 
+we observed that it is crucial to limit the number of child nodes of every TD node.
+Then, especially when there are huge tables involved, joins among child node tables
+cover at most a limited number of child node tables.
+In consequence, the query plan optimizer of the database system still has a chance
+to come up with meaningful execution plans depending on the contents of the table.
+Note that it is not wise though to consider joins which do not take into account just two tables,
+since this already fixes in which order these tables shall be combined,
+thereby again limiting the query plan optimizer.
+Apart from this trade-off, we tried to outsource the task of joining tables to the database as much as possible, since the performance of database systems highly depend on query plan optimization. % and should know best, how to join.
+This actual limit, which is a restriction from experience and practice only, highly depends on the database that is used.
+For PostgreSQL, we set a limit of at most~$5$ child nodes for each node of the TD,
+i.e., each join covers at most 5 child tables.
+
+\paragraph*{Towards non-nice TDs.}
+Although this paper presents the algorithms for nice TDs (mainly due to simplicity),
+the system \dpdb interleaves these cases as presented in 
+Listing~\ref{alg:template} automatically.
+Concretely, the system executes one query per table~$\tab{t}$ for each node~$t$ during the TD traversal.
+
+%In other words, for each table~$\tab{t}$ of each node~$t$ of~$T$
+
+\paragraph*{Parallelization.} A further reason to not over-restrict the number of child nodes within the TD, lies in parallelization.
+In \dpdb, we compute tables in parallel along the TD,
+where multiple tables can be computed at the same time,
+as long as the child tables are computed.
+Therefore, we tried to keep the number of child nodes in the TD as high as possible.
+In our system \dpdb, we currently allow 
+for at most 24 worker threads for table computations and 24 database connections at the same time (both pooled and configurable).
+On top of that we have 2 additional threads and database connections for job assignments to workers, as well as one dedicated watcher thread for clean-up and termination of connections, respectively.
+
+
+
+\paragraph*{Query Plan Optimizer.}
+
 
 \paragraph*{Target Database.}
 
-\paragraph*{Normalization.}
-First of all, for reasons of solving performance later, we need to interleave the/
-
-\paragraph*{Node Workers.}
-
-\paragraph*{JOIN Kinder.}
-
-\paragraph*{Query Plan Optimizer.}
 
 \paragraph*{TODO:}
 \begin{itemize}
@@ -1150,6 +1189,8 @@ First of all, for reasons of solving performance later, we need to interleave th
 	\item Supported DIMACS formats: cnf, td, tw, edge
 	\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
 \end{itemize}
+
+\subsection{Table algorithms with~\dpdb for selected problems}
 
 Pseudocode for sharpsat:
 
