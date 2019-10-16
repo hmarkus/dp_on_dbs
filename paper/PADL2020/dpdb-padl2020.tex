@@ -1166,7 +1166,7 @@ This query consists of serveral parts and we briefly explain its parts from outs
 First of all, the inner-most part concerns the \emph{row candiates} for~$\tab{t}$ consisting of the $\theta$-join as in Line~\ref{line:join} of Listing~\ref{alg:template}, including parts of Line~\ref{line:intr}, namely cross-joins for each introduced variable, involving $\#\mathsf{intrTab}\#$ without the filtering on $\#\mathsf{localProbFilter}\#$.
 Then, there are different configurations of \dpdb concerning these row candidates.
 For debugging (see below) one could (1) actually materialize the result in a table,
-whereas for performance runs, one should use (2) \emph{common table expressions (CTEs or $\mathsf{WITH}$-queries)} or (3) \emph{subqueries (nested queries)}, which both result in one nested SQL query per table~$\tab{t}$. 
+whereas for performance runs, one should use (2) \emph{common table expressions (CTEs or {\ttfamily WITH}-queries)} or (3) \emph{subqueries (nested queries)}, which both result in one nested SQL query per table~$\tab{t}$. 
 On top of these row candidates, projection\footnote{Actually, \dpdb keeps only columns relevant for the table of the parent node of~$t$.} and grouping involving~$\#\mathsf{aggrExp}\#$ as in Line~\ref{line:rem} of Listing~\ref{alg:template}, as well as selection acording to~$\#\mathsf{localProbFilter}\#$, cf., Line~\ref{line:intr}, is specified.
 It turns out that PostgreSQL can do better with subqueries, where the query optimizer
 oftentimes pushes selection and projection into the subquery if needed, which
