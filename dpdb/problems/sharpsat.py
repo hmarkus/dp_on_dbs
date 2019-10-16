@@ -1,5 +1,6 @@
 # -*- coding: future_fstrings -*-
 import logging
+from collections import defaultdict
 
 from dpdb.reader import CnfReader
 from dpdb.problem import *
@@ -29,15 +30,16 @@ class SharpSat(Problem):
         return ["sum(model_count) AS model_count"]
 
     def filter(self,node):
-        return filter(self.clauses, node)
+        return filter(self.var_clause_dict, node)
 
     def prepare_input(self, fname):
         input = CnfReader.from_file(fname)
         self.num_vars = input.num_vars
         self.num_clauses = input.num_clauses
         self.clauses = input.clauses
+        self.var_clause_dict = defaultdict(set)
 
-        return cnf2primal(input.num_vars, input.clauses)
+        return cnf2primal(input.num_vars, input.clauses, self.var_clause_dict)
 
     def setup_extra(self):
         def create_tables():
