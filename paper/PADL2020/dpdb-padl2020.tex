@@ -129,6 +129,9 @@
 \newcommand{\SAT}{\textsc{Sat}\xspace}%
 \newcommand{\CSP}{\textsc{Csp}\xspace}%
 \newcommand{\cSAT}{\textsc{\#Sat}\xspace}%
+\newcommand{\cTCOL}{\textsc{\#3Col}\xspace}%
+\newcommand{\VC}{\textsc{MinVC}\xspace}%
+\newcommand{\cVC}{\textsc{\#MinVC}\xspace}%
 \newcommand{\WMC}{\textsc{WMC}\xspace}%
 \DeclareMathOperator{\tw}{tw}
 \DeclareMathOperator{\dom}{dom}
@@ -552,7 +555,7 @@ Then, we let~$\dom(R)\eqdef \bigcup_{a\in \attr(R)}\dom(a)$, and let relation~$R
 %This can be lifted to \emph{extended projection~$\dot\Pi_{E}(R)$}, where
 We define \emph{renaming} of~$R$ given set~$A$ of attributes, and a bijective mapping~$m:\attr(R) \rightarrow A$ s.t.\ $\dom(a)=\dom(m(a))$ for~$a\in\attr(R)$, by~$\rho_m(R) \eqdef \{(m(a),v) \mid (a,v)\in R\}$.
 \emph{Selection} of rows in $R$ according to a given Boolean formula~$\varphi$ with equality\footnote{We allow for~$\varphi$ to contain expressions~$v{\approx}v'$ as variables for $v,v'\in\dom(R)\cup\attr(R)$, and we abbreviate for $v\in\attr(R)$ with~$\dom(v)=\{0,1\}$, $v{\approx}1$ by~$v$ and~$v{\approx}0$ by~$\neg v$.} is defined by~$\sigma_{\varphi}(R)\eqdef \{ r \mid r\in R, \varphi(r^E)=\emptyset \}$, where~$r^{E}$ is a truth assignment over~$\var(\varphi)$ such that for each~$v,v',v''\in\dom(R)\cup\attr(R)$ (1) $r^E(v{\approx}v')=1$ if $(v, v')\in r$, (2) $r^E(v{\approx}v)=1$, (3) $r^E(v{\approx}v')=r^E(v'{\approx}v)$, and (4) if $r^E(v{\approx}v')=1$, and $r^E(v'{\approx}v'')=1$, then $r^E(v{\approx}v'')=1$.
-Given a relation~$R'$ with~$\attr(R')\cap\attr(R)=\emptyset$. Then, we refer to the \emph{Cartesian product} by~$R\times R'\eqdef \{ r\cup r' \mid r\in R, r'\in R'\}$.
+Given a relation~$R'$ with~$\attr(R')\cap\attr(R)=\emptyset$. Then, we refer to the \emph{cross-join} by~$R\times R'\eqdef \{ r\cup r' \mid r\in R, r'\in R'\}$.
 Further, wet let \emph{$\theta$-join} correspond to~$R \bowtie_\varphi R' \eqdef \sigma_\varphi(R\times R')$.
 \todo{mh: group by}
 
@@ -957,7 +960,7 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
 \noindent Instead of using set theory to describe how tables are obtained during dynamic programming 
 are performed, one could alternatively use relational algebra. % or equivalent.
 There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
-Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute $cnt$ for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
+Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute \text{cnt} for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
 Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
 This step from set notation to relational algebra is driven by the observation that in these table algorithms one can identify recurring patterns, and one mainly has to adjust problem-specific parts of it (highlighted by coloring in Listing~\ref{alg:prim}).
 %
@@ -966,7 +969,7 @@ In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fres
 Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins with a fresh initial table for the introduced variable~$a$ that represent potential values~$a$ can have. In Line~\ref{line:intr} the selection of the $\theta$-join is performed by ensuring~$\varphi_t$, corresponding to the local problem of~\cSAT.
 Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms oftentimes need projection. 
 In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
-Finally, for a node~$t$ with~$\type(t)=\join$, we use again $\theta$-joins (and extended projection for maintaining counters), which allows us later to leverage database technology of the last decades.
+Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use again $\theta$-joins (and extended projection for maintaining counters), which allows us later to leverage database technology of the last decades.
 
 
 \begin{algorithm}[t]
@@ -974,22 +977,22 @@ Finally, for a node~$t$ with~$\type(t)=\join$, we use again $\theta$-joins (and 
   \KwData{Node~$t$, bag $\chi(t)$, clauses~$\varphi_t$,
     sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table $\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
    %
-  {$\type(t) = \leaf$}{\label{line:leaf}%
-    $\tab{t} \eqdef \tuplecolor{\inputPredColor}{\{ \{{(cnt, 1)}\} \}}$%
+  {$\type(t) = \leaf$}{%
+    $\tab{t} \eqdef \tuplecolor{\inputPredColor}{\{ \{{(\text{cnt}, 1)}\} \}}$ \label{line:leaf}%
   }%
   \uElseIf{$\type(t) = \intr$, and
-    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ \label{line:intr}%
-    $\tab{t}\eqdef \tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\varphi_t}} \tuplecolor{\inputPredColor}{\{\{(\cid{a},0)\},\{(\cid{a},1)\}\}}$
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
+    $\tab{t}\eqdef \tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\varphi_t}} \tuplecolor{\inputPredColor}{\{\{(\cid{a},0)\},\{(\cid{a},1)\}\}}$\label{line:intr}
     \hspace{-5em}\vspace{-0.05em}
        % 
   }\vspace{-0.05em}%
   % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
-  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{\label{line:rem}%
-    $\tab{t} \eqdef {_{\chi(t)}G}_{\tuplecolor{\inputPredColor}{\text{SUM}(cnt)}}(\Pi_{{\attr(\tab{1})\setminus\{\cid{a}}\}}\tab{1})$ \hspace{-5em} \vspace{-0.1em}
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{%
+    $\tab{t} \eqdef {_{\chi(t)}G}_{\tuplecolor{\inputPredColor}{\text{cnt$\leftarrow$\ttfamily SUM}(\text{cnt})}}(\Pi_{{\attr(\tab{1})\setminus\{\cid{a}}\}}\tab{1})$\label{line:rem} \hspace{-5em} \vspace{-0.1em}
      %
   } %
-  \uElseIf{$\type(t) = \join$}{\label{line:join}%
-    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\attr(\tab{1})}[\dot\Pi_{\tuplecolor{\inputPredColor}{\{cnt \leftarrow cnt \cdot cnt'\}}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$}  %\{ \langle
+  \uElseIf{$\type(t) = \join$}{%
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\attr(\tab{1})}[\dot\Pi_{\tuplecolor{\inputPredColor}{\{\text{cnt} \leftarrow \text{cnt} \cdot \text{cnt}'\}}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$} \label{line:join} %\{ \langle
       %\tuplecolor{\inputPredColor}{I},
       %\tuplecolor{\statePredColor}{c_1 \cdot c_2}
       %\rangle
@@ -1074,22 +1077,22 @@ In fact, we discuss an implementation of a system according to this architecture
   \KwData{Node~$t$, bag $\chi(t)$, instance~$\mathcal{I}_t$,
     sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table $\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
    %
-  {$\type(t) = \leaf$}{\label{line:leaf}%
-    $\tab{t} \eqdef \tuplecolor{\inputPredColor}{\#\epsilon\mathsf{Tab}\#}$%
+  {$\type(t) = \leaf$}{%
+    $\tab{t} \eqdef \tuplecolor{\inputPredColor}{\#\epsilon\mathsf{Tab}\#}$ \label{line:leaf2}%
   }%
   \uElseIf{$\type(t) = \intr$, and
-    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ \label{line:intr}%
-    $\tab{t}\eqdef \tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\#\mathsf{localProbFilter}\#}} \tuplecolor{\inputPredColor}{\#\mathsf{intrTab}\#}$
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
+    $\tab{t}\eqdef \tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\#\mathsf{localProbFilter}\#}} \tuplecolor{\inputPredColor}{\#\mathsf{intrTab}\#}$ \label{line:intr2}
     \hspace{-5em}\vspace{-0.05em}
        % 
   }\vspace{-0.05em}%
   % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
-  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{\label{line:rem}%
-    $\tab{t} \eqdef {_{\chi(t)}G}_{\tuplecolor{\inputPredColor}{\#\mathsf{aggrExp}\#}}(\Pi_{\attr(\tab{1})\setminus\{\cid{a}\}}\tab{1})$ \hspace{-5em} \vspace{-0.1em}
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{%
+    $\tab{t} \eqdef {_{\chi(t)}G}_{\tuplecolor{\inputPredColor}{\#\mathsf{aggrExp}\#}}(\Pi_{\attr(\tab{1})\setminus\{\cid{a}\}}\tab{1})$ \label{line:rem2}\hspace{-5em} \vspace{-0.1em}
      %
   } %
-  \uElseIf{$\type(t) = \join$}{\label{line:join}%
-    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\attr(\tab{1})}[\dot\Pi_{\tuplecolor{\inputPredColor}{\#\mathsf{extProj}\#}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$}  %\{ \langle
+  \uElseIf{$\type(t) = \join$}{%
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\attr(\tab{1})}[\dot\Pi_{\tuplecolor{\inputPredColor}{\#\mathsf{extProj}\#}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$} \label{line:join2} %\{ \langle
       %\tuplecolor{\inputPredColor}{I},
       %\tuplecolor{\statePredColor}{c_1 \cdot c_2}
       %\rangle
@@ -1124,7 +1127,7 @@ In fact, we discuss an implementation of a system according to this architecture
 
 We implemented the proposed architecture of the previous section in the prototypical \dpdb system.
 The system is open-source\footnote{Our system~\dpdb is available under GPL3 license
-    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/TODOv1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.}, written in Python 3 and uses PostgreSQL as database.
+    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/TODOv1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.}, written in Python 3 and uses PostgreSQL as DBMS.
 We are convinced though that one can easily replace PostgreSQL by any other state-of-the-art relational database that uses SQL.
 %
 %
@@ -1133,32 +1136,69 @@ In the following, we discuss implementation specifics that are crucial for a per
 
 
 \paragraph*{Computing TDs.}
-TDs are computed with the library \emph{htd} version~1.2 with default
+TDs are computed mainly with the library \emph{htd} version~1.2 with default
 settings~\cite{AbseherMusliuWoltran17a}, which works extremely quick
 also for interesting instances~\cite{FichteHecherZisser19} due to heuristics.
-Thereby, it is crucial to not enforce htd to compute nice TDs, as this would cause a lot of overhead later in \dpdb for copying tables.
+Note that \dpdb directly supports the TD format of recent competitions,
+i.e., one could easily replace the TD library.
+It is crucial though to not enforce htd to compute nice TDs, as this would cause a lot of overhead later in \dpdb for copying tables.
 However, in order to benefit from the implementation of $\theta$-joins,
 query optimization and state-of-the-art database technology in general, 
 we observed that it is crucial to limit the number of child nodes of every TD node.
-Then, especially when there are huge tables involved, joins among child node tables
+Then, especially when there are huge tables involved, $\theta$-joins among child node tables
 cover at most a limited number of child node tables.
-In consequence, the query plan optimizer of the database system still has a chance
+In consequence, the query optimizer of the database system still has a chance
 to come up with meaningful execution plans depending on the contents of the table.
-Note that it is not wise though to consider joins which do not take into account just two tables,
+Note that it is not wise though to consider $\theta$-joins which do not take into account just two tables,
 since this already fixes in which order these tables shall be combined,
-thereby again limiting the query plan optimizer.
-Apart from this trade-off, we tried to outsource the task of joining tables to the database as much as possible, since the performance of database systems highly depend on query plan optimization. % and should know best, how to join.
-This actual limit, which is a restriction from experience and practice only, highly depends on the database that is used.
+thereby again limiting the query optimizer.
+Apart from this trade-off, we tried to outsource the task of joining tables to the DBMS as much as possible, since the performance of database systems highly depend on query optimization. % and should know best, how to join.
+This actual limit, which is a restriction from experience and practice only, highly depends on the DBMS that is used.
 For PostgreSQL, we set a limit of at most~$5$ child nodes for each node of the TD,
-i.e., each join covers at most 5 child tables.
+i.e., each $\theta$-join covers at most 5 child tables.
 
 \paragraph*{Towards non-nice TDs.}
 Although this paper presents the algorithms for nice TDs (mainly due to simplicity),
 the system \dpdb interleaves these cases as presented in 
 Listing~\ref{alg:template} automatically.
 Concretely, the system executes one query per table~$\tab{t}$ for each node~$t$ during the TD traversal. 
-This query consists of serveral parts. 
-First of all, 
+This query consists of serveral parts and we briefly explain its parts from outside to inside. 
+First of all, the inner-most part concerns the \emph{row candiates} for~$\tab{t}$ consisting of the $\theta$-join as in Line~\ref{line:join} of Listing~\ref{alg:template}, including parts of Line~\ref{line:intr}, namely cross-joins for each introduced variable, involving $\#\mathsf{intrTab}\#$ without the filtering on $\#\mathsf{localProbFilter}\#$.
+Then, there are different configurations of \dpdb concerning these row candidates.
+For debugging (see below) one could (1) actually materialize the result in a table,
+whereas for performance runs, one should use (2) \emph{common table expressions (CTEs or {\ttfamily WITH}-queries)} or (3) \emph{subqueries (nested queries)}, which both result in one nested SQL query per table~$\tab{t}$. 
+On top of these row candidates, projection\footnote{Actually, \dpdb keeps only columns relevant for the table of the parent node of~$t$.} and grouping involving~$\#\mathsf{aggrExp}\#$ as in Line~\ref{line:rem} of Listing~\ref{alg:template}, as well as selection acording to~$\#\mathsf{localProbFilter}\#$, cf., Line~\ref{line:intr}, is specified.
+It turns out that PostgreSQL can do better with subqueries, where the query optimizer
+oftentimes pushes selection and projection into the subquery if needed, which
+is not the case for CTEs, as discussed in the PostgreSQL manual~\cite[Sec. 7.8.1]{postgres}. On different DBMS or other vendors, e.g., Oracle, it might be better to use CTEs instead.
+
+\begin{example}\label{ex:dbviews}
+Consider again Example~\ref{ex:running0} and Figure~\ref{fig:graph-td}.
+If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): subqueries, where the row candidates are expressed via a subqueries. Then, for each node~$t_i$ of~$\mathcal{T}$, we \dpdb generates a view~$vi$ 
+as well as a table~$ti$ containing in the end the content of~$vi$.
+Observe that each view only has one column~$a$ for variable~$a$ of~$\varphi$ since the
+truth assignment of the other variables are not needed later.
+Actually, in \dpdb the additional columns are kept (empty, null) for readability.
+This keeps the tables compact, only $t1$ has two rows, $t2$, and $t3$ have only one row.
+We obtain the following views.
+%
+\begin{verbatim}
+CREATE VIEW v1 AS SELECT a, sum(cnt) FROM 
+ (WITH intrTab AS (SELECT true val UNION ALL SELECT false)
+   SELECT i1.val a, i2.val b, i3.val c, 1 cnt 
+          FROM intrTab i1, intrTab i2, intrTab i3)  
+WHERE (NOT a OR b OR c) AND (a OR NOT b OR NOT c) GROUP BY a
+
+CREATE VIEW v2 AS SELECT a, sum(cnt) FROM 
+ (WITH intrTab AS (SELECT true val UNION ALL SELECT false) 
+   SELECT i1.val a, i2.val d, 1 cnt FROM intrTab i1, intrTab i2) 
+WHERE (a OR d) AND (a OR NOT d) GROUP BY a
+
+CREATE VIEW v3 AS SELECT a, sum(cnt) FROM 
+ (SELECT t1.a, t1.cnt * t2.cnt cnt FROM t1, t2 WHERE t1.a = t2.a)
+GROUP BY a\end{verbatim}%
+\vspace{-2em}
+\end{example}%
 
 %In other words, for each table~$\tab{t}$ of each node~$t$ of~$T$
 
@@ -1171,67 +1211,128 @@ In our system \dpdb, we currently allow
 for at most 24 worker threads for table computations and 24 database connections at the same time (both pooled and configurable).
 On top of that we have 2 additional threads and database connections for job assignments to workers, as well as one dedicated watcher thread for clean-up and termination of connections, respectively.
 
-\paragraph*{Logging and Debugging.} Currently, we currently have two versions of the \dpdb system implemented. 
+\paragraph*{Logging, Debugging and Extensions.} Currently, we currently have two versions of the \dpdb system implemented. 
 One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances).
 In particular, in the latter we keep all the intermediate results, we record database timestamps before and after certain nodes, provide statistics as, e.g., width, number of rows, etc.
-Further, since for each table~$\tab{t}$, exactly one SQL statement is executed for filling this table, we also have a dedicated view of the SQL SELECT statement, whose result was inserted.
+Further, since for each table~$\tab{t}$, exactly one SQL statement is executed for filling this table, we also have a dedicated view of the SQL {\ttfamily SELECT} statement, whose result was inserted.
 Together with the power and flexibility of SQL queries, we observed that this really helps in finding errors in the table algorithm specifications.
 
-\paragraph*{Configurations and Extensions.} Within one node~$t$ the computation of~$\tab{t}$ uses child tables of~$t$.
+Besides convient debugging, system \dpdb immediately
+contains an extension for approximation.
+There, we restrict the table contents to a maximum number of rows.
+This allows for certain approximations on counting problems or
+optimization problems, where it is infeasible to compute the full tables.
+Further, \dpdb foresees a dedicated randomization on these restricted number of rows
+such that if one repeats the computation with a different random seed,
+we obtain different approximate results.
 
-\paragraph*{Query Plan Optimizer.}
+\subsection{Table algorithms with~\dpdb for selected problems}
 
+The system \dpdb allows for \emph{easy protyping} of DP algorithms on TDs.
+This covers decision problems, counting problems as well as optimization problems.
+As a proof of concept, we present the relevant parts of table algorithm specification
+according to the template in Listing~\ref{alg:template}, cf., Listing~\ref{alg:primdb}.
+
+\paragraph*{Problem~$\cSAT$.}
+
+Specific parts for~$\cSAT$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$,
+where {\ttfamily ti} refers to the database table~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
+\begin{itemize}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}\qquad\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:\; $\varphi_t$
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
+\end{itemize}
+
+Observe that for the corresponding decision problem~$\SAT$, where the goal is to decide only the existence of a satisfying assignment for given formula~$\varphi$, 
+$\#\mathsf{epsilon Tab}\#$ returns the empty table and 
+parts $\#\mathsf{aggrExp}\#, \#\mathsf{extProj}\#$ are just empty 
+since there is no counter needed.
+
+
+\paragraph*{Problem~$\cTCOL$.}
+Given a graph~$G=(V,E)$, a \emph{3-coloring} is a mapping~$\iota: V \rightarrow \{1,2,3\}$
+such that for each edge~$\{u,v\}\in E$, we have~$\iota(u)\neq \iota(v)$.
+Problem~$\cTCOL$ asks to count the number of 3-colorings of~$G$.
+Local problem~$\cTCOL(t,G)$ is defined by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
+
+Specific parts for~$\cTCOL$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$
+are as follows.
+%
+%where {\ttfamily ti} refers to the database table~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
+\begin{itemize}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 2 UNION ALL 3}
+	%\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily \cid{u1} OR \cid{ SELECT 1 AS val UNION ALL 2 UNION ALL 3}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
+\end{itemize}
+
+
+
+\paragraph*{Problem~\VC.}
+Given a graph~$G=(V,E)$, a \emph{vertex cover} is a set of vertices~$C\subseteq V$ of~$G$
+such that for each edge~$\{u,v\}\in E$, we have~$\{u,v\}\cap C\neq \emptyset$.
+Then, \VC asks to find the minimum cardinality~$|C|$ among all vertex cover~$C$, i.e., $C$ is such that there is no vertex cover~$C'$ with~$|C'| < |C|$. 
+Local problem~$\VC(t,G)\eqdef G_t$ is defined as above. 
+%by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
+To this end, we use an additional column {\ttfamily card} for storing cardinalities.
+
+\begin{itemize}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 0 AS card}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}\qquad\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:\; $\varphi_t$
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily MIN(card) AS card}
+	\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
+\end{itemize}
+
+
+
+%#\begin{algorithm}[h]
+%#  \KwData{Node~$t${~\bf Out:} SQL query}
+%#  \KwRet{\{0,1\}}\;
+%#  \caption{introduce}
+%#  \label{alg:introduce}
+%#\end{algorithm}
+%#
+%#\begin{algorithm}[h]
+%#  \KwData{Node~$t${~\bf Out:} SQL expression}
+%#  \KwRet{"sum(cnt)"}\;
+%#  \caption{aggregate}
+%#  \label{alg:aggregate}
+%#\end{algorithm}
+%#
+%#\begin{algorithm}[h]
+%#  \KwData{Node~$t${~\bf Out:} SQL WHERE-condition}
+%#  \KwRet{$\varphi_t$}\;
+%#  \caption{filter}
+%#  \label{alg:filter}
+%#\end{algorithm}
+%#
+%#\begin{algorithm}[h]
+%#  \KwData{Node~$t$, sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} SQL expression}
+%#  \KwRet{"$\tab{1}.cnt * \ldots * \tab{\ell}.cnt$"}\;
+%#  \caption{extra\_projection}
+%#  \label{alg:extraprojection}
+%#\end{algorithm}
+%#
+%#\if 0
+%#["{} AS model_count".format(
+%#                " * ".join(set([var2cnt(node,v) for v in node.vertices] +
+%#                               [node2cnt(n) for n in node.children])) if node.vertices or node.children else "1"
+%#                )]
+%#\fi
+%#
 
 \paragraph*{TODO:}
 \begin{itemize}
-	\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
-	\item limit result rows (+ possibly randomize) of each node for faster approximations.
+	%\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
+	%\item limit result rows (+ possibly randomize) of each node for faster approximations.
 	\item approximate memory used by db for one of the largest problems solved
-	\item mention candidate store options? (table, common table expression (CTE), subquery). We use subquery per default (fastest on postgres), CTE might be faster on oracle)
 	\item Supported DIMACS formats: cnf, td, tw, edge
 	\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
 \end{itemize}
 
-\subsection{Table algorithms with~\dpdb for selected problems}
 
-The system \dpdb allows for \emph{easy protyping}
-
-Pseudocode for sharpsat:
-
-\begin{algorithm}[h]
-  \KwData{Node~$t${~\bf Out:} SQL query}
-  \KwRet{\{0,1\}}\;
-  \caption{introduce}
-  \label{alg:introduce}
-\end{algorithm}
-
-\begin{algorithm}[h]
-  \KwData{Node~$t${~\bf Out:} SQL expression}
-  \KwRet{"sum(cnt)"}\;
-  \caption{aggregate}
-  \label{alg:aggregate}
-\end{algorithm}
-
-\begin{algorithm}[h]
-  \KwData{Node~$t${~\bf Out:} SQL WHERE-condition}
-  \KwRet{$\varphi_t$}\;
-  \caption{filter}
-  \label{alg:filter}
-\end{algorithm}
-
-\begin{algorithm}[h]
-  \KwData{Node~$t$, sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} SQL expression}
-  \KwRet{"$\tab{1}.cnt * \ldots * \tab{\ell}.cnt$"}\;
-  \caption{extra\_projection}
-  \label{alg:extraprojection}
-\end{algorithm}
-
-\if 0
-["{} AS model_count".format(
-                " * ".join(set([var2cnt(node,v) for v in node.vertices] +
-                               [node2cnt(n) for n in node.children])) if node.vertices or node.children else "1"
-                )]
-\fi
 
 \section{Experiments}
 \label{sec:experiments}
