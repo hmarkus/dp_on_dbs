@@ -269,16 +269,9 @@ computation.
 \end{abstract}
 
 \section{Introduction}
-\todo{write following part before ``Contribution''}
-The \emph{model counting problem} (\cSAT) asks to compute the number
-of solutions of a propositional formula.
+%\todo{write following part before ``Contribution''}
 %
-A natural generalization of \cSAT is weighted model counting (\WMC),
-where formulas are extended by weights. 
-%
-Both \cSAT and \WMC are special cases of the weighted constraint
-satisfaction problem~\cite{Larrosa02a,ShapiroHaralick81a}. Nonetheless,
-they can
+%they can
 %
 %
 %
@@ -289,171 +282,110 @@ they can
 %
 %
 %
+Counting solutions is a well-known task in mathematics, computer
+science, and other
+areas~\cite{ChakrabortyMeelVardi16a,DomshlakHoffmann07a,GomesKautzSabharwalSelman08a,SangBeameKautz05a}.
 %
-already be used to solve a variety of applications to real-world
-questions in modern society, %
-reasoning, and
-combinatorics~\cite{ChoiBroeckDarwiche15a,DomshlakHoffmann07a,MeelEtAl17a,SangBeameKautz05a,XueChoiDarwiche12a}.
+In combinatorics, for instance, one characterizes the
+number of solutions to problems by means of mathematical
+expressions,~e.g., generating
+functions~\cite{DoubiletRotaStanley1972}.
 %
-Both \cSAT and \WMC are known to be complete for the
-class~\sharpP~\cite{BacchusDalmaoPitassi03,Roth96}.
+%
+One particular counting problem, namely \emph{model counting} (\cSAT) asks to output the number
+of solutions of a given Boolean formula.
+%
+Model counting and variants thereof have already
+%
+been applied for solving a variety of real-world applications~\cite{%to real-world
+%questions in modern society, %
+%related to reasoning, and
+%combinatorics~
+ChakrabortyMeelVardi16a,ChoiBroeckDarwiche15a,MeelEtAl17a,XueChoiDarwiche12a}.
+%
+Such problems are typically considered rather hard,
+since \cSAT %and \WMC are known to be complete for the
+%class~
+is complete for the class
+\sharpP~\cite{BacchusDalmaoPitassi03,Roth96},
+i.e., one can simulate any problem of the polynomial hierarchy
+with polynomially many calls~\cite{Toda91} to a~\cSAT solver.
+%
+However, recently it was shown that the better part~\cite{FichteHecherZisser19} of the 
+publicly available~\cSAT instances, techniques from 
+parameterized complexity~\cite{FlumGrohe06,DowneyFellows13,Niedermeier06,CyganEtAl15} 
+might come to the rescue. %rescue.
+%
+In particular, after using regular preprocessors, e.g., pmc~\cite{LagniezMarquis14}, in this area, 
+more than 80\% of these practically relevant instances (graph representations thereof) 
+have reasonably small treewidth,
+where small treewidth is one of the most cited\footnote{On October 17, 2019, Google Scholar shows 19,200 results on treewidth.} 
+combinatorial invariants.
+%
+To be more concrete, the measure treewidth is a structural parameter of graphs,
+which models the closeness of the graph to being a tree. 
+%
+This, gives rise to a general framework for counting problems
+that leverage treewidth.
+%
+The general idea to develop such frameworks is indeed not new,
+since there are both, specialized solvers~\cite{CharwatWoltran17,FichteHecherZisser19,KiljanPilipczuk18}, as well as general 
+systems like D-FLAT~\cite{BliemEtAl16}, Jatatosk~\cite{BannachBerndt19}, 
+and sequoia~\cite{LangerEtAl12}, that exploit treewidth (to name a few).
+%
+Some of these systems explicitly use \emph{dynamic programming (DP)} 
+to directly exploit treewidth
+by means of so-called \emph{tree decompositions (TDs)},
+whereas others provide some kind of declarative layer to model
+the problem.
+%
+However, for solving problems, most of the general systems~\cite{BannachBerndt19,LangerEtAl12}
+require a descriptive model of the problem, 
+where an abstract view or for example certain logics are used internally,
+but problems in these systems are not directly described by means of 
+dynamic programming algorithms.
+%
+In this work, we solve (counting) problems by means of DP,
+where the algorithm is specified by giving essential parts of the 
+DP algorithm in form of SQL {\ttfamily SELECT} queries.
+The whole DP algorithm is done by our system~\dpdb,
+which employs \emph{database management systems (DBMS)}~\cite{Ullman89} for solving.
+%
+This has not only the advantage of naturally describing and manipulating the tables
+that are obtained during DP, but also allows us to leverage from decades of
+database technology in form of the capability to deal with huge tables
+using limited amount of main memory (RAM),
+dedicated implementations of database joins, as well as
+query optimization and data-dependent execution plans.
 
-In this paper, we consider both problems from the practical
-perspective. We present and evaluate a new version of a parallel model
-counter, called \gpusatnu, which is based on \emph{dynamic programming
-  (DP)} on tree decompositions (TDs)~\cite{SamerSzeider10b}.
 %
-The idea of solving \cSAT decomposing graph representations of the
-formula and applying DP on them is in fact quite
-well-known~\cite{SamerSzeider10b} and has earlier already been
-introduced for the constraint satisfaction problem (\CSP) by
-Kask~\etal~\cite{KaskEtAl01a}.
+%overall idea is
 %
+%for~\cSAT in fact 
 %
-Its underlying ideas are as follows.  A TD of a propositional
-formula~$F$ is defined on a graph representation of~$F$ and formalizes
-a certain static relationship of the variables of~$F$ among each
-other. The decomposition then gives rise to an evaluation order and to
-sets of variables, which define which variables have to be evaluated
-together when solving the given formula. Intuitively, the width of a
-TD indicates how many variables have to be considered exhaustively
-together during the computation.
-%
-Our previous solver~\gpusatone{} already implements DP-based weighted
-model counting and model counting using uniform weights on a
-GPU~\cite{FichteEtAl18c}.
-%
-%
-%
-%
-Prior to this,
-Fioretto~\etal~\cite{FiorettoPontelliYeoh18} presented an approach and
-implementation to compute one solution in weighted \CSP, which could
-also be extended to solve the sum-of-products problem\footnote{The
-  sum-of-product problem is often also referred to as weighted
-  counting, partition function, or probability of evidence.}.
-%
-%
-Here, we focus on an efficient computation and implementation of \cSAT
-solving by introducing a novel architecture in our solver \gpusatnu.
-%
-%
-We focus on the so-called primal graph as graph representation, even
-though the incidence graph~\cite{SamerSzeider10b} theoretically allows
-for smaller width (off by one), mainly because simplicity of
-algorithms on the primal graph often outweighs the benefits of
-potential smaller
-width~\cite{FichteEtAl17a,FichteEtAl18c}. %
-%
-%
-%
-%
-Our solver implements the principle of parallel programming of single
-instructions on multiple threads (SIMT) on a GPU. Therefore, we
-parallelize by executing the computation of variables that have to be
-considered exhaustively together on multiple threads\shortversion{.}%
-\longversion{, since the
-computation of an assignment to these variables is independent of
-other~assignments~during~DP. } %
-%
-%
-%
-%
-%
-%
-
 %
 \paragraph{Contribution.}  
-We implement a solver \dpdb for solving counting problems based on dynamic programming on tree decompositions,
+We implement a system \dpdb for solving counting problems based on dynamic programming on tree decompositions,
 and present the following contributions.
-(i) Our solver \dpdb uses database management systems to efficiently handle table operations needed
+(i) Our system \dpdb uses database management systems to efficiently handle table operations needed
 for performing dynamic programming efficiently. The system \dpdb is written in Python and employs PostgreSQL as DBMS,
 but can work with other DBMSs easily.
 (ii) The architecture of \dpdb allows to solve general problems of bounded treewidth that can be solved by
-by means of table operations (in form of SQL) on tree decompositions. As a result, \dpdb is a generalized framework 
+by means of table operations (in form of relational algebra and SQL) on tree decompositions. As a result, \dpdb is a generalized framework 
 for dynamic programming on tree decompositions, where one only needs to specify the essential and problem-specific parts of dynamic programming
 in order to solve (counting) problems.
 (iii) Finally, we show how to solve the canonical problem \cSAT with the help of \dpdb, 
 where it seems that the architecture of \dpdb
-is particularly well-suited. In particular, we compare the runtime of
-our system with state-of-the-art model counters, where we observe competitive behavior.
+is particularly well-suited. Concretely, we compare the runtime of
+our system with state-of-the-art model counters, where we observe competitive behavior
+and promising indications for future work.
 %
-
-\paragraph{Related Work.} \todo{lots of it}
-Fioretto \etal~\cite{FiorettoPontelliYeoh18} introduced a solver for
-outputting a solution to the weighted CSP problem using a GPU. Their
-technique is effectively a version of dynamic programming on tree
-decompositions also known as bucket-elimination, which they limited to
-an incomplete elimination by introducing shortcuts and discarding
-non-optimal solutions in order to speed up the computation for the
-problem of outputting just one solution. While the underlying idea of
-a dynamic programming based solver still exists in our solver,
-\gpusatnu is very different when just taking a slightly more detailed
-look. We approach the \emph{counting question -- not just outputting
-  one solution}, which disallows certain simplifications. We can
-neither apply an incomplete bucket-elimination technique (mini-bucket
-elimination) nor discard non-optimal solutions. But then, we consider
-the binary case, which allows us to introduce various simplifications
-including the way we store the data enabling us to save memory and to
-avoid copying data.
-  %
-  Also, we would like to point out that bucket-elimination is used in
-  the decomposer htd to compute just the tree decomposition. In that
-  way, our architecture is quite general as it completely separates the
-  decomposition and the actual computation part resulting in a 
-  framework that can also be used for other problems.
-  %
-  Moreover, we use more sophisticated data structures and split data
-  whenever the data does not fit into the VRAM of the GPU.
-  %
-  Finally, we balance between small width during the computation and
-  not too small width as we want to employ the full computational power
-  of the parallelization with the GPU.
-%
-In the past, a variety of model counters and weighted model counters
-have been implemented based on several different techniques. We listed
-them in details in Section~\ref{sec:experiments}. However, here we
-want to highlight a few differences between our technique and
-knowledge compilation-based techniques as well as distributed
-computing. The solver d4~\cite{LagniezMarquis17a}, which implements a
-knowledge compilation-based approach, employs heuristics to compute
-decompositions of an underlying hypergraph, namely the dual
-hypergraph, and uses this during the computation. Note that the
-following relationships are known for treewidth (i.e., the width of a
-tree decomposition of smallest width) of an arbitrary 
-formula~$F$, $\inctw(F) \leq \dualtw(F) + 1$ and
-$\inctw(F) \leq \primtw(F) + 1$, where $\inctw$ refers to the treewidth
-of the incidence graph, $\dualtw$ of the dual graph, and $\primtw$ of
-the primal graph.
-%
-%
-%
-%
-%
-%
-However, there is no such relationship between the treewidth of the
-primal and dual graph. We are currently unaware of how these
-theoretical results generalize to hypergraphs.
-%
-%
-Experimentally, it is easy to verify that a decomposition of the dual
-graph is often not useful in our context as it provides only
-decompositions of large width.
-%
-When we consider parallel solving, a few words on distributed counting
-are in order. In fact, the model counter DMC
-\cite{LagniezMarquisSzczepanski18a} is intended for parallel
-computation on a cluster of computers using the message passing model
-(MPI). However, this distributed computation requires a separate setup
-of the cluster and exclusive access to multiple nodes. We focus on
-parallel counting with a shared memory model. For details, we refer to
-the difference between parallel and distributed
-computation~\cite{Raynal15a}.
-
-
 
 
 \section{Preliminaries}
+
+We assume familiarity with terminology of graphs and trees.
+For details, we refer to the literature and standard textbooks~\cite{BondyMurty08,Diestel12}.
 
 \refstepcounter{algocf}\label{fig:prim1}%
 \paragraph*{Boolean Satisfiability.}
@@ -617,8 +549,8 @@ and a TD~$\TTT$ of~$G$ of width~$2$.
 \paragraph*{Relational Algebra.}%
 We use relational algebra~\cite{Codd70} for manipulation of relations,
 which forms the theoretical basis of its the well-known implementation database standard 
-\emph{Structured Query Language (SQL)}~\cite{} on tables.
-\todo{mh: db master ref}
+\emph{Structured Query Language (SQL)}~\cite{Ullman89} on tables.
+%\todo{mh: db master ref}
 An \emph{attribute}~$a$ is of a certain finite \emph{domain~$\dom(a)$}.
 Then, a \emph{tuple}~$r$ over set~$\attr(r)$ of attributes,
 is a set of pairs of the form~$(a, v)$ with~$a\in\attr(r),v\in \dom(a)$ s.t.\ for each~$a\in \attr(r)$, there is exactly one~$v\in\dom(a)$ with~$(a,v)\in r$.
@@ -1482,7 +1414,7 @@ instances), %
 and \instances{c2d} benchmarks\footnote{See:
   \href{http://reasoning.cs.ucla.edu/c2d/results.html}{\nolinkurl{reasoning.cs.ucla.edu/c2d}}}
 (14 instances).
-However, we used instances after being preprocessed by pmc,
+However, we used instances after being preprocessed by pmc~\cite{LagniezMarquis14},
 similar to a recent work on~\cSAT~\cite{FichteHecherZisser19}
 There, more than 80\% of the \cSAT instances have primal treewidth below~19
 after preprocessing.
