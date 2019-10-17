@@ -263,7 +263,8 @@ computation.
   %
   \keywords{Dynamic Programming \and
     Parameterized Algorithmics \and Bounded Treewidth \and
-    Counting \and Database Management Systems}
+    Database Management Systems \and SQL \and Relational Algebra \and
+    Counting \and Model Counting}
 \end{abstract}
 
 \section{Introduction}
@@ -378,6 +379,77 @@ our system with state-of-the-art model counters, where we observe competitive be
 %
 
 \paragraph{Related Work.} \todo{lots of it}
+Fioretto \etal~\cite{FiorettoPontelliYeoh18} introduced a solver for
+outputting a solution to the weighted CSP problem using a GPU. Their
+technique is effectively a version of dynamic programming on tree
+decompositions also known as bucket-elimination, which they limited to
+an incomplete elimination by introducing shortcuts and discarding
+non-optimal solutions in order to speed up the computation for the
+problem of outputting just one solution. While the underlying idea of
+a dynamic programming based solver still exists in our solver,
+\gpusatnu is very different when just taking a slightly more detailed
+look. We approach the \emph{counting question -- not just outputting
+  one solution}, which disallows certain simplifications. We can
+neither apply an incomplete bucket-elimination technique (mini-bucket
+elimination) nor discard non-optimal solutions. But then, we consider
+the binary case, which allows us to introduce various simplifications
+including the way we store the data enabling us to save memory and to
+avoid copying data.
+  %
+  Also, we would like to point out that bucket-elimination is used in
+  the decomposer htd to compute just the tree decomposition. In that
+  way, our architecture is quite general as it completely separates the
+  decomposition and the actual computation part resulting in a 
+  framework that can also be used for other problems.
+  %
+  Moreover, we use more sophisticated data structures and split data
+  whenever the data does not fit into the VRAM of the GPU.
+  %
+  Finally, we balance between small width during the computation and
+  not too small width as we want to employ the full computational power
+  of the parallelization with the GPU.
+%
+In the past, a variety of model counters and weighted model counters
+have been implemented based on several different techniques. We listed
+them in details in Section~\ref{sec:experiments}. However, here we
+want to highlight a few differences between our technique and
+knowledge compilation-based techniques as well as distributed
+computing. The solver d4~\cite{LagniezMarquis17a}, which implements a
+knowledge compilation-based approach, employs heuristics to compute
+decompositions of an underlying hypergraph, namely the dual
+hypergraph, and uses this during the computation. Note that the
+following relationships are known for treewidth (i.e., the width of a
+tree decomposition of smallest width) of an arbitrary 
+formula~$F$, $\inctw(F) \leq \dualtw(F) + 1$ and
+$\inctw(F) \leq \primtw(F) + 1$, where $\inctw$ refers to the treewidth
+of the incidence graph, $\dualtw$ of the dual graph, and $\primtw$ of
+the primal graph.
+%
+%
+%
+%
+%
+%
+However, there is no such relationship between the treewidth of the
+primal and dual graph. We are currently unaware of how these
+theoretical results generalize to hypergraphs.
+%
+%
+Experimentally, it is easy to verify that a decomposition of the dual
+graph is often not useful in our context as it provides only
+decompositions of large width.
+%
+When we consider parallel solving, a few words on distributed counting
+are in order. In fact, the model counter DMC
+\cite{LagniezMarquisSzczepanski18a} is intended for parallel
+computation on a cluster of computers using the message passing model
+(MPI). However, this distributed computation requires a separate setup
+of the cluster and exclusive access to multiple nodes. We focus on
+parallel counting with a shared memory model. For details, we refer to
+the difference between parallel and distributed
+computation~\cite{Raynal15a}.
+
+
 
 
 \section{Preliminaries}
@@ -545,6 +617,7 @@ and a TD~$\TTT$ of~$G$ of width~$2$.
 We use relational algebra~\cite{Codd70} for manipulation of relations,
 which forms the theoretical basis of its the well-known implementation database standard 
 \emph{Structured Query Language (SQL)}~\cite{} on tables.
+\todo{mh: db master ref}
 An \emph{attribute}~$a$ is of a certain finite \emph{domain~$\dom(a)$}.
 Then, a \emph{tuple}~$r$ over set~$\attr(r)$ of attributes,
 is a set of pairs of the form~$(a, v)$ with~$a\in\attr(r),v\in \dom(a)$ s.t.\ for each~$a\in \attr(r)$, there is exactly one~$v\in\dom(a)$ with~$(a,v)\in r$.
@@ -958,22 +1031,6 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
 \end{example}%
 
 
-\paragraph*{Alternative: Relational Algebra.}
-\noindent Instead of using set theory to describe how tables are obtained during dynamic programming 
-are performed, one could alternatively use relational algebra. % or equivalent.
-There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
-Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute \text{cnt} for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
-Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
-This step from set notation to relational algebra is driven by the observation that in these table algorithms one can identify recurring patterns, and one mainly has to adjust problem-specific parts of it (highlighted by coloring in Listing~\ref{alg:prim}).
-%
-%
-In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fresh initial table $\tab{t}$, cf., Line~\ref{line:leaf} of Listing~\ref{alg:primdb}.
-Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins with a fresh initial table for the introduced variable~$a$ that represent potential values~$a$ can have. In Line~\ref{line:intr} the selection of the $\theta$-join is performed by ensuring~$\varphi_t$, corresponding to the local problem of~\cSAT.
-Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms oftentimes need projection. 
-In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
-Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use again $\theta$-joins (and extended projection for maintaining counters), which allows us later to leverage database technology of the last decades.
-
-
 \begin{algorithm}[t]
 %\centering
   \KwData{Node~$t$, bag $\chi(t)$, clauses~$\varphi_t$,
@@ -1024,6 +1081,31 @@ Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use ag
 \end{algorithm}%
 
 
+\paragraph*{Alternative: Relational Algebra.}
+\noindent Instead of using set theory to describe how tables are obtained during dynamic programming 
+are performed, one could alternatively use relational algebra. % or equivalent.
+There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
+Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute \text{cnt} for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
+Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
+This step from set notation to relational algebra is driven by the observation that in these table algorithms one can identify recurring patterns, and one mainly has to adjust problem-specific parts of it (highlighted by coloring in Listing~\ref{alg:prim}).
+%
+%
+In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fresh initial table $\tab{t}$, cf., Line~\ref{line:leaf} of Listing~\ref{alg:primdb}.
+Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins with a fresh initial table for the introduced variable~$a$ that represent potential values~$a$ can have. In Line~\ref{line:intr} the selection of the $\theta$-join is performed by ensuring~$\varphi_t$, corresponding to the local problem of~\cSAT.
+Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms oftentimes need projection. 
+In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
+Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use again $\theta$-joins (and extended projection for maintaining counters), which allows us later to leverage database technology of the last decades.
+
+\begin{figure*}[t]%
+\centering
+  {\noindent\includegraphics[]{1-figs/figure.pdf}}
+  \caption{Architecture of Dynamic Programming with Databases. Steps highlighted in red are provided by the system depending on specification of yellow and blue parts, which is given by the user for specific problems~$\mathcal{P}$. The yellow ``E''s represent events that can be intercepted and handled by the user. 
+  The blue part concentrates on table algorithm~$\algo{A_{RAlg}}$, where the user specifies how SQL code~is~generated in a modular~way.}
+  \label{fig:arch}
+%
+\end{figure*}
+
+
 \section{Dynamic Programming on TDs using Databases~\&~SQL}
 %
 %\begin{figure*}[t]%
@@ -1065,15 +1147,6 @@ In fact, we discuss an implementation of a system according to this architecture
 
 %
 %
-\begin{figure*}[t]%
-\centering
-  {\noindent\includegraphics[]{1-figs/figure.pdf}}
-  \caption{Architecture of Dynamic Programming with Databases. Steps highlighted in red are provided by the system depending on specification of yellow and blue parts, which is given by the user for specific problems~$\mathcal{P}$. The yellow ``E''s represent events that can be intercepted and handled by the user. 
-  The blue part concentrates on table algorithm~$\algo{A_{RAlg}}$, where the user specifies how SQL code~is~generated in a modular~way.}
-  \label{fig:arch}
-%
-\end{figure*}
-
 \begin{algorithm}[t]
 %\centering
   \KwData{Node~$t$, bag $\chi(t)$, instance~$\mathcal{I}_t$,
@@ -1214,19 +1287,28 @@ for at most 24 worker threads for table computations and 24 database connections
 On top of that we have 2 additional threads and database connections for job assignments to workers, as well as one dedicated watcher thread for clean-up and termination of connections, respectively.
 
 \paragraph*{Logging, Debugging and Extensions.} Currently, we currently have two versions of the \dpdb system implemented. 
-One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances).
+One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances), thereby increasing explainability.
 In particular, in the latter we keep all the intermediate results, we record database timestamps before and after certain nodes, provide statistics as, e.g., width, number of rows, etc.
 Further, since for each table~$\tab{t}$, exactly one SQL statement is executed for filling this table, we also have a dedicated view of the SQL {\ttfamily SELECT} statement, whose result is then inserted in~$\tab{t}$.
 Together with the power and flexibility of SQL queries, we observed that this really helps in finding errors in the table algorithm specifications.
 
 Besides convient debugging, system \dpdb immediately
-contains an extension for approximation.
+contains an extension for \emph{approximation}.
 There, we restrict the table contents to a maximum number of rows.
 This allows for certain approximations on counting problems or
 optimization problems, where it is infeasible to compute the full tables.
-Further, \dpdb foresees a dedicated randomization on these restricted number of rows
+Further, \dpdb foresees a dedicated \emph{randomization} on these restricted number of rows
 such that if one repeats the computation with a different random seed,
 we obtain different approximate results.
+
+Note that \dpdb can be easily extended. 
+Each problem can overwrite existing default behavior and \dpdb also supports
+problem-specific argument parser for each problem individually.
+Out-of-the-box, we support the formats DIMACS CNF~\cite{}, DIMACS GRAPH~\cite{}, Edge~\cite{} as well as the format for TDs that has been used in recent competitions~\cite{}.
+\todo{mh: refs!}
+%sibility, 
+%Supported DIMACS formats: cnf, td, tw, edge
+
 
 \subsection{Table algorithms with~\dpdb for selected problems}
 
@@ -1335,41 +1417,45 @@ where only rows are kept, whose column {\ttfamily card} is minimal.
 %#\fi
 %#
 
-\paragraph*{TODO:}
-\begin{itemize}
+%\paragraph*{TODO:}
+%\begin{itemize}
 	%\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
 	%\item limit result rows (+ possibly randomize) of each node for faster approximations.
-	\item approximate memory used by db for one of the largest problems solved
-	\item Supported DIMACS formats: cnf, td, tw, edge
-	\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
-\end{itemize}
+	%\item approximate memory used by db for one of the largest problems solved
+	%\item Supported DIMACS formats: cnf, td, tw, edge
+	%\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
+%\end{itemize}
 
 
 
 \section{Experiments}
 \label{sec:experiments}
 %
-We conducted a series of experiments using several benchmark sets for
-model counting and weighted model counting. Benchmark
-sets~\cite{FichteEtAl18b} and our results~\cite{FichteEtAl19c} are
-publicly available and also on github at
-\href{https://github.com/daajoe/gpusat_experiments/tree/cp2019}{\nolinkurl{daajoe/gpusat_experiments}}.
+We conducted a series of experiments using publicly available benchmark sets for~\cSAT.
+%model counting and weighted model counting. 
+Our tested benchmarks~\cite{FichteEtAl18b} 
+are publicly available,
+and our results are
+also on github at
+\href{https://github.com/hmarkus/dp_on_dbs/tree/padl2020}{\nolinkurl{github.com/hmarkus/dp_on_dbs/padl2020}}.
 
+\subsection{Setup}
 
-
-\paragraph{Measure, Setup, and Resource Enforcements.}
-As we use different types of hardware in our experiments and other
-natural measures such as power consumption cannot be recorded with
-current hardware, we compare wall clock time and number of
-timeouts. In the time we include, if applicable, \emph{preprocessing
-  time} as well as \emph{decomposition time} for computing 30
-decompositions with a random seed and decomposition selection time.
+\paragraph{Measure \& Resources.}
+%As we use different types of hardware in our experiments and other
+%natural measures such as power consumption cannot be recorded with
+%current hardware, 
+We mainly compare wall clock time and number of
+timeouts. 
+In the time we include, if applicable, \emph{preprocessing
+  time} as well as \emph{decomposition time} for computing a %30
+TD with a fixed random seed. % and decomposition selection time.
 %
-However, we avoid IO access on the CPU solvers whenever possible,
-i.e., we load instances into the RAM before we start solving.
+%However, we avoid IO access on the CPU solvers whenever possible,
+%i.e., we load instances into the RAM before we start solving.
 %
-For parallel CPU solvers we allow access to 12 or 24 physical cores on
-machines where hyperthreading was disabled.
+For parallel CPU solvers we allow access to 24 physical cores on
+machines, where hyperthreading was disabled.
 %
 %
 %
@@ -1380,7 +1466,7 @@ instance and solver.
 
 \paragraph{Benchmark Instances.}
 We considered a selection of overall 1494 instances from various
-publicly available benchmark sets for model counting consisting of %
+publicly available benchmark sets~\cSAT consisting of %
 %
 %
 %
@@ -1391,10 +1477,20 @@ instances), %
 and \instances{c2d} benchmarks\footnote{See:
   \href{http://reasoning.cs.ucla.edu/c2d/results.html}{\nolinkurl{reasoning.cs.ucla.edu/c2d}}}
 (14 instances).
+However, we used instances after being preprocessed by pmc,
+similar to a recent work on~\cSAT~\cite{FichteEtAl19}
+There, more than 80\% of the \cSAT instances have primal treewidth below~19
+after preprocessing.
+Before preprocessing
+%, for which decomposer takes 0.1 seconds in median.
 %
-For~\WMC, we used the overall 1091 instances from the
-\instances{Cachet} benchmark set\footnote{See:
-  \href{https://www.cs.rochester.edu/u/kautz/Cachet/Model_Counting_Benchmarks/index.html}{\nolinkurl{cs.rochester.edu/u/kautz/Cachet}}}.
+%Overall, both B+E and pmc managed to \emph{drastically reduce} the
+%widths, the decomposer ran below 0.1 seconds in median.
+%
+%
+%For~\WMC, we used the overall 1091 instances from the
+%\instances{Cachet} benchmark set\footnote{See:
+%  \href{https://www.cs.rochester.edu/u/kautz/Cachet/Model_Counting_Benchmarks/index.html}{\nolinkurl{cs.rochester.edu/u/kautz/Cachet}}}.
 %
 
 \paragraph{Benchmarked Solvers.}
@@ -1433,7 +1529,7 @@ and
 \href{https://sites.google.com/site/marcthurley/sharpsat}{\textit{sharpSAT}~13.02}~\cite{Thurley06a}.
 %
 Finally, we also included multi-core solvers
-\href{https://github.com/daajoe/GPUSAT/releases/tag/v0.815-pre}{\textit{gpusat}~1.0}~\cite{FichteEtAl18c}, as well as
+\href{https://github.com/daajoe/GPUSAT/releases/tag/v0.815-pre}{\textit{gpusat}~1.0 and \textit{gpusat}~2.0}~\cite{FichteEtAl19}, as well as
 \textit{countAntom}~1.0~\cite{BurchardSchubertBecker15a} on 12 physical CPU
 cores, which performed better than on 24 cores.
 %
@@ -1444,21 +1540,22 @@ cores, which performed better than on 24 cores.
 %
 %
 %
-Note that we benchmarked additional solvers, which we omitted from the
-presentation here and where we placed results online in our result
-data repository.
-%
-For~\WMC, we considered the following solvers: \textit{sts},
-\textit{\gpusatone}, \gpusatnu, \textit{miniC2D}, \textit{Cachet},
-\textit{d4}, and
+%Note that we benchmarked additional solvers, which we omitted from the
+%presentation here and where we placed results online in our result
+%data repository.
+%%
+%For~\WMC, 
+We considered also additional solvers, e.g., %\textit{sts},
+%\textit{\gpusatone}, \gpusatnu, \textit{miniC2D}, \textit{Cachet},
+%\textit{d4}, and
 \href{http://www.cril.univ-artois.fr/kc/ressources/query-dnnf-0.4.180625.zip}{\textit{d-DNNF
-    reasoner}~0.4.180625} (on top of d4 as underlying knowledge
-compiler). %
+    reasoner}~0.4.180625} on top of d4 as underlying knowledge
+compiler, where detailed results can be found online. %
 All experiments were conducted with default solver options.
 %
 %
-For solver~\gpusatnu, we also benchmarked variant~\gpusatnuv{A+B}
-where we used 30 as threshold above which we apply the BST.
+%For solver~\gpusatnu, we also benchmarked variant~\gpusatnuv{A+B}
+%where we used 30 as threshold above which we apply the BST.
 %
 %
 %
@@ -1469,34 +1566,34 @@ where we used 30 as threshold above which we apply the BST.
 
 
 
-\begin{figure}[bt]
-\centering
-\vspace{0pt}\includegraphics[height=13em]{plot_Width_sat.pdf}%
-\hspace{6pt}\includegraphics[height=13em]{plot_Width_wmc.pdf}%
-\caption{%
-  Width distribution of~\cSAT instances (left) before and after
-  preprocessing (using both B+E and pmc).  Width distribution of~\WMC
-  instances (right) before and after preprocessing using pmc*.
-  Results are based on the primal treewidth and presented in
-  intervals.  X-axis labels the intervals, y-axis labels the number of
-  instances.
-%
-}%
-\label{fig:distribution}
-\end{figure}
+%\begin{figure}[bt]
+%\centering
+%\vspace{0pt}\includegraphics[height=13em]{plot_Width_sat.pdf}%
+%%\hspace{6pt}\includegraphics[height=13em]{plot_Width_wmc.pdf}%
+%\caption{%
+%  Width distribution of~\cSAT instances (left) before and after
+%  preprocessing (using both B+E and pmc).  Width distribution of~\WMC
+%  instances (right) before and after preprocessing using pmc*.
+%  Results are based on the primal treewidth and presented in
+%  intervals.  X-axis labels the intervals, y-axis labels the number of
+%  instances.
+%%
+%}%
+%\label{fig:distribution}
+%\end{figure}
 %
 
-\paragraph{Benchmark Machines.}
+\paragraph{Benchmark Hardware.}
 %
 %
 %
 %
-The non-GPU solvers were executed on a cluster of 9 nodes. Each node is equipped
+Almost all solvers were executed on a cluster of 12 nodes. Each node is equipped
 with two Intel Xeon E5-2650 CPUs consisting of 12 physical cores each
 at 2.2 GHz clock speed and 256 GB RAM. %
 The results were gathered on Ubuntu~16.04.1 LTS machines with disabled hyperthreading
-on kernel~4.4.0-139, which is already a post-Spectre and
-post-Meltdown kernel\footnote{Details on spectre and meltdown: \href{https://spectreattack.com/}{\nolinkurl{spectreattack.com}}.}.
+on kernel~4.4.0-139. %, which is already a post-Spectre and
+%post-Meltdown kernel\footnote{Details on spectre and meltdown: \href{https://spectreattack.com/}{\nolinkurl{spectreattack.com}}.}.
 %
 %
 For~\gpusatone and~\gpusatnu we used a machine equipped with a consumer GPU:
@@ -1549,113 +1646,41 @@ The system operated on Ubuntu~18.04.1 LTS with kernel 4.15.0-34.
 
 
 
-\begin{table}[bt]
-  \centering
-  \resizebox{\columnwidth}{!}{%
-    \begin{tabular}{{l|l|rr|rHr|rHr||rrrrr||rrrH}}
-      \toprule
-      prob & pre &  vMdn & cMdn & t[s] Mdn & t[s] Max & to & t[s] Mdn pre & t[s] Max pre & to & Mdn & 50\% & 80\% & 90\% & 95\% & min & max & mdn & mean \\
-      \midrule
-      \cSAT & w/o pre & 637 & 810 & 0.07 & 1800.0 & \textbf{6} & n/a & n/a & n/a & 31 & 31 & 166 & 378 & 922 & n/a & n/a & n/a & n/a \\
-      & pmc, B+E & \textbf{231} & 350 & 0.02 & 1800.0 & \textbf{6} & 0.06 & 900.0 & 192 & \textbf{3} & \textbf{3} & \textbf{17} & 201 & \textbf{823} & -72 & \textbf{755} & 22 & \textbf{31.9} \\
-      & pmc & \textbf{231} & 189 & 0.03 & 1800.0 & \textbf{6} & \textbf{0.03} & 900.0 & \textbf{103} & \textbf{3} & 4 & 19 & 228 & \textbf{823} & -1839 & 547 & \textbf{23} & 23.1 \\
-      & B+E & \textbf{231} & \textbf{185} & \textbf{0.02} & 1800.0 & \textbf{6} & 0.04 & 900.0 & 189 & \textbf{3} & \textbf{3} & 18 & \textbf{192} & \textbf{823} & 
-                                                                                                                                                                    \textbf{-2} & 633 & \textbf{23} & 31.7 \\
-      \midrule
-      \WMC & w/o pre & \textbf{200} & 519 & 0.04 & 9.21 & \textbf{0} & n/a & n/a & n/a & 28 & 28 & 40 & 43 & 54 & n/a & n/a & n/a & n/a \\
-           & pmc* & \textbf{200} & \textbf{300} & \textbf{0.03} & 1.6 & \textbf{0} & \textbf{0.03} & 1.6 & \textbf{0} & \textbf{11} & \textbf{11} & \textbf{20} & \textbf{25} & \textbf{30} & \textbf{0} & \textbf{330} & \textbf{16} & \textbf{18.8} \\
-      \bottomrule
-    \end{tabular}
-  }
-  \medskip
-  \caption{Overview on upper bounds of the primal treewidth for
-    considered \cSAT and \WMC benchmarks before and after
-    preprocessing.  vMdn median of variables, cMdn median of clauses,
-    t[s] Mdn of the decomposition runtime in seconds, maximum runtime
-    t[s] Max, median Mdn and percentiles of upper bounds on treewidth,
-    and min/max/mdn %
-    of the width improvement after preprocessing. Negative values
-    indicate worse results.  }
-\label{tab:tw_combined}
-  \label{tab:tw_combined_wmc}
-\label{tab:detailed}
-\end{table}
-
-\subsection{Results}
-First, we present how existing preprocessors for \cSAT and
-equivalence-preserving preprocessors for~\WMC influence the treewidth
-on the considered instances.
-
-
-
-
-
-
-\paragraph{Treewidth Analysis.}
-We computed upper bounds on the primal %
-treewidth for our benchmarks before and after preprocessing and state
-them in intervals.
-%
-For model-count preserving preprocessing we
-explored both
-\href{http://www.cril.univ-artois.fr/kc/bpe2.html}{B+E~Apr2016}~\cite{LagniezLoncaMarquis16a}
-and
-\href{http://www.cril.univ-artois.fr/kc/pmc.html}{pmc~1.1}~\cite{LagniezMarquis14a}.
-%
-For \WMC, we used pmc with documented options \ops{-vivification}
-\ops{-eliminateLit} \ops{-litImplied} \ops{-iterate=10} to preserve
-all the models, which we refer to by~\emph{pmc*}.
-%
-%
-In this experiment, we used different timeouts. We set the timeout of
-the preprocessors to 900 seconds and allowed further 1800 seconds for
-the decomposer to get a detailed picture of treewidth upper bounds.
-%
-Figure~\ref{fig:distribution} (left) presents the width distribution
-of number of instances (y-axis) and their corresponding upper bounds
-(x-axis) for primal treewidth, both before and after preprocessing
-using B+E, pmc, and both preprocessors in combination (first pmc, then
-B+E) for~\cSAT.
-%
-Table~\ref{tab:tw_combined} (top) provides statistics on the
-benchmarks combined, including runtime of the preprocessor, runtime of
-the decomposer to obtain a decomposition, upper bounds on primal
-treewidth, and its improvements before and after
-preprocessing. 
-%
-Further, the table also lists the median of the widths of the obtained
-decompositions and their percentiles, which is the treewidth upper
-bound a given percentage of the instances have.
-%
-%
-%
-Interestingly, overall we have that a majority of the instances
-after preprocessing has width below~20.
-%
-In more details, more than 80\% of the \cSAT instances have primal 
-treewidth below~19
-after preprocessing, whereas 90\% of the instances have
-treewidth below~192 for B+E.
-%
-With pmc we observed a corner case where the primal treewidth upper
-bound increased by 1839, however, on average we observed a mean
-improvement on the upper bound of slightly above 23. %
-The best improvement among the widths of all our instances was
-achieved with the combination of pmc and B+E where we improved the
-width by~755.
-%
-Overall, both B+E and pmc managed to \emph{drastically reduce} the
-widths, the decomposer ran below 0.1 seconds in median.
-%
-Interestingly, even the upper bounds on the treewidth of the \WMC
-instances reduced with pmc* as depicted in
-Figure~\ref{fig:distribution} (right).  In more detail, after
-preprocessing 95\% of the instances have primal treewidth below~30,
-c.f., Table~\ref{tab:tw_combined} (bottom).
+%\begin{table}[bt]
+%  \centering
+%  \resizebox{\columnwidth}{!}{%
+%    \begin{tabular}{{l|l|rr|rHr|rHr||rrrrr||rrrH}}
+%      \toprule
+%      prob & pre &  vMdn & cMdn & t[s] Mdn & t[s] Max & to & t[s] Mdn pre & t[s] Max pre & to & Mdn & 50\% & 80\% & 90\% & 95\% & min & max & mdn & mean \\
+%      \midrule
+%      \cSAT & w/o pre & 637 & 810 & 0.07 & 1800.0 & \textbf{6} & n/a & n/a & n/a & 31 & 31 & 166 & 378 & 922 & n/a & n/a & n/a & n/a \\
+%      & pmc, B+E & \textbf{231} & 350 & 0.02 & 1800.0 & \textbf{6} & 0.06 & 900.0 & 192 & \textbf{3} & \textbf{3} & \textbf{17} & 201 & \textbf{823} & -72 & \textbf{755} & 22 & \textbf{31.9} \\
+%      & pmc & \textbf{231} & 189 & 0.03 & 1800.0 & \textbf{6} & \textbf{0.03} & 900.0 & \textbf{103} & \textbf{3} & 4 & 19 & 228 & \textbf{823} & -1839 & 547 & \textbf{23} & 23.1 \\
+%      & B+E & \textbf{231} & \textbf{185} & \textbf{0.02} & 1800.0 & \textbf{6} & 0.04 & 900.0 & 189 & \textbf{3} & \textbf{3} & 18 & \textbf{192} & \textbf{823} & 
+%                                                                                                                                                                    \textbf{-2} & 633 & \textbf{23} & 31.7 \\
+%      \midrule
+%      \WMC & w/o pre & \textbf{200} & 519 & 0.04 & 9.21 & \textbf{0} & n/a & n/a & n/a & 28 & 28 & 40 & 43 & 54 & n/a & n/a & n/a & n/a \\
+%           & pmc* & \textbf{200} & \textbf{300} & \textbf{0.03} & 1.6 & \textbf{0} & \textbf{0.03} & 1.6 & \textbf{0} & \textbf{11} & \textbf{11} & \textbf{20} & \textbf{25} & \textbf{30} & \textbf{0} & \textbf{330} & \textbf{16} & \textbf{18.8} \\
+%      \bottomrule
+%    \end{tabular}
+%  }
+%  \medskip
+%  \caption{Overview on upper bounds of the primal treewidth for
+%    considered \cSAT and \WMC benchmarks before and after
+%    preprocessing.  vMdn median of variables, cMdn median of clauses,
+%    t[s] Mdn of the decomposition runtime in seconds, maximum runtime
+%    t[s] Max, median Mdn and percentiles of upper bounds on treewidth,
+%    and min/max/mdn %
+%    of the width improvement after preprocessing. Negative values
+%    indicate worse results.  }
+%\label{tab:tw_combined}
+%  \label{tab:tw_combined_wmc}
+%\label{tab:detailed}
+%\end{table}
 %
 
+\subsection{Results} % \& Discussion}
 
-\paragraph{Solving Performance Analysis.}
 %
 %
 %
@@ -1824,41 +1849,6 @@ solver and solves the most instances having width below 30.
 %
 \end{table}%
 
-While we focus on \cSAT with our implementation, we also conducted the
-experiments with \WMC in order to compare our solver with \gpusatone
-in the setting for which it was designed.  Table~\ref{tab:wmcresults}
-(top) lists results of the top five best solvers capable of
-solving~\WMC on our instances. Compared to \gpusatone, our solver
-\gpusatnu shows an improvement when the width of the instance is
-between 21 and 40, in more detail \gpusatnu solves 44 instances more.
-%
-%
-%
-%
-%
-%
-After preprocessing with~pmc*, one can observe that the majority of
-the instances has width below 20,~c.f., Table~\ref{tab:wmcresults}
-(bottom). As a result, \gpusatnu does not provide significant
-improvement over \gpusatone there apart from small runtime
-improvements.
-%
-
-
-
-Currently, we are unable to measure the speed-up of the
-implementations in terms of the used cores, mainly due to the fact
-that we aimed for an implementation that is close to \gpusatone so
-that the improvements are actually from the architectural changes and
-not just from the different framework or drivers. Note that OpenCL does
-not support disabling certain cores on the
-GPU.
-We also benchmarked \gpusatnu on an Nvidia GPU, whose runtimes are quite similar. 
-We also provide 
- preliminary data online with the experiments; which are however not conclusive yet.
-However, we we ran into bugs, which seems to be attributed to 
-the OpenCL1.2 Nvidia driver. Therefore, we aim as future work
- for a new implementation~in~CUDA~\cite{Cook13a}. 
 
 %
 %
@@ -1905,119 +1895,19 @@ the OpenCL1.2 Nvidia driver. Therefore, we aim as future work
 %
 %
 %
+\subsection{Discussion}
+
+\begin{itemize}
+	%\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
+	%\item limit result rows (+ possibly randomize) of each node for faster approximations.
+	\item approximate memory used by db for one of the largest problems solved
+	\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
+\end{itemize}
 
 
-\begin{table}[t]
-  \centering
-  \resizebox{0.8\columnwidth}{!}{%
-  \begin{tabular}{{l|lH||rrrrrrrr||r||rHr}}
-      \toprule
-& solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
-      \midrule\midrule
-      %
-      \parbox[t]{1em}{\multirow{5}{*}{\rotatebox[origin=c]{90}{with pmc*}}} & miniC2D & 1 & 858 & \textbf{164} & \textbf{6} & \textbf{0} & \textbf{0} & 3 & 13 & \textbf{8} & \textbf{1031} & 21.29 & 2 \\
-      & \gpusatone & 4.4E-6 & \textbf{866} & 158 & 0 & \textbf{0} & \textbf{0} & 0 & \textbf{348} & 4 & 1024 & 18.03 & 3 \\
-      %
-      & \gpusatnuv{A+B} & 4.4E-6 & \textbf{866} & 156 & 0 & \textbf{0} & \textbf{0} & 0 & 343 & {4} & 1022 & \textbf{17.86} & 4 \\
-      & \gpusatnu & 4.4E-6 & \textbf{866} & 138 & 0 & \textbf{0} & \textbf{0} & 0 & 299 & 4 & 1004 & 22.43 & 4 \\
-      %
-      %
-      & d4 & \textbf{0} & 810 & 106 & 0 & \textbf{0} & \textbf{0} & 0 & 46 & 0 & 916 & 55.36 & 5 \\
-      %
-      & cachet & \textbf{0} & 617 & 128 & 1 & \textbf{0} & \textbf{0} & 3 & 106 & 1 & 749 & 93.65 & 6 \\
-      \midrule
-      \midrule
-      %
-      \parbox[t]{1em}{\multirow{5}{*}{\rotatebox[origin=c]{90}{without pre}}}& d4 & 5.8E-5 & 82 & 501 & \textbf{142} & \textbf{156} & \textbf{10} & \textbf{19} & 111 & \textbf{24} & \textbf{910} & \textbf{53.97} & 2 \\
-& miniC2D & 1 & 84 & 517 & 134 & 152 & 3 & 4 & 19 & 7 & 894 & 59.69 & 3 \\
-      %
-      & \gpusatnuv{A+B} & 4.4E-6 & \textbf{86} & \textbf{527} & 98 & 138 & 0 & 0 & 167 & {19} & 849 & 64.40 & 4 \\	
-      & \gpusatnu & 4.4E-6 & \textbf{86} & 511 & 98 & 138 & 0 & 0 & 131 & 7 & 833 & 68.61 & 4 \\
-      %
-      %
-      & \gpusatone & 4.4E-6 & \textbf{86} & 513 & 68 & 140 & 0 & 0 & \textbf{182} & 10 & 807 & 73.78 & 5 \\
-      %
-      & cachet & \textbf{0} & 60 & 447 & 100 & 145 & 2 & 9 & 118 & 1 & 763 & 89.80 & 6 \\
-      \bottomrule
-    \end{tabular}
-  }
-  \caption{Number of~\WMC instances solved (with)out preprocessing. time[h] is the cumulated  wall clock time in hours, where unsolved instances count as 900 seconds.}
-\label{tab:wmcresults}
-\end{table}
-
-\section{Related Work and Conclusion}
-\paragraph*{Related Work.}
-Fioretto \etal~\cite{FiorettoPontelliYeoh18} introduced a solver for
-outputting a solution to the weighted CSP problem using a GPU. Their
-technique is effectively a version of dynamic programming on tree
-decompositions also known as bucket-elimination, which they limited to
-an incomplete elimination by introducing shortcuts and discarding
-non-optimal solutions in order to speed up the computation for the
-problem of outputting just one solution. While the underlying idea of
-a dynamic programming based solver still exists in our solver,
-\gpusatnu is very different when just taking a slightly more detailed
-look. We approach the \emph{counting question -- not just outputting
-  one solution}, which disallows certain simplifications. We can
-neither apply an incomplete bucket-elimination technique (mini-bucket
-elimination) nor discard non-optimal solutions. But then, we consider
-the binary case, which allows us to introduce various simplifications
-including the way we store the data enabling us to save memory and to
-avoid copying data.
-  %
-  Also, we would like to point out that bucket-elimination is used in
-  the decomposer htd to compute just the tree decomposition. In that
-  way, our architecture is quite general as it completely separates the
-  decomposition and the actual computation part resulting in a 
-  framework that can also be used for other problems.
-  %
-  Moreover, we use more sophisticated data structures and split data
-  whenever the data does not fit into the VRAM of the GPU.
-  %
-  Finally, we balance between small width during the computation and
-  not too small width as we want to employ the full computational power
-  of the parallelization with the GPU.
-%
-In the past, a variety of model counters and weighted model counters
-have been implemented based on several different techniques. We listed
-them in details in Section~\ref{sec:experiments}. However, here we
-want to highlight a few differences between our technique and
-knowledge compilation-based techniques as well as distributed
-computing. The solver d4~\cite{LagniezMarquis17a}, which implements a
-knowledge compilation-based approach, employs heuristics to compute
-decompositions of an underlying hypergraph, namely the dual
-hypergraph, and uses this during the computation. Note that the
-following relationships are known for treewidth (i.e., the width of a
-tree decomposition of smallest width) of an arbitrary 
-formula~$F$, $\inctw(F) \leq \dualtw(F) + 1$ and
-$\inctw(F) \leq \primtw(F) + 1$, where $\inctw$ refers to the treewidth
-of the incidence graph, $\dualtw$ of the dual graph, and $\primtw$ of
-the primal graph.
-%
-%
-%
-%
-%
-%
-However, there is no such relationship between the treewidth of the
-primal and dual graph. We are currently unaware of how these
-theoretical results generalize to hypergraphs.
-%
-%
-Experimentally, it is easy to verify that a decomposition of the dual
-graph is often not useful in our context as it provides only
-decompositions of large width.
-%
-When we consider parallel solving, a few words on distributed counting
-are in order. In fact, the model counter DMC
-\cite{LagniezMarquisSzczepanski18a} is intended for parallel
-computation on a cluster of computers using the message passing model
-(MPI). However, this distributed computation requires a separate setup
-of the cluster and exclusive access to multiple nodes. We focus on
-parallel counting with a shared memory model. For details, we refer to
-the difference between parallel and distributed
-computation~\cite{Raynal15a}.
 
 
+\section{Conclusion}
 %
 
 
@@ -2030,7 +1920,7 @@ computation~\cite{Raynal15a}.
 %
 
 
-\paragraph{Conclusion.}
+%\paragraph{Conclusion.}
 We presented an improved OpenCL-based solver~\gpusatnu for
 solving~\cSAT and~\WMC.  Compared to the weighted model counter
 \gpusatone that uses the GPU, our solver \gpusatnu implements adapted
@@ -2067,7 +1957,7 @@ model counting~\cite{FichteEtAl18d,FichteHecher19,FichteHecherMeier19}.
 %
 %
 
-\clearpage
+%\clearpage
 %
 \bibliographystyle{splncs04}
 \bibliography{dpdb-padl2020}
