@@ -1181,15 +1181,15 @@ This query consists of serveral parts and we briefly explain its parts from outs
 First of all, the inner-most part concerns the \emph{row candiates} for~$\tab{t}$ consisting of the $\theta$-join as in Line~\ref{line:join} of Listing~\ref{alg:template}, including parts of Line~\ref{line:intr}, namely cross-joins for each introduced variable, involving $\#\mathsf{intrTab}\#$ without the filtering on $\#\mathsf{localProbFilter}\#$.
 Then, there are different configurations of \dpdb concerning these row candidates.
 For debugging (see below) one could (1) actually materialize the result in a table,
-whereas for performance runs, one should use (2) \emph{common table expressions (CTEs or {\ttfamily WITH}-queries)} or (3) \emph{subqueries (nested queries)}, which both result in one nested SQL query per table~$\tab{t}$. 
+whereas for performance runs, one should use (2) \emph{common table expressions (CTEs or {\ttfamily WITH}-queries)} or (3) \emph{sub-queries (nested queries)}, which both result in one nested SQL query per table~$\tab{t}$. 
 On top of these row candidates, projection\footnote{Actually, \dpdb keeps only columns relevant for the table of the parent node of~$t$.} and grouping involving~$\#\mathsf{aggrExp}\#$ as in Line~\ref{line:rem} of Listing~\ref{alg:template}, as well as selection acording to~$\#\mathsf{localProbFilter}\#$, cf., Line~\ref{line:intr}, is specified.
-It turns out that PostgreSQL can do better with subqueries, where the query optimizer
-oftentimes pushes selection and projection into the subquery if needed, which
+It turns out that PostgreSQL can do better with sub-queries, where the query optimizer
+oftentimes pushes selection and projection into the sub-query if needed, which
 is not the case for CTEs, as discussed in the PostgreSQL manual~\cite[Sec. 7.8.1]{postgres}. On different DBMS or other vendors, e.g., Oracle, it might be better to use CTEs instead.
 
 \begin{example}\label{ex:dbviews}
 Consider again Example~\ref{ex:running0} and Figure~\ref{fig:graph-td}.
-If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): subqueries, where the row candidates are expressed via a subqueries. Then, for each node~$t_i$ of~$\mathcal{T}$, we \dpdb generates a view~$vi$ 
+If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): sub-queries, where the row candidates are expressed via a sub-queries. Then, for each node~$t_i$ of~$\mathcal{T}$, we \dpdb generates a view~$vi$ 
 as well as a table~$\tab{i}$ containing in the end the content of~$vi$.
 Observe that each view only has one column~$\cid{a}$ for each variable~$a$ of~$\varphi$ since the
 truth assignment of the other variables are not needed later.
@@ -1684,7 +1684,7 @@ with preprocessor pmc %
 %
 in a cactus-like plot. 
 Table~\ref{tab:sat:merged} presents detailed runtime
-results for~\cSAT with preprocessors pmc, B+E, and without preprocessing, respectively.
+results for~\cSAT with preprocessor pmc, respectively. %B+E, and without preprocessing, respectively.
 %
 %
 %
@@ -1725,11 +1725,12 @@ Interestingly, when considering the results on preprocessing in
 Table~\ref{tab:sat:merged} (top, mid) and Figure~\ref{fig:runtime} we
 observe that the architectural improvements pay off quite
 well. \gpusatnu can solve the vast majority of the instances and
-ranks second place.  If one uses the B+E preprocessor shown in
-Table~\ref{tab:sat:merged} (mid), \gpusatnu solves even more instances
-as well as the other solvers. Still, it ranks fifth solving only 26
-instances less than the best solver and 10 less than the third best
-solver and solves the most instances having width below 30.
+ranks second place.  
+%If one uses the B+E preprocessor shown in
+%Table~\ref{tab:sat:merged} (mid), \gpusatnu solves even more instances
+%as well as the other solvers. Still, it ranks fifth solving only 26
+%instances less than the best solver and 10 less than the third best
+%solver and solves the most instances having width below 30.
 
 \newcommand{\inacc}[1]{\ensuremath{\diamond{}}#1}
 \begin{table}[tb]
@@ -1739,7 +1740,7 @@ solver and solves the most instances having width below 30.
       \toprule
       & solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
       \midrule
-      \parbox[t]{1em}{\multirow{9}{*}{\rotatebox[origin=c]{90}{pmc preprocessing}}}&miniC2D & \textbf{0} & 1193 & 29 & \textbf{10} & 2 & 1 & 7 & 13 & 0 & \textbf{1242} & \textbf{68.77} & 1 \\
+      \parbox[t]{1em}{\multirow{9}{*}{\rotatebox[origin=c]{90}{preprocessed by pmc}}}&miniC2D & \textbf{0} & 1193 & 29 & \textbf{10} & 2 & 1 & 7 & 13 & 0 & \textbf{1242} & \textbf{68.77} & 1 \\
       &\gpusatnu & 4.7E-15 & \textbf{1196} & 32 & 1 & 0 & 0 & 0 & 250 & %
                                                                                      \textbf{8} & 1229 & 71.27 & 2 \\
      %
@@ -1754,57 +1755,57 @@ solver and solves the most instances having width below 30.
       %
       %
       \midrule
-      & solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
-      \midrule
-      \parbox[t]{1em}{\multirow{8}{*}{\rotatebox[origin=c]{90}{B+E preprocessing}}}&c2d & \textbf{0} & 1199 & 24 & \textbf{9} & 0 & 2 & 23 & 14 & 0 & \textbf{1257} & \textbf{63.46} & 1 \\
-      &miniC2D & \textbf{0} & 1203 & \textbf{27} & 8 & 0 & 2 & 12 & 8 & 0 & 1252 & 64.92 & 2 \\
-      &d4 & \textbf{0} & 1182 & 15 & \textbf{9} & \textbf{1} & \textbf{3} & 31 & 79 & 1 & 1241 & 69.32 & 3 \\
-      &countAntom 12 & \textbf{0} & 1177 & 14 & 8 & 0 & 2 & \textbf{34} & 100 & 0 & 1235 & 69.79 & 4 \\
-      %
-      &\gpusatnu & 6.4E-16 & \textbf{1204} & 26 & 1 & 0 & 0 & 0 & \textbf{150} & \textbf{3} & 1231 & 68.15 & 5 \\
-      %
-      &\gpusatnuv{A+B} & {6.4E-16} & 1201 & 21 & 1 & 0 & 0 & 0 & 67 & \textbf{3} & 1223 & 70.39 & 6 \\
-      &sdd & \textbf{0} & 1106 & 11 & 4 & \textbf{1} & 1 & 4 & 0 & 0 & 1127 & 100.48 & 7 \\
-      &\gpusatone & 9.9E-12 & 1037 & 16 & 0 & 0 & 0 & 0 & 87 & %
-                                                               \textbf{3} & 1053 & 110.87 & 8 \\
-                                                               %
-      &bdd\_minisat\_all & \textbf{0} & 926 & 6 & 3 & \textbf{1} & 1 & 0 & 101 & 0 & 937 & 140.59 & 9 \\
-      %
-      \midrule
-      &solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
-      %
-      \midrule
-      \parbox[t]{1em}{\multirow{9}{*}{\rotatebox[origin=c]{90}{without preprocessing}}}& countAntom 12 & \textbf{0} & 118 & 511 & 139 & \textbf{175} & \textbf{21} & \textbf{181} & 318 & 15 & \textbf{1145} & \textbf{96.64} & 1 \\
-      & d4 & \textbf{0} & 124 & 514 & 148 & 162 & \textbf{21} & 168 & 69 & 15 & 1137 & 104.94 & 2 \\
-      & c2d & \textbf{0} & 119 & 525 & \textbf{165} & 161 & 18 & 120 & 48 & 15 & 1108 & 110.53 & 3 \\
-      & miniC2D & \textbf{0} & 122 & 514 & 128 & 149 & 9 & 62 & 0 & 0 & 984 & 141.22 & 4 \\
-      & sharpSAT & \textbf{0} & 100 & 467 & 124 & 156 & 12 & 123 & \textbf{390} & 4 & 982 & 135.41 & 5 \\
-      %
-      %
-      %
-      & \gpusatnuv{A+B} & {9.8E-18} & \textbf{125} & \textbf{539} & 96 & 138 & 0 & 0 & 94 
-                                                                            & \textbf{19} & 898 & 151.16 & 8 \\
-      %
-                                                                            %
-                                                                            %
-                                                                            %
-                                                                            %
-                                                                            %
-      &\gpusatnu & 9.7E-18 & \textbf{125} & 523 & 96 & 138 & 0 & 0 & 78 & 17 & 882 & 155.43 & 8 \\
-      %
-      &\gpusatone & 1.4E-10 & \textbf{125} & 524 & 67 & 140 & 0 & 0 & 82 & %
-                                                                           9 & 856 & 162.03 & 11 \\
-      &cachet & \textbf{0} & 99 & 430 & 71 & 152 & 8 & 57 & 3 & 0 & 817 & 176.26 & 12 \\
-      %
+%      & solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
+%      \midrule
+%      \parbox[t]{1em}{\multirow{8}{*}{\rotatebox[origin=c]{90}{B+E preprocessing}}}&c2d & \textbf{0} & 1199 & 24 & \textbf{9} & 0 & 2 & 23 & 14 & 0 & \textbf{1257} & \textbf{63.46} & 1 \\
+%      &miniC2D & \textbf{0} & 1203 & \textbf{27} & 8 & 0 & 2 & 12 & 8 & 0 & 1252 & 64.92 & 2 \\
+%      &d4 & \textbf{0} & 1182 & 15 & \textbf{9} & \textbf{1} & \textbf{3} & 31 & 79 & 1 & 1241 & 69.32 & 3 \\
+%      &countAntom 12 & \textbf{0} & 1177 & 14 & 8 & 0 & 2 & \textbf{34} & 100 & 0 & 1235 & 69.79 & 4 \\
+%      %
+%      &\gpusatnu & 6.4E-16 & \textbf{1204} & 26 & 1 & 0 & 0 & 0 & \textbf{150} & \textbf{3} & 1231 & 68.15 & 5 \\
+%      %
+%      &\gpusatnuv{A+B} & {6.4E-16} & 1201 & 21 & 1 & 0 & 0 & 0 & 67 & \textbf{3} & 1223 & 70.39 & 6 \\
+%      &sdd & \textbf{0} & 1106 & 11 & 4 & \textbf{1} & 1 & 4 & 0 & 0 & 1127 & 100.48 & 7 \\
+%      &\gpusatone & 9.9E-12 & 1037 & 16 & 0 & 0 & 0 & 0 & 87 & %
+%                                                               \textbf{3} & 1053 & 110.87 & 8 \\
+%                                                               %
+%      &bdd\_minisat\_all & \textbf{0} & 926 & 6 & 3 & \textbf{1} & 1 & 0 & 101 & 0 & 937 & 140.59 & 9 \\
+%      %
+%      \midrule
+%      &solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
+%      %
+%      \midrule
+%      \parbox[t]{1em}{\multirow{9}{*}{\rotatebox[origin=c]{90}{without preprocessing}}}& countAntom 12 & \textbf{0} & 118 & 511 & 139 & \textbf{175} & \textbf{21} & \textbf{181} & 318 & 15 & \textbf{1145} & \textbf{96.64} & 1 \\
+%      & d4 & \textbf{0} & 124 & 514 & 148 & 162 & \textbf{21} & 168 & 69 & 15 & 1137 & 104.94 & 2 \\
+%      & c2d & \textbf{0} & 119 & 525 & \textbf{165} & 161 & 18 & 120 & 48 & 15 & 1108 & 110.53 & 3 \\
+%      & miniC2D & \textbf{0} & 122 & 514 & 128 & 149 & 9 & 62 & 0 & 0 & 984 & 141.22 & 4 \\
+%      & sharpSAT & \textbf{0} & 100 & 467 & 124 & 156 & 12 & 123 & \textbf{390} & 4 & 982 & 135.41 & 5 \\
+%      %
+%      %
+%      %
+%      & \gpusatnuv{A+B} & {9.8E-18} & \textbf{125} & \textbf{539} & 96 & 138 & 0 & 0 & 94 
+%                                                                            & \textbf{19} & 898 & 151.16 & 8 \\
+%      %
+%                                                                            %
+%                                                                            %
+%                                                                            %
+%                                                                            %
+%                                                                            %
+%      &\gpusatnu & 9.7E-18 & \textbf{125} & 523 & 96 & 138 & 0 & 0 & 78 & 17 & 882 & 155.43 & 8 \\
+%      %
+%      &\gpusatone & 1.4E-10 & \textbf{125} & 524 & 67 & 140 & 0 & 0 & 82 & %
+%                                                                           9 & 856 & 162.03 & 11 \\
+%      &cachet & \textbf{0} & 99 & 430 & 71 & 152 & 8 & 57 & 3 & 0 & 817 & 176.26 & 12 \\
+%      %
       \midrule
       &solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
       \bottomrule
     \end{tabular}
   }
   \caption{%
-    Number of~\cSAT instances (grouped by treewidth upper bound intervals)
+    Number of~\cSAT instances, grouped by treewidth upper bound intervals,
     solved by sum of the top five sequential and all parallel counting solvers 
-    with preprocessor pmc (top), B+E (mid), and without preprocessing (bottom).
+    with preprocessor pmc.
     time[h] is the cumulated  wall clock time in hours, where unsolved instances 
     are counted as 900 seconds.
 %
@@ -1859,64 +1860,79 @@ solver and solves the most instances having width below 30.
 %
 %
 %
-\subsection{Discussion}
-\todo{write}
-\begin{itemize}
+%\subsection{Discussion}
+%\todo{write}
+%\begin{itemize}
 	%\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
 	%\item limit result rows (+ possibly randomize) of each node for faster approximations.
-	\item approximate memory used by db for one of the largest problems solved
-	\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
-\end{itemize}
+	%\item approximate memory used by db for one of the largest problems solved
+	%\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
+%\end{itemize}
 
 
 
 
-\section{Conclusion}
+\section{Final Discussion \& Conclusions}
 %
-\todo{write}
-
-
+%\todo{write}
 %
-
 %
-
-
 %
-
-
+%
+%%
+%
+%
+%%
+%
+%
 %\paragraph{Conclusion.}
-We presented an improved OpenCL-based solver~\gpusatnu for
-solving~\cSAT and~\WMC.  Compared to the weighted model counter
-\gpusatone that uses the GPU, our solver \gpusatnu implements adapted
-memory management, specialized data structures on the GPU, improved
-data type precision handling, and an initial approach to use
-customized TDs.
+We presented a generic system~\dpdb for explicitly exploiting treewidth
+by means of dynamic programming on databases.
+The idea of~\dpdb is to use database management systems (DBMS)
+for table manipulation, which makes it (1) easy and elegant to
+perform \emph{rapid prototyping} for problems,
+and (2) allows to leverage from decades of database theory and 
+database system tuning.
 %
-We carried out rigorous experimental work, including establishing
-upper bounds for treewidth after preprocessing of commonly used
-benchmarks and comparing to most recent solvers.
+It turned out that all the cases that occur in dynamic programming can be handled
+quite elegantly with plain SQL queries.
+%
+Our system~\dpdb can be used for both decision and counting problems,
+thereby also considering optimization.
+We see our system particularly well-suited for counting problems,
+especially, since it was shown that for model counting (\cSAT)
+instances of practical relevance typically have small treewidth~\cite{FichteHecherZisser19}.
+%
+%
+In consequence, we carried out preliminary experiments on publicly available instances for~\cSAT, 
+where we see competitive behavior compared to most recent solvers.
 %
 %
 
 \paragraph{Future Work.}
 Our results give rise to several research questions.
-Since established preprocessors are mainly suited for~\cSAT, we are
-interested in additional preprocessing methods for weighted model
-counting (WMC) that reduce the treewidth or at least allow us to
-compute TDs of smaller width.
 %
-It would also be interesting whether GPU-based techniques can
-successfully be used within knowledge compilation-based model
-counters.
+First of all, we want to push towards PostgreSQL 11, but at the same time
+also consider other vendors and systems, e.g., Oracle.
+In particular, the behavior of different systems might change,
+when we use different strategies on how to write and evaluate our SQL queries, 
+e.g., sub-queries vs.\ common table expressions.
 %
-An interesting research direction is to study whether
-efficient data representation techniques can be combined with dynamic
-programming in order to lift our solver to
+Currently, we do not create or use any indices,
+as preliminary tests showed that \emph{meaningful B*tree indices} are hard to create. % in our case.
+%
+Further, the exploration of bitmap indices, as available in Oracle \emph{enterprise DBMS} would be worth trying in our case (and for~\cSAT), 
+since one can efficiently combine database columns by 
+using extremely \emph{efficient bit operations}.
 %
 %
-counting in WCSP~\cite{FiorettoPontelliYeoh18}.
-Further, we are also interested in extending this work to projected
-model counting~\cite{FichteEtAl18d,FichteHecher19,FichteHecherMeier19}.
+An other interesting research direction is to study whether
+efficient data representation techniques on DBMS can be combined with dynamic
+programming in order to lift our solver to quantified Boolean formulas.
+%
+%
+Finally, we are also interested in extending this work to projected
+model counting~\cite{FichteEtAl18d}.
 %
 %
 %
