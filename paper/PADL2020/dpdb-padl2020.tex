@@ -310,23 +310,30 @@ is complete for the class
 \sharpP~\cite{BacchusDalmaoPitassi03,Roth96},
 i.e., one can simulate any problem of the polynomial hierarchy
 with polynomially many calls~\cite{Toda91} to a~\cSAT solver.
+Taming this high complexity is possible with
+techniques from parameterized complexity~\cite{FlumGrohe06,DowneyFellows13,Niedermeier06,CyganEtAl15}. 
+%However, recently it was shown that the better part~\cite{FichteHecherZisser19} of the 
+In fact, many of the
+publicly available~\cSAT instances
+%might come to the rescue. %rescue.
+%%
+%In particular, 
+show good structural properties
+after using regular preprocessors like pmc~\cite{LagniezMarquis14}, see~\cite{FichteHecherZisser19}. 
+%in this area, 
+%more than 80\% of these practically relevant instances (graph representations thereof) 
+By good structural properties, we mean that graph representations of these instance
+have reasonably small \emph{treewidth}.
 %
-However, recently it was shown that the better part~\cite{FichteHecherZisser19} of the 
-publicly available~\cSAT instances, techniques from 
-parameterized complexity~\cite{FlumGrohe06,DowneyFellows13,Niedermeier06,CyganEtAl15} 
-might come to the rescue. %rescue.
-%
-In particular, after using regular preprocessors, e.g., pmc~\cite{LagniezMarquis14}, in this area, 
-more than 80\% of these practically relevant instances (graph representations thereof) 
-have reasonably small treewidth,
-where small treewidth is one of the most cited\footnote{On October 17, 2019, Google Scholar shows 19,200 results on treewidth. Treewidth was also subject of recent competitions~\cite{DellHusfeldtJansen17a,DellKomusiewiczTalmon18a}.} 
-combinatorial invariants.
-%
-To be more concrete, the measure treewidth is a structural parameter of graphs,
-which models the closeness of the graph to being a tree. 
-%
-This, gives rise to a general framework for counting problems
-that leverage treewidth.
+%To be more concrete, the 
+The measure treewidth is a structural parameter of graphs
+which models the closeness of the graph to being a tree 
+%Treewidth 
+and is one of the most cited\footnote{On October 17, 2019, Google Scholar shows 19,200 results on treewidth. Treewidth was also subject of recent competitions~\cite{DellHusfeldtJansen17a,DellKomusiewiczTalmon18a}.} 
+combinatorial invariants studied in parameterized complexity.
+
+This observation gives rise to a general framework for counting problems
+that leverages treewidth.
 %
 The general idea to develop such frameworks is indeed not new,
 since there are both, specialized solvers~\cite{CharwatWoltran17,FichteHecherZisser19,KiljanPilipczuk18}, as well as general 
@@ -337,22 +344,24 @@ Some of these systems explicitly use \emph{dynamic programming (DP)}
 to directly exploit treewidth
 by means of so-called \emph{tree decompositions (TDs)},
 whereas others provide some kind of declarative layer to model
-the problem.
+the problem (and perform decomposition and DP internally).
 %
-However, for solving problems, most of the general systems~\cite{BannachBerndt19,LangerEtAl12}
-require a descriptive model of the problem, 
-where an abstract view or for example certain logics are used internally,
-but problems in these systems are not directly described by means of 
-dynamic programming algorithms.
+%SW: message ist mir nicht klar
+%However, for solving problems, most of the general systems~\cite{BannachBerndt19,LangerEtAl12}
+%require a descriptive model of the problem, 
+%where an abstract view or for example certain logics are used internally,
+%but problems in these systems are not directly described by means of 
+%dynamic programming algorithms.
 %
-In this work, we solve (counting) problems by means of DP,
-where the algorithm is specified by giving essential parts of the 
-DP algorithm in form of SQL {\ttfamily SELECT} queries.
-The whole DP algorithm is done by our system~\dpdb,
-which employs \emph{database management systems (DBMS)}~\cite{Ullman89} for solving.
+In this work, we solve (counting) problems by means of explicitly specified DP algorithms,
+%where the algorithm is specified by 
+where essential parts of the 
+DP algorithm are specified in form of SQL {\ttfamily SELECT} queries.
+The actual run of the DP algorithm is then delegated to our system~\dpdb,
+which employs \emph{database management systems (DBMS)}~\cite{Ullman89}.
 %
 This has not only the advantage of naturally describing and manipulating the tables
-that are obtained during DP, but also allows us to leverage from decades of
+that are obtained during DP, but also allows \dpdb to benefit from decades of
 database technology in form of the capability to deal with huge tables
 using limited amount of main memory (RAM),
 dedicated implementations of database joins, as well as
@@ -367,7 +376,7 @@ query optimization and data-dependent execution plans.
 \paragraph{Contribution.}  
 We implement a system \dpdb for solving counting problems based on dynamic programming on tree decompositions,
 and present the following contributions.
-(i) Our system \dpdb uses database management systems to efficiently handle table operations needed
+(i) Our system \dpdb uses database management systems to handle table operations needed
 for performing dynamic programming efficiently. The system \dpdb is written in Python and employs PostgreSQL as DBMS,
 but can work with other DBMSs easily.
 (ii) The architecture of \dpdb allows to solve general problems of bounded treewidth that can be solved by
@@ -395,7 +404,7 @@ For details, we refer to the literature and standard textbooks~\cite{BondyMurty0
   %
   A literal is a Boolean variable~$x$ or its negation~$\neg
   x$.
-  A \emph{CNF formula}~$\varphi$ is a set of \emph{clauses}, interpreted as conjunction, which are sets of literals
+  A \emph{CNF formula}~$\varphi$ is a set of \emph{clauses} interpreted as conjunction. A clause is a set of literals
   interpreted as disjunction. For a formula or clause~$X$, we
   abbreviate by $\var(X)$ the variables that occur~in~$X$.
 %
@@ -525,13 +534,14 @@ $t'\neq t''$ and $\chi(t) = \chi(t') = \chi(t'')$; $\intr$
 $\chi(t') \subseteq \chi(t)$ and $|\chi(t)| = |\chi(t')| + 1$; $\rem$
 (``removal'') if $t$ has a single child~$t'$,
 $\chi(t') \supseteq \chi(t)$ and $|\chi(t')| = |\chi(t)| + 1$. If for
-every node $t\in N$, %
+every node $t\in V(T)$, %
 $\type(t) \in \{ \leaf, \join, \intr, \rem\}$, then the TD is called \emph{nice}.
 
 \begin{example}
 Figure~\ref{fig:graph-td} depicts a graph~$G$
 and a TD~$\TTT$ of~$G$ of width~$2$.
-  The treewidth of~$G$ is also~$2$ since~$G$ contains~\cite{Kloks94a} a complete graph with~$3$ vertices.
+  The treewidth of~$G$ is also~$2$ since~$G$ contains
+	a complete graph with~$3$ vertices~\cite{Kloks94a}.
  % are depicted in
  % Figure~\ref{fig:graph-td}. 
 \end{example}
@@ -552,7 +562,7 @@ which forms the theoretical basis of its the well-known implementation database 
 \emph{Structured Query Language (SQL)}~\cite{Ullman89} on tables.
 %\todo{mh: db master ref}
 An \emph{attribute}~$a$ is of a certain finite \emph{domain~$\dom(a)$}.
-Then, a \emph{tuple}~$r$ over set~$\attr(r)$ of attributes,
+Then, a \emph{tuple}~$r$ over set~$\attr(r)$ of attributes
 is a set of pairs of the form~$(a, v)$ with~$a\in\attr(r),v\in \dom(a)$ s.t.\ for each~$a\in \attr(r)$, there is exactly one~$v\in\dom(a)$ with~$(a,v)\in r$.
 A \emph{relation~$R$} is a finite set of tuples~$r$ over set~$\attr(R)\eqdef\attr(r)$ of attributes.
 Given a relation~$R$ over~$\attr(R)$.
@@ -565,7 +575,7 @@ Later, we use \emph{aggregation by grouping~$_A G_{(a\leftarrow g)}$}, where we 
 We define \emph{renaming} of~$R$ given set~$A$ of attributes, and a bijective mapping~$m:\attr(R) \rightarrow A$ s.t.\ $\dom(a)=\dom(m(a))$ for~$a\in\attr(R)$, by~$\rho_m(R) \eqdef \{(m(a),v) \mid (a,v)\in R\}$.
 \emph{Selection} of rows in $R$ according to a given Boolean formula~$\varphi$ with equality\footnote{We allow for~$\varphi$ to contain expressions~$v{\approx}v'$ as variables for $v,v'\in\dom(R)\cup\attr(R)$, and we abbreviate for $v\in\attr(R)$ with~$\dom(v)=\{0,1\}$, $v{\approx}1$ by~$v$ and~$v{\approx}0$ by~$\neg v$.} is defined by~$\sigma_{\varphi}(R)\eqdef \{ r \mid r\in R, \varphi(r^E)=\emptyset \}$, where~$r^{E}$ is a truth assignment over~$\var(\varphi)$ such that for each~$v,v',v''\in\dom(R)\cup\attr(R)$ (1) $r^E(v{\approx}v')=1$ if $(v, v')\in r$, (2) $r^E(v{\approx}v)=1$, (3) $r^E(v{\approx}v')=r^E(v'{\approx}v)$, and (4) if $r^E(v{\approx}v')=1$, and $r^E(v'{\approx}v'')=1$, then $r^E(v{\approx}v'')=1$.
 Given a relation~$R'$ with~$\attr(R')\cap\attr(R)=\emptyset$. Then, we refer to the \emph{cross-join} by~$R\times R'\eqdef \{ r\cup r' \mid r\in R, r'\in R'\}$.
-Further, wet let \emph{$\theta$-join} correspond to~$R \bowtie_\varphi R' \eqdef \sigma_\varphi(R\times R')$.
+Further, a \emph{$\theta$-join} (according to $\varphi$) corresponds to~$R \bowtie_\varphi R' \eqdef \sigma_\varphi(R\times R')$.
 
 
 \section{Towards Relational Algebra for Dynamic Programming}
@@ -853,7 +863,7 @@ let local problem~$\cSAT(t, \varphi)=\varphi_t$ be $\varphi_t \eqdef \SB c \SM c
 %%
 %\end{figure*}
 
-Table algorithm~$\algo{S}$ as presented in Listing~\ref{alg:prim} shows all the cases that are needed to solve~\cSAT by means of DP of nice TDs.
+Table algorithm~$\algo{S}$ as presented in Listing~\ref{alg:prim} shows all the cases that are needed to solve~\cSAT by means of DP over nice TDs.
 Each table~$\tab{t}$ consist of rows of the form~$\langle I, c\rangle$,
 where~$I$ is an assignment of~$\varphi_t$ and~$c$ is a counter. %within a table~$\tab{t}
 Nodes~$t$ with~$\type(t)=\leaf$ consist of the empty assignment and counter~$1$, cf., Line~1.
@@ -1015,8 +1025,9 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
 
 
 \paragraph*{Alternative: Relational Algebra.}
-\noindent Instead of using set theory to describe how tables are obtained during dynamic programming 
-are performed, one could alternatively use relational algebra. % or equivalent.
+\noindent Instead of using set theory to describe how tables are obtained during dynamic programming,
+%are performed, 
+one could alternatively use relational algebra. % or equivalent.
 There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
 Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute \text{cnt} for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
 Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
@@ -1024,10 +1035,11 @@ This step from set notation to relational algebra is driven by the observation t
 %
 %
 In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fresh initial table $\tab{t}$, cf., Line~\ref{line:leaf} of Listing~\ref{alg:primdb}.
-Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins with a fresh initial table for the introduced variable~$a$ that represent potential values~$a$ can have. In Line~\ref{line:intr} the selection of the $\theta$-join is performed by ensuring~$\varphi_t$, corresponding to the local problem of~\cSAT.
-Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms oftentimes need projection. 
+Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins 
+with a fresh initial table for the introduced variable~$a$ representing potential values for~$a$. In Line~\ref{line:intr} the selection of the $\theta$-join is performed according to~$\varphi_t$, i.e.\ corresponding to the local problem of~\cSAT.
+Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms typically need projection. 
 In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
-Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use again $\theta$-joins (and extended projection for maintaining counters), which allows us later to leverage database technology of the last decades.
+Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use again $\theta$-joins (and extended projection for maintaining counters), which allows us later to leverage advanced database technology. %of the last decades.
 
 \begin{figure*}[t]%
 \centering
@@ -1081,7 +1093,7 @@ on certain normalization or forms of TDs, e.g., whether it is nice or not.
 %the architecture foresees 
 Instead, a table algorithm of any TD is simply specified by 
 handling \emph{problem-specific} implementations of the placeholders of Listing~\ref{alg:template}, where the system following this architecture is responsible for interleaving and overlapping these cases within a node~$t$.
-In fact, we discuss an implementation of a system according to this architecture next, where for efficiency it is crucial to implement non-nice TDs.
+In fact, we discuss an implementation of a system according to this architecture next, where it is crucial to implement non-nice TDs to obtain higher efficiency.
 
 %
 %
@@ -1155,7 +1167,7 @@ which finds TDs extremely quick
 also for interesting instances~\cite{FichteHecherZisser19} due to heuristics.
 Note that \dpdb directly supports the TD format of recent competitions~\cite{DellHusfeldtJansen17a,DellKomusiewiczTalmon18a},
 i.e., one could easily replace the TD library.
-It is crucial though to not enforce htd to compute nice TDs, as this would cause a lot of overhead later in \dpdb for copying tables.
+It is important though to not enforce htd to compute nice TDs, as this would cause a lot of overhead later in \dpdb for copying tables.
 However, in order to benefit from the implementation of $\theta$-joins,
 query optimization and state-of-the-art database technology in general, 
 we observed that it is crucial to limit the number of child nodes of every TD node.
@@ -1167,7 +1179,7 @@ Note that though one should consider $\theta$-joins with more than just two tabl
 since such binary $\theta$-joins already fix in which order these tables shall be combined,
 thereby again limiting the query optimizer. %\todo{this sentence is really hard to read/understand; especially due to all the negations}
 Apart from this trade-off, we tried to outsource the task of joining tables to the DBMS, %as much as possible, 
-since the performance of database systems highly depend on query optimization. % and should know best, how to join.
+since the performance of database systems highly depends on query optimization. % and should know best, how to join.
 The actual limit, which is a restriction from experience and practice only, highly depends on the DBMS that is used.
 For PostgreSQL, we set a limit of at most~$5$ child nodes for each node of the TD,
 i.e., each $\theta$-join covers at most 5 child tables.
@@ -1189,7 +1201,7 @@ is not the case for CTEs, as discussed in the PostgreSQL manual~\cite[Sec. 7.8.1
 
 \begin{example}\label{ex:dbviews}
 Consider again Example~\ref{ex:running0} and Figure~\ref{fig:graph-td}.
-If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): sub-queries, where the row candidates are expressed via a sub-queries. Then, for each node~$t_i$ of~$\mathcal{T}$, we \dpdb generates a view~$vi$ 
+If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): sub-queries, where the row candidates are expressed via a sub-queries. Then, for each node~$t_i$ of~$\mathcal{T}$, \dpdb generates a view~$vi$ 
 as well as a table~$\tab{i}$ containing in the end the content of~$vi$.
 Observe that each view only has one column~$\cid{a}$ for each variable~$a$ of~$\varphi$ since the
 truth assignment of the other variables are not needed later.
@@ -1226,7 +1238,7 @@ In our system \dpdb, we currently allow
 for at most 24 worker threads for table computations and 24 database connections at the same time (both pooled and configurable).
 On top of that we have 2 additional threads and database connections for job assignments to workers, as well as one dedicated watcher thread for clean-up and termination of connections, respectively.
 
-\paragraph*{Logging, Debugging and Extensions.} Currently, we currently have two versions of the \dpdb system implemented. 
+\paragraph*{Logging, Debugging and Extensions.} We currently have two versions of the \dpdb system implemented. 
 One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances), thereby increasing explainability.
 The former for instance does neither keep intermediate results 
 nor create database tables in advance (Step 2b),
@@ -1304,10 +1316,11 @@ Specific parts for~$\cTCOL$ for node~$t$ with~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_
 \paragraph*{Problem~\VC.}
 Given input graph~$\mathcal{I}=G=(V,E)$, a \emph{vertex cover} is a set of vertices~$C\subseteq V$ of~$G$
 such that for each edge~$\{u,v\}\in E$, we have~$\{u,v\}\cap C\neq \emptyset$.
-Then, \VC asks to find the minimum cardinality~$|C|$ among all vertex cover~$C$, i.e., $C$ is such that there is no vertex cover~$C'$ with~$|C'| < |C|$. 
+Then, \VC asks to find the minimum cardinality~$|C|$ among all vertex covers~$C$, i.e., $C$ is such that there is no vertex cover~$C'$ with~$|C'| < |C|$. 
 Local problem~$\VC(t,G)\eqdef G_t$ is defined as above. 
 %by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
-To this end, we use an additional column {\ttfamily card} for storing cardinalities.
+%To this end, we 
+We use an additional column {\ttfamily card} for storing cardinalities.
 
 Problem $\VC$ for node~$t$ with~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$ and~$\chi(t)=\{a_1,\ldots,a_{k}\}$ can be specified as follows.
 
@@ -1324,7 +1337,7 @@ Problem $\VC$ for node~$t$ with~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$ and
 \end{itemize}
 
 Observe that $\#\mathsf{ExtProj}\#$ is a bit more involved on non-nice TDs, as, whenever 
-the column for a vertex~$a$ is set o~$1$, i.e., vertex~$a$ is in the vertex cover,
+the column for a vertex~$a$ is set to~$1$, i.e., vertex~$a$ is in the vertex cover,
 we have to consider~$a$ only with cost~$1$, also if $a$ appears in several child node bags.
 %
 
@@ -1930,7 +1943,7 @@ using extremely \emph{efficient bit operations}.
 It might be worth to rigorously test and explore our extensions on limiting the number of rows per table for \emph{approximating} \cSAT or other counting problems, cf.,~\cite{ChakrabortyMeelVardi16a,MeelEtAl17a}.
 %
 %
-An other interesting research direction is to study whether
+Another interesting research direction is to study whether
 efficient data representation techniques on DBMS can be combined with dynamic
 programming in order to lift our solver to quantified Boolean formulas.
 %
