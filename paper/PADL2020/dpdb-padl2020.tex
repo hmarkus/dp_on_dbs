@@ -954,7 +954,7 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
   since
   $\tab{12} = \{\langle \emptyset, 6 \rangle \}$, we can reconstruct for example
   model~$\{a\mapsto 1,b \mapsto 1, c\mapsto 0, d\mapsto 1\} = I_{11.1} \cup I_{5.4} \cup I_{9.2}$ of~$\varphi$ using highlighted (yellow) rows in Figure~\ref{fig:running1}.
-  On the other hand, if~$\varphi$ was unsatisfiable, $\tab{12}$ would be empty ($\emptyset$). \todo{really? just count 0?}%
+  On the other hand, if~$\varphi$ was unsatisfiable, $\tab{12}$ would be empty ($\emptyset$). %\todo{really? just count 0?}%
   %
   %
   %
@@ -1150,7 +1150,8 @@ In the following, we discuss implementation specifics that are crucial for a per
 
 \paragraph*{Computing TDs.}
 TDs are computed mainly with the library \emph{htd} version~1.2 with default
-settings~\cite{AbseherMusliuWoltran17a} \todo{actually, we require the normalize-cli branch...}, which finds TDs extremely quick
+settings~\cite{AbseherMusliuWoltran17a}, %\todo{actually, we require the normalize-cli branch...}, 
+which finds TDs extremely quick
 also for interesting instances~\cite{FichteHecherZisser19} due to heuristics.
 Note that \dpdb directly supports the TD format of recent competitions,
 i.e., one could easily replace the TD library.
@@ -1162,11 +1163,12 @@ Then, especially when there are huge tables involved, $\theta$-joins among child
 cover at most a limited number of child node tables.
 In consequence, the query optimizer of the database system still has a chance
 to come up with meaningful execution plans depending on the contents of the table.
-Note that it is not wise though to consider $\theta$-joins which do not take into account just two tables,
-since this already fixes in which order these tables shall be combined,
-thereby again limiting the query optimizer. \todo{this sentence is really hard to read/understand; especially due to all the negations}
-Apart from this trade-off, we tried to outsource the task of joining tables to the DBMS as much as possible, since the performance of database systems highly depend on query optimization. % and should know best, how to join.
-This actual limit, which is a restriction from experience and practice only, highly depends on the DBMS that is used.
+Note that though one should consider $\theta$-joins with more than just two tables,
+since such binary $\theta$-joins already fix in which order these tables shall be combined,
+thereby again limiting the query optimizer. %\todo{this sentence is really hard to read/understand; especially due to all the negations}
+Apart from this trade-off, we tried to outsource the task of joining tables to the DBMS, %as much as possible, 
+since the performance of database systems highly depend on query optimization. % and should know best, how to join.
+The actual limit, which is a restriction from experience and practice only, highly depends on the DBMS that is used.
 For PostgreSQL, we set a limit of at most~$5$ child nodes for each node of the TD,
 i.e., each $\theta$-join covers at most 5 child tables.
 
@@ -1408,8 +1410,8 @@ TD with a fixed random seed. % and decomposition selection time.
 %However, we avoid IO access on the CPU solvers whenever possible,
 %i.e., we load instances into the RAM before we start solving.
 %
-For parallel CPU solvers we allow access to 24 physical cores on
-machines, where hyperthreading was disabled.
+For parallel solvers we allowed access to 24 physical cores on
+machines. %, where hyperthreading was disabled.
 %
 %
 %
@@ -1431,11 +1433,10 @@ instances), %
 and \instances{c2d} benchmarks\footnote{See:
   \href{http://reasoning.cs.ucla.edu/c2d/results.html}{\nolinkurl{reasoning.cs.ucla.edu/c2d}}}
 (14 instances).
-However, we used instances after being preprocessed by pmc~\cite{LagniezMarquis14},
-similar to a recent work on~\cSAT~\cite{FichteHecherZisser19}
-There, more than 80\% of the \cSAT instances have primal treewidth below~19
+However, we considered instances preprocessed by regular~\cSAT preprocessor 
+\emph{pmc}~\cite{LagniezMarquis14}, similar to results of recent work on~\cSAT~\cite{FichteHecherZisser19}, where it was also shown that more than 80\% of the \cSAT instances have primal treewidth below~19
 after preprocessing.
-Before preprocessing
+
 %, for which decomposer takes 0.1 seconds in median.
 %
 %Overall, both B+E and pmc managed to \emph{drastically reduce} the
@@ -1448,9 +1449,14 @@ Before preprocessing
 %
 
 \paragraph{Benchmarked system \dpdb.}
-PostgreSQL version, etc.\todo{add}
+We used PostgreSQL 9.5 for our system~\dpdb, 
+which was available on our benchmark described hardware below.
+However, we expect major performance increases if higher versions are used,
+which was not available on our benchmark machines.
+In particular, parallel queries, where a query is evaluated in parallel,
+were added and improved in every version greater than 9.6.
 
-\paragraph{Other Benchmarked Solvers.}
+\paragraph{Other benchmarked systems.}
 In our experimental work, we present results for the most recent
 versions of publicly available \cSAT solvers, namely,
 %
@@ -1553,7 +1559,8 @@ on kernel~4.4.0-139. %, which is already a post-Spectre and
 %post-Meltdown kernel\footnote{Details on spectre and meltdown: \href{https://spectreattack.com/}{\nolinkurl{spectreattack.com}}.}.
 %
 %
-For~\gpusatone and~\gpusatnu we used a machine equipped with a consumer GPU:
+As we also took into account solvers using a GPU, 
+for~\gpusatone and~\gpusatnu we used a machine equipped with a consumer GPU:
 %
 Intel Core i3-3245 CPU operating at 3.4 GHz, 16 GB RAM, and one
 Sapphire Pulse ITX Radeon RX 570 GPU running at 1.24 GHz with 32
@@ -1859,7 +1866,6 @@ solver and solves the most instances having width below 30.
 	%\item limit result rows (+ possibly randomize) of each node for faster approximations.
 	\item approximate memory used by db for one of the largest problems solved
 	\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
-	\item effect of parallel queries that are not availbale in PostgreSQL 9.5, added to 9.6 and improved in every version since that, i.e., versions 10, 11 as well as 12.
 \end{itemize}
 
 
