@@ -551,12 +551,15 @@ is a set of pairs of the form~$(a, v)$ with~$a\in\attr(r),v\in \dom(a)$ s.t.\ fo
 A \emph{relation~$R$} is a finite set of tuples~$r$ over set~$\attr(R)\eqdef\attr(r)$ of attributes.
 Given a relation~$R$ over~$\attr(R)$.
 Then, we let~$\dom(R)\eqdef \bigcup_{a\in \attr(R)}\dom(a)$, and let relation~$R$ \emph{projected to~$A\subseteq \attr(R)$} be given by $\Pi_{A}(R)\eqdef \{r_A \mid r\in R\}$, where~$r_A \eqdef \{(a, v) \mid (a, v) \in r, a \in A\}$.
-\todo{mh:extended projection}
+This concept can be lifted to \emph{extended projection~$\dot\Pi_{A,S}(R)$}, where we assume in addition to~$A\subseteq \attr(R)$, a set~$S$ of expressions of the form~$a \leftarrow f$, such that $a\in \attr(R)\setminus A$, and $f$ is an arithmetic function that takes a tuple~$r\in R$,
+such that there is at most one expression in~$S$ for each $a\in \attr(R)\setminus A$.
+Formally, we define $\dot\Pi_{A,S}(R)\eqdef \{r_A \cup r^S \mid r\in R\}$ with~$r^S \eqdef \{(a, f(r)) \mid a \in \attr(r), (a \leftarrow f) \in S\}$.
 %This can be lifted to \emph{extended projection~$\dot\Pi_{E}(R)$}, where
 We define \emph{renaming} of~$R$ given set~$A$ of attributes, and a bijective mapping~$m:\attr(R) \rightarrow A$ s.t.\ $\dom(a)=\dom(m(a))$ for~$a\in\attr(R)$, by~$\rho_m(R) \eqdef \{(m(a),v) \mid (a,v)\in R\}$.
 \emph{Selection} of rows in $R$ according to a given Boolean formula~$\varphi$ with equality\footnote{We allow for~$\varphi$ to contain expressions~$v{\approx}v'$ as variables for $v,v'\in\dom(R)\cup\attr(R)$, and we abbreviate for $v\in\attr(R)$ with~$\dom(v)=\{0,1\}$, $v{\approx}1$ by~$v$ and~$v{\approx}0$ by~$\neg v$.} is defined by~$\sigma_{\varphi}(R)\eqdef \{ r \mid r\in R, \varphi(r^E)=\emptyset \}$, where~$r^{E}$ is a truth assignment over~$\var(\varphi)$ such that for each~$v,v',v''\in\dom(R)\cup\attr(R)$ (1) $r^E(v{\approx}v')=1$ if $(v, v')\in r$, (2) $r^E(v{\approx}v)=1$, (3) $r^E(v{\approx}v')=r^E(v'{\approx}v)$, and (4) if $r^E(v{\approx}v')=1$, and $r^E(v'{\approx}v'')=1$, then $r^E(v{\approx}v'')=1$.
 Given a relation~$R'$ with~$\attr(R')\cap\attr(R)=\emptyset$. Then, we refer to the \emph{cross-join} by~$R\times R'\eqdef \{ r\cup r' \mid r\in R, r'\in R'\}$.
 Further, wet let \emph{$\theta$-join} correspond to~$R \bowtie_\varphi R' \eqdef \sigma_\varphi(R\times R')$.
+We use \emph{grouping}.
 \todo{mh: group by}
 
 
@@ -992,7 +995,7 @@ Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use ag
      %
   } %
   \uElseIf{$\type(t) = \join$}{%
-    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\attr(\tab{1})}[\dot\Pi_{\tuplecolor{\inputPredColor}{\{\text{cnt} \leftarrow \text{cnt} \cdot \text{cnt}'\}}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$} \label{line:join} %\{ \langle
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\{\text{cnt} \leftarrow \text{cnt} \cdot \text{cnt}'\}}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})$} \label{line:join} %\{ \langle
       %\tuplecolor{\inputPredColor}{I},
       %\tuplecolor{\statePredColor}{c_1 \cdot c_2}
       %\rangle
@@ -1092,7 +1095,7 @@ In fact, we discuss an implementation of a system according to this architecture
      %
   } %
   \uElseIf{$\type(t) = \join$}{%
-    \makebox[3.3cm][l]{$\tab{t} \eqdef \Pi_{\attr(\tab{1})}[\dot\Pi_{\tuplecolor{\inputPredColor}{\#\mathsf{extProj}\#}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})]$} \label{line:join2} %\{ \langle
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\#\mathsf{extProj}\#}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})$} \label{line:join2} %\{ \langle
       %\tuplecolor{\inputPredColor}{I},
       %\tuplecolor{\statePredColor}{c_1 \cdot c_2}
       %\rangle
@@ -1137,7 +1140,7 @@ In the following, we discuss implementation specifics that are crucial for a per
 
 \paragraph*{Computing TDs.}
 TDs are computed mainly with the library \emph{htd} version~1.2 with default
-settings~\cite{AbseherMusliuWoltran17a}, which works extremely quick
+settings~\cite{AbseherMusliuWoltran17a}, which finds TDs extremely quick
 also for interesting instances~\cite{FichteHecherZisser19} due to heuristics.
 Note that \dpdb directly supports the TD format of recent competitions,
 i.e., one could easily replace the TD library.
@@ -1176,7 +1179,7 @@ is not the case for CTEs, as discussed in the PostgreSQL manual~\cite[Sec. 7.8.1
 Consider again Example~\ref{ex:running0} and Figure~\ref{fig:graph-td}.
 If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): subqueries, where the row candidates are expressed via a subqueries. Then, for each node~$t_i$ of~$\mathcal{T}$, we \dpdb generates a view~$vi$ 
 as well as a table~$ti$ containing in the end the content of~$vi$.
-Observe that each view only has one column~$a$ for variable~$a$ of~$\varphi$ since the
+Observe that each view only has one column~$\cid{a}$ for each variable~$a$ of~$\varphi$ since the
 truth assignment of the other variables are not needed later.
 Actually, in \dpdb the additional columns are kept (empty, null) for readability.
 This keeps the tables compact, only $t1$ has two rows, $t2$, and $t3$ have only one row.
@@ -1214,7 +1217,7 @@ On top of that we have 2 additional threads and database connections for job ass
 \paragraph*{Logging, Debugging and Extensions.} Currently, we currently have two versions of the \dpdb system implemented. 
 One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances).
 In particular, in the latter we keep all the intermediate results, we record database timestamps before and after certain nodes, provide statistics as, e.g., width, number of rows, etc.
-Further, since for each table~$\tab{t}$, exactly one SQL statement is executed for filling this table, we also have a dedicated view of the SQL {\ttfamily SELECT} statement, whose result was inserted.
+Further, since for each table~$\tab{t}$, exactly one SQL statement is executed for filling this table, we also have a dedicated view of the SQL {\ttfamily SELECT} statement, whose result is then inserted in~$\tab{t}$.
 Together with the power and flexibility of SQL queries, we observed that this really helps in finding errors in the table algorithm specifications.
 
 Besides convient debugging, system \dpdb immediately
@@ -1242,7 +1245,7 @@ where {\ttfamily ti} refers to the \emph{database table}~$\tab{i}$ for node~$t_i
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily $(l_{1,1}$ OR $\ldots$ OR $l_{1,k_1})$ AND $\ldots$ AND $(l_{n,1}$ OR $\ldots$ OR $l_{n,k_n})$}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
-	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt AS cnt }
 \end{itemize}
 
 Observe that for the corresponding decision problem~$\SAT$, where the goal is to decide only the existence of a satisfying assignment for given formula~$\varphi$, 
@@ -1267,7 +1270,7 @@ are as follows, where~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$.
 	%\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily \cid{u1} OR \cid{ SELECT 1 AS val UNION ALL 2 UNION ALL 3}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily NOT $(\cid{u_1}=\cid{v_1})$ AND $\ldots$ AND NOT $(\cid{u_n}=\cid{v_n})$}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
-	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt AS cnt }
 \end{itemize}
 
 
@@ -1293,7 +1296,8 @@ Problem $\VC$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$, where~$E(G_t)
 Similar to \VC and \cTCOL one can model several other (graph) problems.
 One could also think of counting the number of solutions of problem \VC,
 where both a column for cardinalities and one for counting is used. 
-There, in addition to grouping with {\ttfamily GROUP BY} in \dpdb, we additionally could use the {\ttfamily HAVING} construct of SQL.
+There, in addition to grouping with {\ttfamily GROUP BY} in \dpdb, we additionally could use the {\ttfamily HAVING} construct of SQL,
+where only rows are kept, whose column {\ttfamily card} is minimal.
 
 
 %#\begin{algorithm}[h]
