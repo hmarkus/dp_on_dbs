@@ -1241,8 +1241,7 @@ we obtain different approximate results.
 Note that \dpdb can be easily extended. 
 Each problem can overwrite existing default behavior and \dpdb also supports
 problem-specific argument parser for each problem individually.
-Out-of-the-box, we support the formats DIMACS CNF~\cite{}, DIMACS GRAPH~\cite{}, Edge~\cite{} as well as the format for TDs that has been used in recent competitions~\cite{}.
-\todo{mh: refs!}
+Out-of-the-box, we support the formats DIMACS sat and DIMACS graph~\cite{LiuZhongJiao06} as well as the format for TDs used in recent competitions~\cite{DellHusfeldtJansen17a,DellKomusiewiczTalmon18a}.
 %sibility, 
 %Supported DIMACS formats: cnf, td, tw, edge
 
@@ -1311,7 +1310,7 @@ Problem $\VC$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$, where~$E(G_t)
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}%{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
 \end{itemize}
 
-Note that concrete implementations could apply, for example $\#\mathsf{localProbFilter}\#$, only for edges involving newly introduced vertices. \todo{more detail}
+Note that concrete implementations could generate and apply parts of the specification, as for example $\#\mathsf{localProbFilter}\#$, only for edges involving newly introduced vertices. %\todo{more detail}
 
 Similar to \VC and \cTCOL one can model several other (graph) problems.
 One could also think of counting the number of solutions of problem \VC,
