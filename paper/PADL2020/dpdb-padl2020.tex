@@ -551,16 +551,15 @@ is a set of pairs of the form~$(a, v)$ with~$a\in\attr(r),v\in \dom(a)$ s.t.\ fo
 A \emph{relation~$R$} is a finite set of tuples~$r$ over set~$\attr(R)\eqdef\attr(r)$ of attributes.
 Given a relation~$R$ over~$\attr(R)$.
 Then, we let~$\dom(R)\eqdef \bigcup_{a\in \attr(R)}\dom(a)$, and let relation~$R$ \emph{projected to~$A\subseteq \attr(R)$} be given by $\Pi_{A}(R)\eqdef \{r_A \mid r\in R\}$, where~$r_A \eqdef \{(a, v) \mid (a, v) \in r, a \in A\}$.
-This concept can be lifted to \emph{extended projection~$\dot\Pi_{A,S}(R)$}, where we assume in addition to~$A\subseteq \attr(R)$, a set~$S$ of expressions of the form~$a \leftarrow f$, such that $a\in \attr(R)\setminus A$, and $f$ is an arithmetic function that takes a tuple~$r\in R$,
+This concept can be lifted to \emph{extended projection~$\dot\Pi_{A,S}$}, where we assume in addition to~$A\subseteq \attr(R)$, a set~$S$ of expressions of the form~$a \leftarrow f$, such that $a\in \attr(R)\setminus A$, and $f$ is an arithmetic function that takes a tuple~$r\in R$,
 such that there is at most one expression in~$S$ for each $a\in \attr(R)\setminus A$.
 Formally, we define $\dot\Pi_{A,S}(R)\eqdef \{r_A \cup r^S \mid r\in R\}$ with~$r^S \eqdef \{(a, f(r)) \mid a \in \attr(r), (a \leftarrow f) \in S\}$.
 %This can be lifted to \emph{extended projection~$\dot\Pi_{E}(R)$}, where
+Later, we use \emph{aggregation by grouping~$_A G_{(a\leftarrow g)}$}, where we assume~$A\subseteq \attr(R), a\in\attr(R)\setminus A$ and a so-called \emph{aggregate function~$g$}, which takes a relation~$R'\subseteq R$ and returns a value of domain~$\dom(a)$. Therefore, we let~$_A G_{(a\leftarrow g)}(R)\eqdef \{r\cup \{(a,g(R[r]))\} \mid r\in\Pi_{A}(R)\}$, where $R[r]\eqdef\{r'\mid r'\in R, r\subseteq r'\}$.
 We define \emph{renaming} of~$R$ given set~$A$ of attributes, and a bijective mapping~$m:\attr(R) \rightarrow A$ s.t.\ $\dom(a)=\dom(m(a))$ for~$a\in\attr(R)$, by~$\rho_m(R) \eqdef \{(m(a),v) \mid (a,v)\in R\}$.
 \emph{Selection} of rows in $R$ according to a given Boolean formula~$\varphi$ with equality\footnote{We allow for~$\varphi$ to contain expressions~$v{\approx}v'$ as variables for $v,v'\in\dom(R)\cup\attr(R)$, and we abbreviate for $v\in\attr(R)$ with~$\dom(v)=\{0,1\}$, $v{\approx}1$ by~$v$ and~$v{\approx}0$ by~$\neg v$.} is defined by~$\sigma_{\varphi}(R)\eqdef \{ r \mid r\in R, \varphi(r^E)=\emptyset \}$, where~$r^{E}$ is a truth assignment over~$\var(\varphi)$ such that for each~$v,v',v''\in\dom(R)\cup\attr(R)$ (1) $r^E(v{\approx}v')=1$ if $(v, v')\in r$, (2) $r^E(v{\approx}v)=1$, (3) $r^E(v{\approx}v')=r^E(v'{\approx}v)$, and (4) if $r^E(v{\approx}v')=1$, and $r^E(v'{\approx}v'')=1$, then $r^E(v{\approx}v'')=1$.
 Given a relation~$R'$ with~$\attr(R')\cap\attr(R)=\emptyset$. Then, we refer to the \emph{cross-join} by~$R\times R'\eqdef \{ r\cup r' \mid r\in R, r'\in R'\}$.
 Further, wet let \emph{$\theta$-join} correspond to~$R \bowtie_\varphi R' \eqdef \sigma_\varphi(R\times R')$.
-We use \emph{grouping}.
-\todo{mh: group by}
 
 
 \section{Towards Relational Algebra for Dynamic Programming}
