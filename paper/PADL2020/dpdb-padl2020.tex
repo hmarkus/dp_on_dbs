@@ -319,7 +319,7 @@ might come to the rescue. %rescue.
 In particular, after using regular preprocessors, e.g., pmc~\cite{LagniezMarquis14}, in this area, 
 more than 80\% of these practically relevant instances (graph representations thereof) 
 have reasonably small treewidth,
-where small treewidth is one of the most cited\footnote{On October 17, 2019, Google Scholar shows 19,200 results on treewidth.} 
+where small treewidth is one of the most cited\footnote{On October 17, 2019, Google Scholar shows 19,200 results on treewidth. Treewidth was also subject of recent competitions~\cite{DellHusfeldtJansen17a,DellKomusiewiczTalmon18a}.} 
 combinatorial invariants.
 %
 To be more concrete, the measure treewidth is a structural parameter of graphs,
@@ -1153,7 +1153,7 @@ TDs are computed mainly with the library \emph{htd} version~1.2 with default
 settings~\cite{AbseherMusliuWoltran17a}, %\todo{actually, we require the normalize-cli branch...}, 
 which finds TDs extremely quick
 also for interesting instances~\cite{FichteHecherZisser19} due to heuristics.
-Note that \dpdb directly supports the TD format of recent competitions,
+Note that \dpdb directly supports the TD format of recent competitions~\cite{DellHusfeldtJansen17a,DellKomusiewiczTalmon18a},
 i.e., one could easily replace the TD library.
 It is crucial though to not enforce htd to compute nice TDs, as this would cause a lot of overhead later in \dpdb for copying tables.
 However, in order to benefit from the implementation of $\theta$-joins,
@@ -1176,7 +1176,7 @@ i.e., each $\theta$-join covers at most 5 child tables.
 Although this paper presents the algorithms for nice TDs (mainly due to simplicity),
 the system \dpdb interleaves these cases as presented in 
 Listing~\ref{alg:template}.
-Concretely, the system executes one query per table~$\tab{t}$ for each node~$t$ during the TD traversal. 
+Concretely, the system executes one query per table~$\tab{t}$ for each node~$t$ during the traversal of TD~$\mathcal{T}$. 
 This query consists of serveral parts and we briefly explain its parts from outside to inside. 
 First of all, the inner-most part concerns the \emph{row candiates} for~$\tab{t}$ consisting of the $\theta$-join as in Line~\ref{line:join} of Listing~\ref{alg:template}, including parts of Line~\ref{line:intr}, namely cross-joins for each introduced variable, involving $\#\mathsf{intrTab}\#$ without the filtering on $\#\mathsf{localProbFilter}\#$.
 Then, there are different configurations of \dpdb concerning these row candidates.
@@ -1258,7 +1258,7 @@ Out-of-the-box, we support the formats DIMACS sat and DIMACS graph~\cite{LiuZhon
 The system \dpdb allows for \emph{easy protyping} of DP algorithms on TDs.
 This covers decision problems, counting problems as well as optimization problems.
 As a proof of concept, we present the relevant parts of table algorithm specification
-according to the template in Listing~\ref{alg:template}, cf., Listing~\ref{alg:primdb}.
+according to the template in Listing~\ref{alg:template} for a selection of problems below\footnote{Implementation for problems~\cSAT as well as~\VC is readily available in~\dpdb.}.
 To this end, we assume in this section a not necessarily nice TD~$\mathcal{T}=(T,\chi)$ of the corresponding graph representation of our given instance~$\mathcal{I}$.
 Further, for the following specifications of the table algorithm using the template~$\algo{A_{RAlg}}$ 
 in Listing~\ref{alg:primdb}, we assume any node~$t$ of~$T$ and its child nodes~$t_1, \ldots, t_\ell$.
@@ -1919,11 +1919,15 @@ when we use different strategies on how to write and evaluate our SQL queries,
 e.g., sub-queries vs.\ common table expressions.
 %
 Currently, we do not create or use any indices,
-as preliminary tests showed that \emph{meaningful B*tree indices} are hard to create. % in our case.
+as preliminary tests showed that \emph{meaningful B*tree indices} are hard to create
+and oftentimes cost too much time to create. % in our case.
 %
 Further, the exploration of bitmap indices, as available in Oracle \emph{enterprise DBMS} would be worth trying in our case (and for~\cSAT), 
 since one can efficiently combine database columns by 
 using extremely \emph{efficient bit operations}.
+%
+
+It might be worth to rigorously test and explore our extensions on limiting the number of rows per table for \emph{approximating} \cSAT or other counting problems, cf.,~\cite{ChakrabortyMeelVardi16a,MeelEtAl17a}.
 %
 %
 An other interesting research direction is to study whether
