@@ -1,11 +1,18 @@
 # -*- coding: future_fstrings -*-
 from dpdb.problem import *
+from collections import defaultdict
 
-def cnf2primal (num_vars, clauses):
+class hashabledict(dict):
+    def __hash__(self):
+        return hash(frozenset(self))
+
+def cnf2primal (num_vars, clauses, var_clause_dict = defaultdict(set)):
     edges = set([])
     for clause in clauses:
         atoms = [abs(lit) for lit in clause]
+        clause_set = hashabledict({frozenset(atoms): frozenset(clause)})
         for i in atoms:
+            var_clause_dict[i].add(clause_set)
             for j in atoms:
                 if i < j:
                     edges.add((i,j))
@@ -27,7 +34,15 @@ def lit2expr (lit):
         return "NOT {}".format(lit2var(lit))
 
 def filter(clauses, node):
-    cur_cl = [clause for clause in clauses if all(abs(lit) in node.vertices for lit in clause)]
+    #cur_cl = [clause for clause in clauses if all(abs(lit) in node.vertices for lit in clause)]
+    vertice_set = set(node.vertices)
+    cur_cl = set()
+    for v in node.vertices:
+        candidates = clauses[v]
+        for d in candidates:
+            for key, val in d.items():
+                if key.issubset(vertice_set):
+                    cur_cl.add(val)
 
     if len(cur_cl) > 0:
         return "WHERE {0}".format(
