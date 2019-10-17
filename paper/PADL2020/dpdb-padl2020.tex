@@ -1210,7 +1210,7 @@ CREATE VIEW v2 AS SELECT a, sum(cnt) AS cnt FROM
 WHERE (a OR d) AND (a OR NOT d) GROUP BY a
 
 CREATE VIEW v3 AS SELECT a, sum(cnt) AS cnt FROM 
- (SELECT \ensuremath{\tab{1}}.a, \ensuremath{\tab{1}}.cnt * \ensuremath{\tab{2}}.cnt cnt FROM \ensuremath{\tab{1}}, \ensuremath{\tab{2}} WHERE \ensuremath{\tab{1}}.a = \ensuremath{\tab{2}}.a)
+ (SELECT \ensuremath{\tab{1}}.a, \ensuremath{\tab{1}}.cnt * \ensuremath{\tab{2}}.cnt AS cnt FROM \ensuremath{\tab{1}}, \ensuremath{\tab{2}} WHERE \ensuremath{\tab{1}}.a = \ensuremath{\tab{2}}.a)
 GROUP BY a\end{alltt}%verbatim}%
 \vspace{-2em}
 \end{example}%
