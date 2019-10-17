@@ -39,6 +39,7 @@
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{amsfonts}
+\usepackage{alltt}
 %
 %
 %
@@ -1250,28 +1251,28 @@ is not the case for CTEs, as discussed in the PostgreSQL manual~\cite[Sec. 7.8.1
 \begin{example}\label{ex:dbviews}
 Consider again Example~\ref{ex:running0} and Figure~\ref{fig:graph-td}.
 If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): subqueries, where the row candidates are expressed via a subqueries. Then, for each node~$t_i$ of~$\mathcal{T}$, we \dpdb generates a view~$vi$ 
-as well as a table~$ti$ containing in the end the content of~$vi$.
+as well as a table~$\tab{i}$ containing in the end the content of~$vi$.
 Observe that each view only has one column~$\cid{a}$ for each variable~$a$ of~$\varphi$ since the
 truth assignment of the other variables are not needed later.
 Actually, in \dpdb the additional columns are kept (empty, null) for readability.
-This keeps the tables compact, only $t1$ has two rows, $t2$, and $t3$ have only one row.
+This keeps the tables compact, only $\tab{1}$ has two rows, $\tab{2}$, and $\tab{3}$ have only one row.
 We obtain the following views.
 %
-\begin{verbatim}
-CREATE VIEW v1 AS SELECT a, sum(cnt) FROM 
- (WITH intrTab AS (SELECT true val UNION ALL SELECT false)
-   SELECT i1.val a, i2.val b, i3.val c, 1 cnt 
+\begin{alltt}\small
+CREATE VIEW v1 AS SELECT a, sum(cnt) AS cnt FROM 
+ (WITH intrTab AS (SELECT true AS val UNION ALL SELECT false)
+   SELECT i1.val AS a, i2.val AS b, i3.val AS c, 1 AS cnt 
           FROM intrTab i1, intrTab i2, intrTab i3)  
 WHERE (NOT a OR b OR c) AND (a OR NOT b OR NOT c) GROUP BY a
 
-CREATE VIEW v2 AS SELECT a, sum(cnt) FROM 
- (WITH intrTab AS (SELECT true val UNION ALL SELECT false) 
-   SELECT i1.val a, i2.val d, 1 cnt FROM intrTab i1, intrTab i2) 
+CREATE VIEW v2 AS SELECT a, sum(cnt) AS cnt FROM 
+ (WITH intrTab AS (SELECT true AS val UNION ALL SELECT false) 
+   SELECT i1.val AS a, i2.val AS d, 1 AS cnt FROM intrTab i1, intrTab i2) 
 WHERE (a OR d) AND (a OR NOT d) GROUP BY a
 
-CREATE VIEW v3 AS SELECT a, sum(cnt) FROM 
- (SELECT t1.a, t1.cnt * t2.cnt cnt FROM t1, t2 WHERE t1.a = t2.a)
-GROUP BY a\end{verbatim}%
+CREATE VIEW v3 AS SELECT a, sum(cnt) AS cnt FROM 
+ (SELECT \ensuremath{\tab{1}}.a, \ensuremath{\tab{1}}.cnt * \ensuremath{\tab{2}}.cnt cnt FROM \ensuremath{\tab{1}}, \ensuremath{\tab{2}} WHERE \ensuremath{\tab{1}}.a = \ensuremath{\tab{2}}.a)
+GROUP BY a\end{alltt}%verbatim}%
 \vspace{-2em}
 \end{example}%
 
@@ -1288,7 +1289,11 @@ On top of that we have 2 additional threads and database connections for job ass
 
 \paragraph*{Logging, Debugging and Extensions.} Currently, we currently have two versions of the \dpdb system implemented. 
 One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances), thereby increasing explainability.
-In particular, in the latter we keep all the intermediate results, we record database timestamps before and after certain nodes, provide statistics as, e.g., width, number of rows, etc.
+The former for instance does neither keep intermediate results 
+nor create database tables in advance (Step 2b),
+as depicted in Figure~\ref{fig:arch}, but creates tables according 
+to an SQL {\ttfamily SELECT} statement.
+In the latter we keep all the intermediate results, we record database timestamps before and after certain nodes, provide statistics as, e.g., width, number of rows, etc.
 Further, since for each table~$\tab{t}$, exactly one SQL statement is executed for filling this table, we also have a dedicated view of the SQL {\ttfamily SELECT} statement, whose result is then inserted in~$\tab{t}$.
 Together with the power and flexibility of SQL queries, we observed that this really helps in finding errors in the table algorithm specifications.
 
@@ -1319,14 +1324,14 @@ according to the template in Listing~\ref{alg:template}, cf., Listing~\ref{alg:p
 
 \paragraph*{Problem~$\cSAT$.}
 
-Specific parts for~$\cSAT$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$ and $\varphi_t = \{\{l_{1,1},\ldots,l_{1,k_1}\}, \ldots, \{l_{n,1},\ldots,l_{n,k_n}\}\}$,
-where {\ttfamily ti} refers to the \emph{database table}~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
+Specific parts for~$\cSAT$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$ and $\varphi_t = \{\{l_{1,1},\ldots,l_{1,k_1}\}, \ldots, \{l_{n,1},\ldots,l_{n,k_n}\}\}$.
+%where  refers to the \emph{database table}~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
 \begin{itemize}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily $(l_{1,1}$ OR $\ldots$ OR $l_{1,k_1})$ AND $\ldots$ AND $(l_{n,1}$ OR $\ldots$ OR $l_{n,k_n})$}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
-	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt AS cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily \tab{1}.cnt $\cdot \ldots \cdot \tab{\ell}$.cnt AS cnt }
 \end{itemize}
 
 Observe that for the corresponding decision problem~$\SAT$, where the goal is to decide only the existence of a satisfying assignment for given formula~$\varphi$, 
@@ -1347,11 +1352,11 @@ are as follows, where~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$.
 %where {\ttfamily ti} refers to the database table~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
 \begin{itemize}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
-	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL $\ldots$ UNION ALL $u$}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL $\ldots$ UNION ALL $o$}
 	%\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily \cid{u1} OR \cid{ SELECT 1 AS val UNION ALL 2 UNION ALL 3}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily NOT $(\cid{u_1}=\cid{v_1})$ AND $\ldots$ AND NOT $(\cid{u_n}=\cid{v_n})$}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
-	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt AS cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily $\tab{1}$.cnt $\cdot \ldots \cdot \tab{\ell}$.cnt AS cnt }
 \end{itemize}
 
 
@@ -1478,7 +1483,7 @@ and \instances{c2d} benchmarks\footnote{See:
   \href{http://reasoning.cs.ucla.edu/c2d/results.html}{\nolinkurl{reasoning.cs.ucla.edu/c2d}}}
 (14 instances).
 However, we used instances after being preprocessed by pmc,
-similar to a recent work on~\cSAT~\cite{FichteEtAl19}
+similar to a recent work on~\cSAT~\cite{FichteHecherZisser19}
 There, more than 80\% of the \cSAT instances have primal treewidth below~19
 after preprocessing.
 Before preprocessing
@@ -1529,7 +1534,7 @@ and
 \href{https://sites.google.com/site/marcthurley/sharpsat}{\textit{sharpSAT}~13.02}~\cite{Thurley06a}.
 %
 Finally, we also included multi-core solvers
-\href{https://github.com/daajoe/GPUSAT/releases/tag/v0.815-pre}{\textit{gpusat}~1.0 and \textit{gpusat}~2.0}~\cite{FichteEtAl19}, as well as
+\href{https://github.com/daajoe/GPUSAT/releases/tag/v0.815-pre}{\textit{gpusat}~1.0 and \textit{gpusat}~2.0}~\cite{FichteHecherZisser19}, as well as
 \textit{countAntom}~1.0~\cite{BurchardSchubertBecker15a} on 12 physical CPU
 cores, which performed better than on 24 cores.
 %
