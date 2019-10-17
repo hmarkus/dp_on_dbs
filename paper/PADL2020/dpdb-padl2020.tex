@@ -311,7 +311,7 @@ is complete for the class
 i.e., one can simulate any problem of the polynomial hierarchy
 with polynomially many calls~\cite{Toda91} to a~\cSAT solver.
 %
-However, recently it was shown that the better part~\cite{FichteHecherZisser19} of the 
+However, recently it was shown that for the better part~\cite{FichteHecherZisser19} of the
 publicly available~\cSAT instances, techniques from 
 parameterized complexity~\cite{FlumGrohe06,DowneyFellows13,Niedermeier06,CyganEtAl15} 
 might come to the rescue. %rescue.
@@ -1226,7 +1226,7 @@ In our system \dpdb, we currently allow
 for at most 24 worker threads for table computations and 24 database connections at the same time (both pooled and configurable).
 On top of that we have 2 additional threads and database connections for job assignments to workers, as well as one dedicated watcher thread for clean-up and termination of connections, respectively.
 
-\paragraph*{Logging, Debugging and Extensions.} Currently, we currently have two versions of the \dpdb system implemented. 
+\paragraph*{Logging, Debugging and Extensions.} Currently, we have two versions of the \dpdb system implemented.
 One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances), thereby increasing explainability.
 The former for instance does neither keep intermediate results 
 nor create database tables in advance (Step 2b),
@@ -1912,7 +1912,7 @@ where we see competitive behavior compared to most recent solvers.
 \paragraph{Future Work.}
 Our results give rise to several research questions.
 %
-First of all, we want to push towards PostgreSQL 11, but at the same time
+First of all, we want to push towards PostgreSQL 12, but at the same time
 also consider other vendors and systems, e.g., Oracle.
 In particular, the behavior of different systems might change,
 when we use different strategies on how to write and evaluate our SQL queries, 
