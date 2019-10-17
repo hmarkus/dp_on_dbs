@@ -1300,14 +1300,14 @@ Local problem~$\VC(t,G)\eqdef G_t$ is defined as above.
 %by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
 To this end, we use an additional column {\ttfamily card} for storing cardinalities.
 
-Problem $\VC$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$, where~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$ can be specified as follows.
+Problem $\VC$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$, where~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$ and~$\chi(t)=\{a_1,\ldots,a_{k}\}$ can be specified as follows.
 
 \begin{itemize}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 0 AS card}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily $(\cid{u_1}$ OR $\cid{v_1})$ AND $\ldots$ AND $(\cid{u_n}$ OR $\cid{v_n})$}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily MIN(card) AS card}
-	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}%{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily $\tab{1}$.card + $\ldots$ + $\tab{\ell}$.card - $\Sigma_{}$ - $\ldots$ - $\Sigma_{}$}
 \end{itemize}
 
 Note that concrete implementations could generate and apply parts of this specification, as for example in $\#\mathsf{localProbFilter}\#$ only edges involving newly introduced vertices need to be checked. %\todo{more detail}
@@ -1431,7 +1431,10 @@ Before preprocessing
 %  \href{https://www.cs.rochester.edu/u/kautz/Cachet/Model_Counting_Benchmarks/index.html}{\nolinkurl{cs.rochester.edu/u/kautz/Cachet}}}.
 %
 
-\paragraph{Benchmarked Solvers.}
+\paragraph{Benchmarked system \dpdb.}
+PostgreSQL version, etc.\todo{add}
+
+\paragraph{Other Benchmarked Solvers.}
 In our experimental work, we present results for the most recent
 versions of publicly available \cSAT solvers, namely,
 %
@@ -1618,7 +1621,7 @@ The system operated on Ubuntu~18.04.1 LTS with kernel 4.15.0-34.
 %
 
 \subsection{Results} % \& Discussion}
-
+\todo{write}
 %
 %
 %
@@ -1834,12 +1837,13 @@ solver and solves the most instances having width below 30.
 %
 %
 \subsection{Discussion}
-
+\todo{write}
 \begin{itemize}
 	%\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
 	%\item limit result rows (+ possibly randomize) of each node for faster approximations.
 	\item approximate memory used by db for one of the largest problems solved
 	\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
+	\item effect of parallel queries that are not availbale in PostgreSQL 9.5, added to 9.6 and improved in every version since that, i.e., versions 10, 11 as well as 12.
 \end{itemize}
 
 
@@ -1847,7 +1851,7 @@ solver and solves the most instances having width below 30.
 
 \section{Conclusion}
 %
-
+\todo{write}
 
 
 %
