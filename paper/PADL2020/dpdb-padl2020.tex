@@ -368,7 +368,7 @@ and present the following contributions.
 for performing dynamic programming efficiently. The system \dpdb is written in Python and employs PostgreSQL as DBMS,
 but can work with other DBMSs easily.
 (ii) The architecture of \dpdb allows to solve general problems of bounded treewidth that can be solved by
-by means of table operations (in form of SQL) on tree decompositions. As a result, \dpdb is a generalized framework 
+means of table operations (in form of SQL) on tree decompositions. As a result, \dpdb is a generalized framework 
 for dynamic programming on tree decompositions, where one only needs to specify the essential and problem-specific parts of dynamic programming
 in order to solve (counting) problems.
 (iii) Finally, we show how to solve the canonical problem \cSAT with the help of \dpdb, 
@@ -909,7 +909,7 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
   $\vec{u_{t.i}} = \langle I_{t.i}, c_{t.i} \rangle$.
 
   %
-  Table~$\tab{1}=\SB \langle\emptyset, 1\rangle \SE$ as
+  Table~$\tab{1}=\SB \langle\emptyset, 1\rangle \SE$ has
   $\type(t_1) = \leaf$.
   %
   Since $\type(t_2) = \intr$, we construct table~$\tab{2}$
@@ -948,7 +948,7 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
   since
   $\tab{12} = \{\langle \emptyset, 6 \rangle \}$, we can reconstruct for example
   model~$\{a\mapsto 1,b \mapsto 1, c\mapsto 0, d\mapsto 1\} = I_{11.1} \cup I_{5.4} \cup I_{9.2}$ of~$\varphi$ using highlighted (yellow) rows in Figure~\ref{fig:running1}.
-  On the other hand, if~$\varphi$ was unsatisfiable, $\tab{12}$ would be empty ($\emptyset$). %
+  On the other hand, if~$\varphi$ was unsatisfiable, $\tab{12}$ would be empty ($\emptyset$). \todo{really? just count 0?}%
   %
   %
   %
@@ -960,7 +960,7 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
 
 \paragraph*{Alternative: Relational Algebra.}
 \noindent Instead of using set theory to describe how tables are obtained during dynamic programming 
-are performed, one could alternatively use relational algebra. % or equivalent.
+, one could alternatively use relational algebra. % or equivalent.
 There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
 Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute \text{cnt} for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
 Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
@@ -1139,7 +1139,7 @@ In the following, we discuss implementation specifics that are crucial for a per
 
 \paragraph*{Computing TDs.}
 TDs are computed mainly with the library \emph{htd} version~1.2 with default
-settings~\cite{AbseherMusliuWoltran17a}, which finds TDs extremely quick
+settings~\cite{AbseherMusliuWoltran17a} \todo{actually, we require the normalize-cli branch...}, which finds TDs extremely quick
 also for interesting instances~\cite{FichteHecherZisser19} due to heuristics.
 Note that \dpdb directly supports the TD format of recent competitions,
 i.e., one could easily replace the TD library.
@@ -1153,7 +1153,7 @@ In consequence, the query optimizer of the database system still has a chance
 to come up with meaningful execution plans depending on the contents of the table.
 Note that it is not wise though to consider $\theta$-joins which do not take into account just two tables,
 since this already fixes in which order these tables shall be combined,
-thereby again limiting the query optimizer.
+thereby again limiting the query optimizer. \todo{this sentence is really hard to read/understand; especially due to all the negations}
 Apart from this trade-off, we tried to outsource the task of joining tables to the DBMS as much as possible, since the performance of database systems highly depend on query optimization. % and should know best, how to join.
 This actual limit, which is a restriction from experience and practice only, highly depends on the DBMS that is used.
 For PostgreSQL, we set a limit of at most~$5$ child nodes for each node of the TD,
@@ -1176,7 +1176,7 @@ is not the case for CTEs, as discussed in the PostgreSQL manual~\cite[Sec. 7.8.1
 
 \begin{example}\label{ex:dbviews}
 Consider again Example~\ref{ex:running0} and Figure~\ref{fig:graph-td}.
-If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): subqueries, where the row candidates are expressed via a subqueries. Then, for each node~$t_i$ of~$\mathcal{T}$, we \dpdb generates a view~$vi$ 
+If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): subqueries, where the row candidates are expressed via a subqueries. Then, for each node~$t_i$ of~$\mathcal{T}$, \dpdb generates a view~$vi$ 
 as well as a table~$ti$ containing in the end the content of~$vi$.
 Observe that each view only has one column~$\cid{a}$ for each variable~$a$ of~$\varphi$ since the
 truth assignment of the other variables are not needed later.
@@ -1213,8 +1213,9 @@ In our system \dpdb, we currently allow
 for at most 24 worker threads for table computations and 24 database connections at the same time (both pooled and configurable).
 On top of that we have 2 additional threads and database connections for job assignments to workers, as well as one dedicated watcher thread for clean-up and termination of connections, respectively.
 
-\paragraph*{Logging, Debugging and Extensions.} Currently, we currently have two versions of the \dpdb system implemented. 
-One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances).
+\todo{discuss the next paragraph}
+\paragraph*{Logging, Debugging and Extensions.} Currently, we have two versions of the \dpdb system implemented. 
+One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problems (instances).
 In particular, in the latter we keep all the intermediate results, we record database timestamps before and after certain nodes, provide statistics as, e.g., width, number of rows, etc.
 Further, since for each table~$\tab{t}$, exactly one SQL statement is executed for filling this table, we also have a dedicated view of the SQL {\ttfamily SELECT} statement, whose result is then inserted in~$\tab{t}$.
 Together with the power and flexibility of SQL queries, we observed that this really helps in finding errors in the table algorithm specifications.
@@ -1248,7 +1249,7 @@ where {\ttfamily ti} refers to the \emph{database table}~$\tab{i}$ for node~$t_i
 \end{itemize}
 
 Observe that for the corresponding decision problem~$\SAT$, where the goal is to decide only the existence of a satisfying assignment for given formula~$\varphi$, 
-$\#\mathsf{epsilon Tab}\#$ returns the empty table and 
+$\#\mathsf{\epsilon Tab}\#$ returns the empty table and 
 parts $\#\mathsf{aggrExp}\#, \#\mathsf{extProj}\#$ are just empty 
 since there is no counter needed.
 
@@ -1291,6 +1292,8 @@ Problem $\VC$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$, where~$E(G_t)
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily MIN(card) AS card}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}%{\ttfamily t1.cnt $\cdot \ldots \cdot$ t$\ell$.cnt }
 \end{itemize}
+
+Note that concrete implementations could apply, for example $\#\mathsf{localProbFilter}\#$, only for edges involving newly introduced vertices. \todo{more detail}
 
 Similar to \VC and \cTCOL one can model several other (graph) problems.
 One could also think of counting the number of solutions of problem \VC,
