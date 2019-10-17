@@ -986,7 +986,7 @@ For join nodes~$t$, counters of common assignments in the child tables are multi
   \uElseIf{$\type(t) = \join$}{%
     \makebox[3.3cm][l]{$\tab{t} \eqdef \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\{\text{cnt} \leftarrow \text{cnt} \cdot \text{cnt}'\}}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})$} \label{line:join} %\{ \langle
       %\tuplecolor{\inputPredColor}{I},
-      %\tuplecolor{\statePredColor}{c_1 \cdot c_2}
+      %\tuplecolor{\statePredColor}{c_1 \* cdot c_2}
       %\rangle
       %$}%$|\;\langle \tuplecolor{\inputPredColor}{I},
     %\tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
@@ -1071,11 +1071,16 @@ tables~$\tab{t}$ during the tree decomposition
 traversal in Step~3 of dynamic programming.
 %
 Listing~\ref{alg:template} presents a general template, where parts of table algorithms for problems that are typically problem-specific are replaced by colored placeholders of the form~$\textcolor{\inputPredColor}{\#\mathsf{placeHolder}\#}$, cf., Listing~\ref{alg:primdb}.
+Observe that Line~\ref{line:intr2} of Listing~\ref{alg:template}
+uses extended projection as in Line~\ref{line:join2}. % compared to Listing~\ref{alg:primdb}.
+This is needed for some problems, where additional columns require updates, 
+whenever vertices get introduced.
+
 Note, however, that the whole architecture does not depend 
 on certain normalization or forms of TDs, e.g., whether it is nice or not.
 %the architecture foresees 
 Instead, a table algorithm of any TD is simply specified by 
-handling \emph{problem-specific} implementations of the placeholders of Listings~\ref{alg:template}, where the system following this architecture is responsible for interleaving and overlapping these cases within a node~$t$.
+handling \emph{problem-specific} implementations of the placeholders of Listing~\ref{alg:template}, where the system following this architecture is responsible for interleaving and overlapping these cases within a node~$t$.
 In fact, we discuss an implementation of a system according to this architecture next, where for efficiency it is crucial to implement non-nice TDs.
 
 %
@@ -1090,7 +1095,7 @@ In fact, we discuss an implementation of a system according to this architecture
   }%
   \uElseIf{$\type(t) = \intr$, and
     $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
-    $\tab{t}\eqdef \tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\#\mathsf{localProbFilter}\#}} \tuplecolor{\inputPredColor}{\#\mathsf{intrTab}\#}$ \label{line:intr2}
+    $\tab{t}\eqdef \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\#\mathsf{extProj}\#}}(\tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\#\mathsf{localProbFilter}\#}} \tuplecolor{\inputPredColor}{\#\mathsf{intrTab}\#})$ \label{line:intr2}
     \hspace{-5em}\vspace{-0.05em}
        % 
   }\vspace{-0.05em}%
@@ -1168,7 +1173,7 @@ i.e., each $\theta$-join covers at most 5 child tables.
 \paragraph*{Towards non-nice TDs.}
 Although this paper presents the algorithms for nice TDs (mainly due to simplicity),
 the system \dpdb interleaves these cases as presented in 
-Listing~\ref{alg:template} automatically.
+Listing~\ref{alg:template}.
 Concretely, the system executes one query per table~$\tab{t}$ for each node~$t$ during the TD traversal. 
 This query consists of serveral parts and we briefly explain its parts from outside to inside. 
 First of all, the inner-most part concerns the \emph{row candiates} for~$\tab{t}$ consisting of the $\theta$-join as in Line~\ref{line:join} of Listing~\ref{alg:template}, including parts of Line~\ref{line:intr}, namely cross-joins for each introduced variable, involving $\#\mathsf{intrTab}\#$ without the filtering on $\#\mathsf{localProbFilter}\#$.
@@ -1252,17 +1257,20 @@ The system \dpdb allows for \emph{easy protyping} of DP algorithms on TDs.
 This covers decision problems, counting problems as well as optimization problems.
 As a proof of concept, we present the relevant parts of table algorithm specification
 according to the template in Listing~\ref{alg:template}, cf., Listing~\ref{alg:primdb}.
+To this end, we assume in this section a not necessarily nice TD~$\mathcal{T}=(T,\chi)$ of the corresponding graph representation of our given instance~$\mathcal{I}$.
+Further, for the following specifications of the table algorithm using the template~$\algo{A_{RAlg}}$ 
+in Listing~\ref{alg:primdb}, we assume any node~$t$ of~$T$ and its child nodes~$t_1, \ldots, t_\ell$.
 
 \paragraph*{Problem~$\cSAT$.}
-
-Specific parts for~$\cSAT$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$ and $\varphi_t = \{\{l_{1,1},\ldots,l_{1,k_1}\}, \ldots, \{l_{n,1},\ldots,l_{n,k_n}\}\}$.
+Given instance formula~$\mathcal{I}=\varphi$.
+Then, specific parts for~$\cSAT$ for node~$t$ with $\varphi_t = \{\{l_{1,1},\ldots,l_{1,k_1}\}, \ldots, \{l_{n,1},\ldots,l_{n,k_n}\}\}$.
 %where  refers to the \emph{database table}~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
 \begin{itemize}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily $(l_{1,1}$ OR $\ldots$ OR $l_{1,k_1})$ AND $\ldots$ AND $(l_{n,1}$ OR $\ldots$ OR $l_{n,k_n})$}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
-	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily \tab{1}.cnt $\cdot \ldots \cdot \tab{\ell}$.cnt AS cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily \tab{1}.cnt * $\ldots$ * $\tab{\ell}$.cnt AS cnt }
 \end{itemize}
 
 Observe that for the corresponding decision problem~$\SAT$, where the goal is to decide only the existence of a satisfying assignment for given formula~$\varphi$, 
@@ -1272,13 +1280,12 @@ since there is no counter needed.
 
 
 \paragraph*{Problem~$\cTCOL$.}
-Given a graph~$G=(V,E)$, a \emph{$o$-coloring} is a mapping~$\iota: V \rightarrow \{1,\ldots,o\}$
+For given input graph~$\mathcal{I}=G=(V,E)$, a \emph{$o$-coloring} is a mapping~$\iota: V \rightarrow \{1,\ldots,o\}$
 such that for each edge~$\{u,v\}\in E$, we have~$\iota(u)\neq \iota(v)$.
 Problem~$\cTCOL$ asks to count the number of $o$-colorings of~$G$.
 Local problem~$\cTCOL(t,G)$ is defined by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
 
-Specific parts for~$\cTCOL$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$
-are as follows, where~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$.
+Specific parts for~$\cTCOL$ for node~$t$ with~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$.
 %
 %where {\ttfamily ti} refers to the database table~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
 \begin{itemize}
@@ -1287,28 +1294,37 @@ are as follows, where~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$.
 	%\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily \cid{u1} OR \cid{ SELECT 1 AS val UNION ALL 2 UNION ALL 3}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily NOT $(\cid{u_1}=\cid{v_1})$ AND $\ldots$ AND NOT $(\cid{u_n}=\cid{v_n})$}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
-	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily $\tab{1}$.cnt $\cdot \ldots \cdot \tab{\ell}$.cnt AS cnt }
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily $\tab{1}$.cnt * $\ldots$ * $\tab{\ell}$.cnt AS cnt }
 \end{itemize}
 
 
 
 \paragraph*{Problem~\VC.}
-Given a graph~$G=(V,E)$, a \emph{vertex cover} is a set of vertices~$C\subseteq V$ of~$G$
+Given input graph~$\mathcal{I}=G=(V,E)$, a \emph{vertex cover} is a set of vertices~$C\subseteq V$ of~$G$
 such that for each edge~$\{u,v\}\in E$, we have~$\{u,v\}\cap C\neq \emptyset$.
 Then, \VC asks to find the minimum cardinality~$|C|$ among all vertex cover~$C$, i.e., $C$ is such that there is no vertex cover~$C'$ with~$|C'| < |C|$. 
 Local problem~$\VC(t,G)\eqdef G_t$ is defined as above. 
 %by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
 To this end, we use an additional column {\ttfamily card} for storing cardinalities.
 
-Problem $\VC$ for node~$t$ with child nodes~$t_1, \ldots, t_\ell$, where~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$ and~$\chi(t)=\{a_1,\ldots,a_{k}\}$ can be specified as follows.
+Problem $\VC$ for node~$t$ with~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$ and~$\chi(t)=\{a_1,\ldots,a_{k}\}$ can be specified as follows.
 
 \begin{itemize}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 0 AS card}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily $(\cid{u_1}$ OR $\cid{v_1})$ AND $\ldots$ AND $(\cid{u_n}$ OR $\cid{v_n})$}
 	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily MIN(card) AS card}
-	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily $\tab{1}$.card + $\ldots$ + $\tab{\ell}$.card - $\Sigma_{}$ - $\ldots$ - $\Sigma_{}$}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily $\tab{1}$.card + $\ldots$ + $\tab{\ell}$.card - ($\Sigma_{i=1}^\ell \Card{\chi(t_i)\cap \{a_1\}}$ - 1) *}\newline 
+	%\item 
+	\makebox[8.25em][l]{}{\ttfamily $\tab{1}$.$\cid{a_1}$ - $\ldots$ - ($\Sigma_{i=1}^\ell \Card{\chi(t_i) \cap\{a_1\}}$ - 1) * $\tab{1}$.$\cid{a_\ell}$}
+	%\makebox[8.25em][l]{}where ${ovcnt}(a)\eqdef \Sigma_{i=1}^\ell$
+	%$\Sigma_{i=1}^{\ell} \Card{\{a_1\}\cap\chi(t_i)}$ - $\ldots$ - $\Sigma_{i=1}^{\ell}\Card{\{a_{\ell}\}\cap\tab{\ell}}$}
 \end{itemize}
+
+Observe that $\#\mathsf{ExtProj}\#$ is a bit more involved on non-nice TDs, as, whenever 
+the column for a vertex~$a$ is set o~$1$, i.e., vertex~$a$ is in the vertex cover,
+we have to consider~$a$ only with cost~$1$, also if $a$ appears in several child node bags.
+%
 
 Note that concrete implementations could generate and apply parts of this specification, as for example in $\#\mathsf{localProbFilter}\#$ only edges involving newly introduced vertices need to be checked. %\todo{more detail}
 
