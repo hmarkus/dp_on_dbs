@@ -154,10 +154,10 @@
 %
 
 \newcommand{\dpdb}{{\small\textsf{dpdb}}\xspace}
-\newcommand{\gpusat}{{\small\textsf{gpusat}}\xspace}
-\newcommand{\gpusatnu}{{\small\textsf{gpusat2}}\xspace}
-\newcommand{\gpusatnuv}[1]{{\small\textsf{gpusat2({\textit{#1}})}}\xspace}
-\newcommand{\gpusatone}{{\small\textsf{gpusat1}}\xspace}
+\newcommand{\gpusat}{{{gpusat}}\xspace}
+\newcommand{\gpusatnu}{{{gpusat2}}\xspace}
+\newcommand{\gpusatnuv}[1]{{{gpusat2({\textit{#1}})}}\xspace}
+\newcommand{\gpusatone}{{{gpusat1}}\xspace}
 
 %
 \newcommand{\tm}[1]{\textbf{#1}}
@@ -203,7 +203,7 @@
   %
   \thanks{%
     Our system~\dpdb is available under GPL3 license
-    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/TODOv1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.
+    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/v1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.
     %
   %
     %The work has been supported by the
@@ -850,6 +850,8 @@ has as vertices its variables, where two variables are joined by an edge
 if they occur together in a clause of~$\varphi$.
 Given formula~$\varphi$, a TD~$\mathcal{T}=(T,\chi)$ of~$G_\varphi$
 and a node~$t$ of $T$.
+Sometimes, we refer to the treewidth of the primal graph of a given formula
+by the \emph{treewidth of the formula}.
 %For brevity, we refer
 %by~\emph{treewidth} \emph{of} a \emph{formula} to the treewidth of its
 %primal graph. 
@@ -869,7 +871,7 @@ where~$I$ is an assignment of~$\varphi_t$ and~$c$ is a counter. %within a table~
 Nodes~$t$ with~$\type(t)=\leaf$ consist of the empty assignment and counter~$1$, cf., Line~1.
 For a node~$t$ with introduced variable~$a\in\chi(t)$, we guess in Line~3 for each assignment~$\beta$ of the child table, whether~$a$ is set to true or to false, and ensure that~$\varphi_t$ is satisfied.
 When an atom~$a$ is removed in node~$t$, we project assignments of child tables to~$\chi(t)$, cf., Line~5, and counters of the same assignments are summed up.
-For join nodes~$t$, counters of common assignments in the child tables are multiplied as in Line~7.
+For join nodes~$t$, counters of common assignments in the child tables are multiplied, as shown in Line~7.
 
 \vspace{-1em}
 \begin{example}\label{ex:running0}
@@ -1039,7 +1041,8 @@ Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joi
 with a fresh initial table for the introduced variable~$a$ representing potential values for~$a$. In Line~\ref{line:intr} the selection of the $\theta$-join is performed according to~$\varphi_t$, i.e.\ corresponding to the local problem of~\cSAT.
 Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms typically need projection. 
 In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
-Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use again $\theta$-joins (and extended projection for maintaining counters), which allows us later to leverage advanced database technology. %of the last decades.
+Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use extended projection and $\theta$-joins, where we join on the same truth assignments, which allows us later to leverage advanced database technology. %of the last decades.
+Extended projection is needed for multiplying the counters of the two rows containing the same assignment.
 
 \begin{figure*}[t]%
 \centering
@@ -1152,7 +1155,7 @@ In fact, we discuss an implementation of a system according to this architecture
 
 We implemented the proposed architecture of the previous section in the prototypical \dpdb system.
 The system is open-source\footnote{Our system~\dpdb is available under GPL3 license
-    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/TODOv1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.}, written in Python 3 and uses PostgreSQL as DBMS.
+    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/v1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.}, written in Python 3 and uses PostgreSQL as DBMS.
 We are convinced though that one can easily replace PostgreSQL by any other state-of-the-art relational database that uses SQL.
 %
 %
@@ -1416,7 +1419,7 @@ also on github at
 %current hardware, 
 We mainly compare wall clock time and number of
 timeouts. 
-In the time we include, if applicable, \emph{preprocessing
+In the time we include \emph{preprocessing
   time} as well as \emph{decomposition time} for computing a %30
 TD with a fixed random seed. % and decomposition selection time.
 %
@@ -1479,11 +1482,33 @@ versions of publicly available \cSAT solvers, namely,
 \href{http://reasoning.cs.ucla.edu/minic2d/}{\textit{miniC2D}~1.0.0}~\cite{OztokDarwiche15a},
 \href{http://www.cril.univ-artois.fr/KC/eadt.html}{\textit{cnf2eadt}~1.0}~\cite{KoricheLagniezMarquisThomas13a}, 
 \href{http://www.sd.is.uec.ac.jp/toda/code/cnf2obdd.html}{\textit{bdd\_{}minisat\_\allowbreak{}all}~1.0.2}~\cite{TodaSoh15a},
-and \href{http://reasoning.cs.ucla.edu/sdd/}{\textit{sdd}~2.0}~\cite{Darwiche11a} (based on %
-knowledge compilation techniques).
+and \href{http://reasoning.cs.ucla.edu/sdd/}{\textit{sdd}~2.0}~\cite{Darwiche11a}, which are all based on %
+knowledge compilation techniques.
 %
 %
 %
+%
+%
+\begin{figure}[t]
+  %
+  %
+  \centering
+  \resizebox{.75\columnwidth}{!}{\includegraphics{plot_pmc.pdf}}
+  \resizebox{.75\columnwidth}{!}{\includegraphics{plot_pmc_35_enlarged.pdf}}
+  %
+  %
+  %
+  %
+  %
+  %
+  \caption{Runtime for the top 15 solvers over \emph{all}~\cSAT instances (top) / \emph{only} instances up to treewidth upper bound 35 (bottom). %
+    %
+    %
+    The x-axis refers to the number of instances and the y-axis
+    depicts the runtime sorted in ascending order for each solver
+    individually.}
+  \label{fig:runtime}
+\end{figure}
 %
 %
 %
@@ -1505,7 +1530,7 @@ and
 \href{https://sites.google.com/site/marcthurley/sharpsat}{\textit{sharpSAT}~13.02}~\cite{Thurley06a}.
 %
 Finally, we also included multi-core solvers
-\href{https://github.com/daajoe/GPUSAT/releases/tag/v0.815-pre}{\textit{gpusat}~1.0 and \textit{gpusat}~2.0}~\cite{FichteHecherZisser19}, as well as
+\href{https://github.com/daajoe/GPUSAT/releases/tag/v0.815-pre}{\textit{gpusat}~1.0 and \textit{gpusat}~2.0}~\cite{FichteHecherZisser19}, which both are based on dynamic programming, as well as
 \textit{countAntom}~1.0~\cite{BurchardSchubertBecker15a} on 12 physical CPU
 cores, which performed better than on 24 cores.
 %
@@ -1521,13 +1546,13 @@ cores, which performed better than on 24 cores.
 %data repository.
 %%
 %For~\WMC, 
-We considered also additional solvers, e.g., %\textit{sts},
-%\textit{\gpusatone}, \gpusatnu, \textit{miniC2D}, \textit{Cachet},
-%\textit{d4}, and
-\href{http://www.cril.univ-artois.fr/kc/ressources/query-dnnf-0.4.180625.zip}{\textit{d-DNNF
-    reasoner}~0.4.180625} on top of d4 as underlying knowledge
-compiler, where detailed results can be found online. %
-All experiments were conducted with default solver options.
+%We considered also additional solvers, e.g., %\textit{sts},
+%%\textit{\gpusatone}, \gpusatnu, \textit{miniC2D}, \textit{Cachet},
+%%\textit{d4}, and
+%\href{http://www.cril.univ-artois.fr/kc/ressources/query-dnnf-0.4.180625.zip}{\textit{d-DNNF
+%    reasoner}~0.4.180625} on top of d4 as underlying knowledge
+%compiler, where detailed results can be found online. %
+Experiments were conducted with default~solver~options.
 %
 %
 %For solver~\gpusatnu, we also benchmarked variant~\gpusatnuv{A+B}
@@ -1656,95 +1681,6 @@ The system operated on Ubuntu~18.04.1 LTS with kernel 4.15.0-34.
 %\end{table}
 %
 
-\subsection{Results} % \& Discussion}
-\todo{write}
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-
-
-\begin{figure}[t]
-  %
-  %
-  \centering
-  \resizebox{.7\columnwidth}{!}{\includegraphics{plot_pmc_enlarged.pdf}}
-  %
-  %
-  %
-  %
-  %
-  %
-  \caption{Runtime for the top 5 sequential and all parallel solvers over all the~\cSAT instances with pmc preprocessor. %
-    %
-    %
-    The x-axis refers to the number of instances and the y-axis
-    depicts the runtime sorted in ascending order for each solver
-    individually.  }
-  \label{fig:runtime}
-\end{figure}
-%
-Figure~\ref{fig:runtime} illustrates the top five sequential solvers,
-and all parallel counting solvers %
-%
-with preprocessor pmc %
-%
-in a cactus-like plot. 
-Table~\ref{tab:sat:merged} presents detailed runtime
-results for~\cSAT with preprocessor pmc, respectively. %B+E, and without preprocessing, respectively.
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-Since the solver sts produced results that varied from the correct
-result on average more than the value of the correct result, %
-%
-%
-%
-%
-%
-we excluded it from the presented results.  If we disallow
-preprocessing, \gpusatnu and \gpusatone perform only slightly better
-in the overall standing of the solvers. But \gpusatnu solves 42
-instances more and requires about 10 hours less of wallclock
-time. Further, we can observe, that %
-the variant~\gpusatnuv{A+B} performs particular well, mainly since for
-instances below width~30, the BST compression seems relatively
-expensive compared to the array data structure.
-%
-%
-%
-%
-%
-Interestingly, when considering the results on preprocessing in
-Table~\ref{tab:sat:merged} (top, mid) and Figure~\ref{fig:runtime} we
-observe that the architectural improvements pay off quite
-well. \gpusatnu can solve the vast majority of the instances and
-ranks second place.  
-%If one uses the B+E preprocessor shown in
-%Table~\ref{tab:sat:merged} (mid), \gpusatnu solves even more instances
-%as well as the other solvers. Still, it ranks fifth solving only 26
-%instances less than the best solver and 10 less than the third best
-%solver and solves the most instances having width below 30.
-
 \newcommand{\inacc}[1]{\ensuremath{\diamond{}}#1}
 \begin{table}[tb]
   \centering
@@ -1753,21 +1689,30 @@ ranks second place.
       \toprule
       & solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
       \midrule
-      \parbox[t]{1em}{\multirow{9}{*}{\rotatebox[origin=c]{90}{preprocessed by pmc}}}&miniC2D & \textbf{0} & 1193 & 29 & \textbf{10} & 2 & 1 & 7 & 13 & 0 & \textbf{1242} & \textbf{68.77} & 1 \\
-      &\gpusatnu & 4.7E-15 & \textbf{1196} & 32 & 1 & 0 & 0 & 0 & 250 & %
-                                                                                     \textbf{8} & 1229 & 71.27 & 2 \\
+      \parbox[t]{1em}{\multirow{17}{*}{\rotatebox[origin=c]{90}{preprocessed by pmc~\cite{LagniezMarquis14}}}}&miniC2D & \textbf{0} & 1193 & 29 & \textbf{10} & 2 & 1 & 7 & 13 & 0 & \textbf{1242} & \textbf{68.77} & 1 \\
+      &\gpusatnu & 4.7E-15 & \textbf{1196} & \textbf{32} & 1 & 0 & 0 & 0 & 250 & %
+                                                                                     2 & 1229 & 71.27 & 2 \\
      %
       &d4 & \textbf{0} & 1163 & 20 & \textbf{10} & 2 & \textbf{4} & 28 & 52 & 1 & 1227 & 76.86 & 3 \\
       %
-      & \gpusatnuv{A+B} & {4.6E-15} & {1187} & 18 & 1 & 0 & 0 & 0 & 120 & 7 & 1206 & 74.56 & 4 \\
-      &countAntom 12 & \textbf{0} & 1141 & 18 & \textbf{10} & \textbf{5} & \textbf{4} & 13 & 101 & 0 & 1191 & 84.39 & 5 \\
+      %& \gpusatnuv{A+B} & {4.6E-15} & {1187} & 18 & 1 & 0 & 0 & 0 & 120 & 7 & 1206 & 74.56 & 4 \\
+      &countAntom 12 & \textbf{0} & 1141 & 18 & \textbf{10} & {5} & \textbf{4} & 13 & 101 & 0 & 1191 & 84.39 & 5 \\
       &c2d & \textbf{0} & 1124 & 31 & \textbf{10} & 3 & 3 & 10 & 20 & 0 & 1181 & 84.41 & 6 \\
-      &sharpSAT & \textbf{0} & 1029 & 16 & \textbf{10} & 2 & \textbf{4} & \textbf{30} & \textbf{253} & 1 & 1091 & 106.88 & 7 \\
-      &\gpusatone & 1.7E-13 & 1020 & 16 & 0 & 0 & 0 & 0 & 106 & 7 & 1036 & 114.86 & 8 \\
+       & \dpdb & 0 & 1155 & 19 & 5 & 2 & 0 & 0 & 2 & 1 & 1181 & 100.40 \\
+      &sharpSAT & \textbf{0} & 1029 & 16 & \textbf{10} & 2 & \textbf{4} & {30} & {253} & 1 & 1091 & 106.88 & 7 \\
+      &\gpusatone & 1.7E-13 & 1020 & 16 & 0 & 0 & 0 & 0 & 106 & 1 & 1036 & 114.86 & 8 \\
       & sdd & \textbf{0} & 1014 & 4 & 7 & 1 & 0 & 2 & 0 & 0 & 1028 & 124.23 & 9 \\
+      & sts & 0 & 927 & 4 & 8 & \textbf{7} & 5 & \textbf{52} & 73 & \textbf{21} & 1003 & 128.43 \\
+    & dsharp & 0 & 853 & 3 & 7 & 2 & 0 & 0 & 83 & 0 & 865 & 157.87 \\
+    & cnf2eadt & 0 & 799 & 3 & 7 & 2 & 0 & 7 & \textbf{328} & 0 & 818 & 170.17 \\
+    & approxmc 3 & 0 & 794 & 3 & 7 & 2 & 0 & 6 & 10 & 0 & 812 & 173.35 \\
+    & bdd\_minisat\_all & 0 & 791 & 4 & 1 & 0 & 0 & 0 & 99 & 0 & 796 & 175.09 \\
+    & cachet & 0 & 624 & 3 & 8 & 2 & 3 & 24 & 3 & 0 & 664 & 209.26 \\
+    & approxmc 2 & 0 & 447 & 3 & 0 & 0 & 0 & 0 & 1 & 0 & 450 & 265.31 \\
+    & sharpCDCL & 0 & 340 & 3 & 0 & 0 & 0 & 0 & 0 & 0 & 343 & 289.17 \\
       %
       %
-      \midrule
+      %\midrule
 %      & solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
 %      \midrule
 %      \parbox[t]{1em}{\multirow{8}{*}{\rotatebox[origin=c]{90}{B+E preprocessing}}}&c2d & \textbf{0} & 1199 & 24 & \textbf{9} & 0 & 2 & 23 & 14 & 0 & \textbf{1257} & \textbf{63.46} & 1 \\
@@ -1810,15 +1755,13 @@ ranks second place.
 %                                                                           9 & 856 & 162.03 & 11 \\
 %      &cachet & \textbf{0} & 99 & 430 & 71 & 152 & 8 & 57 & 3 & 0 & 817 & 176.26 & 12 \\
 %      %
-      \midrule
-      &solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
+      %\midrule
+      %&solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
       \bottomrule
     \end{tabular}
   }
   \caption{%
-    Number of~\cSAT instances, grouped by treewidth upper bound intervals,
-    solved by sum of the top five sequential and all parallel counting solvers 
-    with preprocessor pmc.
+    Number of solved~\cSAT instances, preprocessed by pmc and grouped by intervals of upper bounds of the treewidth.
     time[h] is the cumulated  wall clock time in hours, where unsolved instances 
     are counted as 900 seconds.
 %
@@ -1826,6 +1769,63 @@ ranks second place.
   \label{tab:sat:merged}
 %
 \end{table}%
+
+\subsection{Results} % \& Discussion}
+%\todo{write}
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+Figure~\ref{fig:runtime} illustrates the top 15 solvers,
+where instances are preprocessed by pmc, %
+%
+in two cactus-like plots, where the x-axis refers to the number 
+of instances and the y-axis depicts the runtime sorted in ascending order for each solver individually.
+At the top, we provide an overview over all the benchmarked~\cSAT instances.
+Below, a more detailed picture is drawn, where only instances up to an upper bound\footnote{These upper bounds were obtained via decomposer htd in at most two seconds.} of treewidth 35 are considered.
+Overall, \dpdb seems to be quite competitive and beats most of the solvers, as for example \gpusatone, sharpSAT, dsharp, approxmc as well as cachet.
+If one considers only instances with TDs up to width 35 as in Figure~\ref{fig:runtime} (bottom), \dpdb is able to solve slightly more instances than c2d as well as countAntom.
+Surprisingly, our system shows a different runtime behavior than the other solvers. 
+We believe that reason lies in an initial overhead caused by the creation of the tables that seems to depend on the number of nodes of the used TD.
+There, I/O operations between main memory and hard disk seem to kick in.
+%
+%
+Table~\ref{tab:sat:merged} presents more detailed runtime results, showing a solid fifth place for \dpdb as our system solves the vast majority of the instances. %B+E, and without preprocessing, respectively.
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%Note that the solver sts produced results that varied from the correct
+%result on average more than the value of the correct result.  
+%
+%
+%
+%
+%
+%If one uses the B+E preprocessor shown in
+%Table~\ref{tab:sat:merged} (mid), \gpusatnu solves even more instances
+%as well as the other solvers. Still, it ranks fifth solving only 26
+%instances less than the best solver and 10 less than the third best
+%solver and solves the most instances having width below 30.
 
 
 %
