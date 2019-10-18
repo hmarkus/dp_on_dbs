@@ -1606,7 +1606,7 @@ Experiments were conducted with default~solver~options.
 %
 Almost all solvers were executed on a cluster of 12 nodes. Each node is equipped
 with two Intel Xeon E5-2650 CPUs consisting of 12 physical cores each
-at 2.2 GHz clock speed and 256 GB RAM. %
+at 2.2 GHz clock speed, 256 GB RAM and 1 TB hard disc drives (\emph{not} an SSD) Seagate ST1000NM0033. %
 The results were gathered on Ubuntu~16.04.1 LTS machines with disabled hyperthreading
 on kernel~4.4.0-139. %, which is already a post-Spectre and
 %post-Meltdown kernel\footnote{Details on spectre and meltdown: \href{https://spectreattack.com/}{\nolinkurl{spectreattack.com}}.}.
@@ -1809,7 +1809,7 @@ Overall, \dpdb seems to be quite competitive and beats most of the solvers, as f
 %
 Surprisingly, our system shows a different runtime behavior than the other solvers. 
 We believe that the reason lies in an initial overhead caused by the creation of the tables that seems to depend on the number of nodes of the used TD.
-There, I/O operations between main memory and hard disk seem to kick in.
+There, \emph{I/O operations} of writing from main memory to hard disk seem to kick in.
 %
 %
 Table~\ref{tab:sat:merged} presents more detailed runtime results, showing a solid sixth place for \dpdb as our system solves the vast majority of the instances. %B+E, and without preprocessing, respectively.
