@@ -1712,8 +1712,8 @@ The system operated on Ubuntu~18.04.1 LTS with kernel 4.15.0-34.
       %
       %& \gpusatnuv{A+B} & {4.6E-15} & {1187} & 18 & 1 & 0 & 0 & 0 & 120 & 7 & 1206 & 74.56 & 4 \\
       &countAntom 12 & \textbf{0} & 1141 & 18 & \textbf{10} & {5} & \textbf{4} & 13 & 101 & 0 & 1191 & 84.39 & 5 \\
+       & \dpdb & 0 & 1159 & 19 & 5 & 2 & 0 & 0 & 2 & 1 & 1185 & 100.99 \\
       &c2d & \textbf{0} & 1124 & 31 & \textbf{10} & 3 & 3 & 10 & 20 & 0 & 1181 & 84.41 & 6 \\
-       & \dpdb & 0 & 1155 & 19 & 5 & 2 & 0 & 0 & 2 & 1 & 1181 & 100.40 \\
       &sharpSAT & \textbf{0} & 1029 & 16 & \textbf{10} & 2 & \textbf{4} & {30} & {253} & 1 & 1091 & 106.88 & 7 \\
       &\gpusatone & 1.7E-13 & 1020 & 16 & 0 & 0 & 0 & 0 & 106 & 1 & 1036 & 114.86 & 8 \\
       & sdd & \textbf{0} & 1014 & 4 & 7 & 1 & 0 & 2 & 0 & 0 & 1028 & 124.23 & 9 \\
@@ -1812,9 +1812,9 @@ We believe that the reason lies in an initial overhead caused by the creation of
 There, \emph{I/O operations} of writing from main memory to hard disk seem to kick in.
 %
 %
-Table~\ref{tab:sat:merged} presents more detailed runtime results, showing a solid sixth place for \dpdb as our system solves the vast majority of the instances. %B+E, and without preprocessing, respectively.
+Table~\ref{tab:sat:merged} presents more detailed runtime results, showing a solid fifth place for \dpdb as our system solves the vast majority of the instances. %B+E, and without preprocessing, respectively.
 Assume we only have instances up to an upper bound\footnote{These upper bounds were obtained via decomposer htd in at most two seconds.} of treewidth 35.
-Then, if instances with TDs up to width 35 are considered, \dpdb solves even slightly more instances than c2d and~countAntom.
+Then, if instances with TDs up to width 35 are considered, \dpdb solves even slightly more instances than~countAntom.
 %
 %
 %
