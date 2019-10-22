@@ -246,23 +246,38 @@ class Problem(object):
 
         def create_tables():
             logger.debug("Creating tables")
-            workers = {}
+            self.db.create_table("td_node_status", [
+                ("node", "INTEGER NOT NULL PRIMARY KEY"),
+                ("start_time", "TIMESTAMP"),
+                ("end_time", "TIMESTAMP"),
+                ("rows", "INTEGER")
+            ])
+            self.db.create_table("td_edge", [("node", "INTEGER NOT NULL"), ("parent", "INTEGER NOT NULL")])
+            self.db.create_table("td_bag", [("bag", "INTEGER NOT NULL"),("node", "INTEGER")])
 
-            with ThreadPoolExecutor(self.max_worker_threads) as executor:
+            if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
+                workers = {}
+                with ThreadPoolExecutor(self.max_worker_threads) as executor:
+                    for n in self.td.nodes:
+                        e = executor.submit(create_tables_for_node,n,workers)
+                        workers[n.id] = e
+            else:
                 for n in self.td.nodes:
-                    e = executor.submit(create_tables_for_node,n,workers)
-                    workers[n.id] = e
+                    create_tables_for_node(n)
 
-        def create_tables_for_node(n, workers):
-            for c in n.children:
-                if not self.interrupted:
-                    workers[c.id].result()
 
-            if self.interrupted:
-                return
+        def create_tables_for_node(n, workers = {}):
+            if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
+                for c in n.children:
+                    if not self.interrupted:
+                        workers[c.id].result()
+                if self.interrupted:
+                    return
+                db = DB.from_pool(self.pool)
+                db.set_praefix(f"p{self.id}_")
+            else:
+                db = self.db
 
-            db = DB.from_pool(self.pool)
-            db.set_praefix(f"p{self.id}_")
             # create all columns and insert null if values are not used in parent
             # this only works in the current version of manual inserts without procedure calls in worker
             db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
@@ -274,7 +289,8 @@ class Problem(object):
             ass_view = self.assignment_view(n)
             ass_view = db.replace_dynamic_tabs(ass_view)
             db.create_view(f"td_node_{n.id}_v", ass_view)
-            db.close()
+            if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
+                db.close()
             
         def insert_data():
             logger.debug("Inserting problem data")
@@ -332,9 +348,10 @@ class Problem(object):
         self.db.ignore_next_praefix()
         self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
         self.db.commit()
-        self.db.ignore_next_praefix()
-        elapsed = self.db.select("problem",["end_time-calc_start_time","calc_start_time-setup_start_time"],[f"ID = {self.id}"])
-        logger.info("Setup time: %s; Calc time: %s", elapsed[1], elapsed[0])
+        if "faster" not in self.kwargs or not self.kwargs["faster"]:
+            self.db.ignore_next_praefix()
+            elapsed = self.db.select("problem",["end_time-calc_start_time","calc_start_time-setup_start_time"],[f"ID = {self.id}"])
+            logger.info("Setup time: %s; Calc time: %s", elapsed[1], elapsed[0])
         self.db.close()
 
     def interrupt(self):

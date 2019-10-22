@@ -127,6 +127,7 @@ if __name__ == "__main__":
     gen_opts.add_argument("--td-file", dest="td_file", help="Store TreeDecomposition file (htd Output)")
     gen_opts.add_argument("--gr-file", dest="gr_file", help="Store Graph file (htd Input)")
     gen_opts.add_argument("--faster", dest="faster", help="Store less information in database", action="store_true")
+    gen_opts.add_argument("--parallel-setup", dest="parallel_setup", help="Perform setup in parallel", action="store_true")
 
     # problem options
     prob_opts = parser.add_argument_group("problem options", "Options that apply to all problem types")
