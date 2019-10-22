@@ -6,6 +6,7 @@ Solve dynamic programming problems on tree decompositions using databases
 ### htd
 
 [htd on github](https://github.com/TU-Wien-DBAI/htd/)
+
 Branch `normalize_cli` is required by dpdb (currently not included in htd's master)
 
 ### Database
