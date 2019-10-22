@@ -1,0 +1,1987 @@
+\documentclass{llncs}
+
+\newcommand{\trash}[1]{}
+
+\newcommand{\longversion}[1]{#1}
+\newcommand{\shortversion}[1]{}
+
+\usepackage[USenglish]{babel}
+\usepackage[novbox]{pdfsync}
+\usepackage{todonotes}
+%
+\usepackage{colortbl}
+%
+\usepackage[hyphens,spaces]{url}
+\usepackage{hyperref}
+\usepackage[]{xcolor}
+\renewcommand\UrlFont{\color{blue}\rmfamily} 
+\usepackage{accsupp}
+
+%
+\newcommand{\tuplecolor}[1]{\textcolor{#1}}
+\newcommand{\inputPredColor}{orange!55!red}
+\newcommand{\outputPredColor}{blue!45!black}
+\newcommand{\statePredColor}{green!62!black}
+\newcommand{\specialPredColor}{red!62!black}
+
+\newcommand{\MAIR}[2]{\ensuremath{#1^+_{#2}}}%
+\newcommand{\MAR}[1]{\ensuremath{#1^-_a}}%
+\newcommand{\MARR}[2]{\ensuremath{#1^-_{#2}}}%
+
+\newcommand{\Tab}[1]{\ensuremath{\text{C-Tabs}}}
+
+\usepackage{soul}
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\graphicspath{{./1-figs/}{./1-plots/}}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{alltt}
+%
+%
+%
+%
+
+%
+\usepackage{microtype}
+
+%
+\usepackage{array}
+\newcolumntype{H}{>{\setbox0=\hbox\bgroup}c<{\egroup}@{}}
+\usepackage{multirow}
+
+%
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
+
+\newcommand{\cid}[1]{\ensuremath{[\![#1]\!]}}
+
+
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\renewcommand*{\algorithmcfname}{Listing}
+\SetKwInput{KwData}{In}
+\SetKwInput{KwResult}{Out}
+\setlength{\textfloatsep}{1em}
+\SetAlFnt{\small}
+\SetAlCapFnt{\small}
+\SetAlCapNameFnt{\small}
+\SetAlCapHSkip{0pt}
+\SetEndCharOfAlgoLine{}
+\IncMargin{-0.4em}
+\makeatletter
+\newcommand{\algorithmfootnote}[2][\footnotesize]{
+  \let\old@algocf@finish\@algocf@finish
+  \def\@algocf@finish{\old@algocf@finish
+    \leavevmode\rlap{\begin{minipage}{\linewidth}
+    #1#2
+    \end{minipage}}
+  }
+}
+\makeatother
+
+
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,intersections}
+\usetikzlibrary{fit,petri,topaths,calc}
+\usetikzlibrary{shapes,decorations}
+\usetikzlibrary{patterns}
+\usetikzlibrary{positioning}
+\tikzstyle{tdnode} = [draw,rounded corners,top color=vertexTopColor,bottom color=vertexBottomColor,minimum size=1.5em]
+\tikzstyle{stdnode} = [tdnode, font=\scriptsize]
+\tikzstyle{stdnodenum} = [minimum size=1.5em, font=\scriptsize]
+\tikzstyle{tdlabel} = [draw=none, rectangle, fill=none, inner sep=0pt, font=\scriptsize]
+\colorlet{vertexTopColor}{white}
+%
+\colorlet{vertexBottomColor}{black!10}
+%
+
+
+\usepackage{rotating}
+\usepackage{xspace}
+
+%
+%
+%
+%
+\def\hy{\hbox{-}\nobreak\hskip0pt}
+\def\hyph{-\penalty0\hskip0pt\relax}
+
+\newcommand{\SB}{\{\,}%
+\newcommand{\SM}{\;{|}\;}%
+\newcommand{\SE}{\,\}}%
+
+%
+%
+\newcommand{\sharpP}{\#P\xspace}
+\newcommand{\sharpPc}{\#\ensuremath{\cdot}P\hy complete\xspace}
+
+\newcommand{\ta}[1]{\ensuremath{2^{#1}}}
+\newcommand{\eqdef}{\ensuremath{\,\mathrel{\mathop:}=}}
+\newcommand{\TTT}{\mathcal{T}}
+\newcommand{\Card}[1]{|#1|}
+\let\phi=\varphi
+\let\epsilon=\varepsilon
+
+\newcommand{\SAT}{\textsc{Sat}\xspace}%
+\newcommand{\CSP}{\textsc{Csp}\xspace}%
+\newcommand{\cSAT}{\textsc{\#Sat}\xspace}%
+\newcommand{\cTCOL}{\textsc{\#$o$-Col}\xspace}%
+\newcommand{\VC}{\textsc{MinVC}\xspace}%
+\newcommand{\cVC}{\textsc{\#MinVC}\xspace}%
+\newcommand{\WMC}{\textsc{WMC}\xspace}%
+\DeclareMathOperator{\tw}{tw}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\attr}{att}
+\DeclareMathOperator{\ass}{ass}
+\DeclareMathOperator{\width}{width}
+\DeclareMathOperator{\inctw}{inctw}
+\DeclareMathOperator{\primtw}{primtw}
+\DeclareMathOperator{\dualtw}{dualtw}
+
+\newcommand{\citex}[1]{\citeauthor{#1}~\shortcite{#1}}
+\newcommand{\citey}[1]{\citeauthor{#1},~\citeyear{#1}}
+
+
+%
+%
+%
+%
+%
+
+\newcommand{\dpdb}{{\small\textsf{dpdb}}\xspace}
+\newcommand{\gpusat}{{{gpusat}}\xspace}
+\newcommand{\gpusatnu}{{{gpusat2}}\xspace}
+\newcommand{\gpusatnuv}[1]{{{gpusat2({\textit{#1}})}}\xspace}
+\newcommand{\gpusatone}{{{gpusat1}}\xspace}
+
+%
+\newcommand{\tm}[1]{\textbf{#1}}
+
+\newcommand{\instances}[1]{\texttt{#1}}
+%
+\newcommand{\set}[1]{\emph{#1}}
+
+%
+
+\newcommand{\etal}{et~al.\@\xspace}
+\newcommand{\AlgNone}{None\xspace}
+
+\newcommand{\footnoteitext}[1]{\stepcounter{footnote}
+  \footnotetext[\thefootnote]{#1}}
+
+
+\newcommand{\algo}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\ops}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\tab}[1]{\ensuremath{\tau_{#1}}}
+
+\newcommand{\CTabs}[1]{\ensuremath{\text{C-Tabs}}}
+
+\DeclareMathOperator{\var}{var}
+%\newcommand{\Ft}[1]{\ensuremath{\varphi_{\hspace{-0.05em}\leq\hspace{-0.05em}#1}}}
+
+\DeclareMathOperator{\type}{type}
+\newcommand{\intr}{\textit{intr}}
+\newcommand{\leaf}{\textit{leaf}}
+\newcommand{\rem}{\textit{rem}}
+\newcommand{\join}{\textit{join}}
+%
+
+\spnewtheorem{EXa}{Example}{\bfseries}{\normalfont}
+\usepackage{amssymb}%
+\renewenvironment{example}{\begin{EXa}}{\hfill\ensuremath{\blacksquare}\end{EXa}}
+
+\usepackage{multicol}
+\usepackage{multirow}
+
+
+\title{Exploiting Database Management Systems and Treewidth for Counting%
+  %
+  \thanks{%
+    Our system~\dpdb is available under GPL3 license
+    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/v1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.
+    %
+  %
+    %The work has been supported by the
+    %Austrian Science Fund (FWF), Grants Y698 and P26696, and the
+    %German Science Fund (DFG), Grant HO 1294/11-1.
+    %
+    %
+    %
+    %
+  }%
+%
+}
+
+%
+%
+%
+
+%
+
+%
+\usepackage[misc,geometry]{ifsym} 
+
+\author{Johannes K. Fichte\inst{1}\orcidID{0000-0002-8681-7470}%
+  \and Markus Hecher\inst{2,3}\orcidID{0000-0003-0131-6771} 
+  \and Patrick Thier\inst{2}%\orcidID{TODO0000-0003-0131-6771}
+  \and Stefan Woltran\inst{2}\orcidID{0000-0003-1594-8972}
+}%
+%
+\institute{TU Dresden, %
+  Germany \email{johannes.fichte@tu-dresden.de} %
+  \and TU Wien, %
+  Austria \email{\{hecher,woltran,thier\}@dbai.tuwien.ac.at} \and %
+  University of
+  Potsdam, %
+  %
+  Germany \email{hecher@uni-potsdam.de}
+%
+%
+%
+%
+}
+\authorrunning{Fichte et al.}
+
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Bounded treewidth is one of the most cited combinatorial invariants, which was applied in the literature for solving several counting problems efficiently. 
+%Counting problems %in the counting complexity class \#P are considered to be extremely hard, since one can solve any problem of the polynomial hierarchy
+%by means of a polynomial number of calls to a \#P oracle.
+A canonical counting problem is \cSAT, which asks to count the satisfying assignments of a Boolean formula. Recent work shows that benchmarking instances for \cSAT often have reasonably small treewidth. %Hence, algorithms that exploit small treewidth are particularly suited to solve \cSAT.
+This paper deals with counting problems for instances of small treewidth. We introduce a general framework to solve counting questions based on state-of-the-art database management systems (DBMS). Our framework takes explicitly advantage of small treewidth by solving instances using dynamic programming (DP) on tree decompositions (TD). Therefore, we implement the concept of DP into a DBMS (PostgreSQL), since DP algorithms are already often given in terms of table manipulations in theory. This allows for elegant specifications of DP algorithms and the use of SQL to manipulate records and tables, which gives us a natural approach to bring DP algorithms into practice. To the best of our knowledge, we present the first
+approach to employ a DBMS for algorithms on TDs. A key advantage of our approach is that DBMS naturally allow to deal with huge tables with a limited amount of main memory (RAM), parallelization, as well as suspending %and resuming 
+computation.
+  %
+  \keywords{Dynamic Programming \and
+    Parameterized Algorithmics \and Bounded Treewidth \and
+    Database Systems \and SQL \and Relational Algebra \and
+    Counting}
+\end{abstract}
+
+\section{Introduction}
+%\todo{write following part before ``Contribution''}
+%
+%they can
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+Counting solutions is a well-known task in mathematics, computer
+science, and other
+areas~\cite{ChakrabortyMeelVardi16a,DomshlakHoffmann07a,GomesKautzSabharwalSelman08a,SangBeameKautz05a}.
+%
+In combinatorics, for instance, one characterizes the
+number of solutions to problems by means of mathematical
+expressions,~e.g., generating
+functions~\cite{DoubiletRotaStanley1972}.
+%
+%
+One particular counting problem, namely \emph{model counting} (\cSAT) asks to output the number
+of solutions of a given Boolean formula.
+%
+Model counting and variants thereof have already
+%
+been applied for solving a variety of real-world applications~\cite{%to real-world
+%questions in modern society, %
+%related to reasoning, and
+%combinatorics~
+ChakrabortyMeelVardi16a,ChoiBroeckDarwiche15a,MeelEtAl17a,XueChoiDarwiche12a}.
+%
+Such problems are typically considered rather hard,
+since \cSAT %and \WMC are known to be complete for the
+%class~
+is complete for the class
+\sharpP~\cite{BacchusDalmaoPitassi03,Roth96},
+i.e., one can simulate any problem of the polynomial hierarchy
+with polynomially many calls~\cite{Toda91} to a~\cSAT solver.
+Taming this high complexity is possible with
+techniques from parameterized complexity~\cite{CyganEtAl15}. 
+%However, recently it was shown that the better part~\cite{FichteHecherZisser19} of the 
+In fact, many of the
+publicly available~\cSAT instances
+%might come to the rescue. %rescue.
+%%
+%In particular, 
+show good structural properties
+after using regular preprocessors like pmc~\cite{LagniezMarquis14}, see~\cite{FichteHecherZisser19}. 
+%in this area, 
+%more than 80\% of these practically relevant instances (graph representations thereof) 
+By good structural properties, we mean that graph representations of these instance
+have reasonably small \emph{treewidth}.
+%
+%To be more concrete, the 
+The measure treewidth is a structural parameter of graphs
+which models the closeness of the graph to being a tree 
+%Treewidth 
+and is one of the most cited %\footnote{On October 17, 2019, Google Scholar shows 19,200 results on treewidth. } 
+combinatorial invariants studied in parameterized complexity~\cite{CyganEtAl15}, and subject of recent competitions~\cite{DellKomusiewiczTalmon18a}.
+
+This observation gives rise to a general framework for counting problems
+that leverages treewidth.
+%
+The general idea to develop such frameworks is indeed not new,
+since there are both, specialized solvers~\cite{CharwatWoltran17,FichteHecherZisser19,KiljanPilipczuk18}, as well as general 
+systems like D-FLAT~\cite{BliemEtAl16}, Jatatosk~\cite{BannachBerndt19}, 
+and sequoia~\cite{LangerEtAl12}, that exploit treewidth.
+%
+Some of these systems explicitly use \emph{dynamic programming (DP)} 
+to directly exploit treewidth
+by means of so-called \emph{tree decompositions (TDs)},
+whereas others provide some kind of declarative layer to model
+the problem (and perform decomposition and DP internally).
+%
+%SW: message ist mir nicht klar
+%However, for solving problems, most of the general systems~\cite{BannachBerndt19,LangerEtAl12}
+%require a descriptive model of the problem, 
+%where an abstract view or for example certain logics are used internally,
+%but problems in these systems are not directly described by means of 
+%dynamic programming algorithms.
+%
+In this work, we solve (counting) problems by means of explicitly specified DP algorithms,
+%where the algorithm is specified by 
+where essential parts of the 
+DP algorithm are specified in form of SQL {\ttfamily SELECT} queries.
+The actual run of the DP algorithm is then delegated to our system~\dpdb,
+which employs \emph{database management systems (DBMS)}~\cite{Ullman89}.
+%
+This has not only the advantage of naturally describing and manipulating the tables
+that are obtained during DP, but also allows \dpdb to benefit from decades of
+database technology in form of the capability to deal with huge tables
+using limited amount of main memory (RAM),
+dedicated database joins, as well as
+query optimization and data-dependent execution plans.
+
+%
+%overall idea is
+%
+%for~\cSAT in fact 
+%
+%
+\vspace{-.9em}
+\paragraph{Contribution.}  
+We implement a system \dpdb for solving counting problems based on dynamic programming on tree decompositions,
+and present the following contributions.
+(i) Our system \dpdb uses database management systems to handle table operations needed
+for performing dynamic programming efficiently. The system \dpdb is written in Python and employs PostgreSQL as DBMS,
+but can work with other DBMSs easily.
+(ii) The architecture of \dpdb allows to solve general problems of bounded treewidth that can be solved by
+by means of table operations (in form of relational algebra and SQL) on tree decompositions. As a result, \dpdb is a generalized framework 
+for dynamic programming on tree decompositions, where one only needs to specify the essential and problem-specific parts of dynamic programming
+in order to solve (counting) problems.
+(iii) Finally, we show how to solve the canonical problem \cSAT with the help of \dpdb, 
+where it seems that the architecture of \dpdb
+is particularly well-suited. Concretely, we compare the runtime of
+our system with state-of-the-art model counters, where we observe competitive behavior
+and promising indications for future work.
+%
+
+\vspace{-1em}
+\section{Preliminaries}\vspace{-.6em}
+
+We assume familiarity with terminology of graphs and trees.
+For details, we refer to the literature and standard textbooks~\cite{Diestel12}.
+
+%\refstepcounter{algocf}\label{fig:prim1}%
+\vspace{-.8em}
+\paragraph*{Boolean Satisfiability.}
+  We define Boolean formulas and their evaluation in the usual
+  way, cf., ~\cite{KleineBuningLettman99}.
+  %
+  %
+  A literal is a Boolean variable~$x$ or its negation~$\neg
+  x$.
+  A \emph{CNF formula}~$\varphi$ is a set of \emph{clauses} interpreted as conjunction. A clause is a set of literals
+  interpreted as disjunction. For a formula or clause~$X$, we
+  abbreviate by $\var(X)$ the variables that occur~in~$X$.
+%
+  %
+%\longversion{%
+%   A \emph{clause} is a finite set of literals, interpreted as the
+%  disjunction of these literals.
+%
+%
+%
+%A \emph{Boolean formula}
+%%
+%is a finite set of clauses, interpreted as a conjunction of the clauses.
+%
+%Let $F$ be a formula. 
+%A \emph{sub-formula~$S$} of~$F$ consists of
+%subsets of clauses of~$F$.
+%
+%
+%
+%
+An \emph{assignment} of~$\varphi$ is a mapping
+$I: \var(\varphi) \rightarrow \{0,1\}$.
+%
+%
+%
+%
+%
+%
+%
+The formula~$\varphi(I)$ \emph{under assignment~$I$} is obtained
+by removing every clause~$c$ from $\varphi$ that contains a literal set to~$1$
+by $I$, and removing from every remaining clause of~$\varphi$ all literals set
+to~$0$ by~$I$. An assignment~$I$ is \emph{satisfying} if
+$\varphi(I)=\emptyset$.
+%
+\emph{Problem \cSAT} asks to output the number of satisfying assignments
+of a formula.
+%
+%
+%
+%}
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+
+
+%
+
+%
+\vspace{-.8em}
+\paragraph*{Tree Decomposition and Treewidth.} %
+%
+
+\begin{figure}[t]%
+\centering
+\begin{tikzpicture}[node distance=7mm,every node/.style={fill,circle,inner sep=2pt}]
+\node (a) [label={[text height=1.5ex,yshift=0.0cm,xshift=0.05cm]left:$d$}] {};
+\node (b) [right of=a,label={[text height=1.5ex]right:$a$}] {};
+\node (c) [below left of=b,label={[text height=1.5ex,yshift=0.09cm,xshift=0.05cm]left:$b$}] {};
+\node (d) [below right of=b,label={[text height=1.5ex,yshift=0.09cm,xshift=-0.05cm]right:$c$}] {};
+%
+\draw (a) to (b);
+%
+\draw (b) to (c);
+\draw (b) to (d);
+\draw (c) to (d);
+%
+\end{tikzpicture}\hspace{1em}%
+\begin{tikzpicture}[node distance=0.5mm]
+%
+\tikzset{every path/.style=thick}
+
+\node (leaf1) [tdnode,label={[yshift=-0.25em,xshift=0.5em]above left:$t_1$}] {$\{a,b,c\}$};
+\node (leaf2) [tdnode,label={[xshift=-1.0em, yshift=-0.15em]above right:$t_2$}, right = 0.1cm of leaf1]  {$\{a,d\}$};
+\coordinate (middle) at ($ (leaf1.north east)!.5!(leaf2.north west) $);
+\node (join) [tdnode,ultra thick,label={[]left:$t_3$}, above  = 1mm of middle] {$\{a\}$};
+
+\coordinate (top) at ($ (join.north east)+(3.5em,0) $);
+\coordinate (bot) at ($ (top)+(0,-4em) $);
+
+%
+\draw [->] (join) to (leaf1);
+\draw [->] (join) to (leaf2);
+\end{tikzpicture}%
+\caption{Graph~$G$ %from Example~\ref{ex:running0}
+  (left) with a TD~${\cal T}$ of graph~$G$
+  (right).}%
+\label{fig:graph-td}%
+\end{figure}
+
+
+A \emph{tree decomposition (TD)}~\cite{Kloks94a,CyganEtAl15} of a given graph~$G$ is a pair
+$\TTT=(T,\chi)$ where $T$ is a rooted tree and $\chi$ is a mapping
+which assigns to each node $t\in V(T)$ a set~$\chi(t)\subseteq V(G)$,
+called \emph{bag}, such that (i) $V(G)=\bigcup_{t\in V(T)}\chi(t)$
+and
+$E(G)\subseteq\SB \{u,v\} \SM t\in V(T), \{u,v\}\subseteq \chi(t)\SE$;
+and (ii) for each $r, s, t\in V(T)$, such that $s$ lies on the path
+from~$r$ to $t$, we have $\chi(r) \cap \chi(t) \subseteq \chi(s)$. We
+let $\width(\TTT) \eqdef \max_{t\in V(T)}\Card{\chi(t)}-1$.
+%
+The
+\emph{treewidth} $\tw(G)$ of $G$ is the minimum $\width({\TTT})$ over
+all TDs~$\TTT$ of $G$.
+%
+For a node~$t \in V(T)$, we say that $\type(t)$ is $\leaf$ if $t$ has
+no children and~$\chi(t)=\emptyset$; $\join$ if $t$ has children~$t'$ and $t''$ with
+$t'\neq t''$ and $\chi(t) = \chi(t') = \chi(t'')$; $\intr$
+(``introduce'') if $t$ has a single child~$t'$,
+$\chi(t') \subseteq \chi(t)$ and $|\chi(t)| = |\chi(t')| + 1$; $\rem$
+(``removal'') if $t$ has a single child~$t'$,
+$\chi(t') \supseteq \chi(t)$ and $|\chi(t')| = |\chi(t)| + 1$. If for
+every node $t\in V(T)$, %
+$\type(t) \in \{ \leaf, \join, \intr, \rem\}$, then the TD is called \emph{nice}.
+
+\vspace{-.35em}
+\begin{example}
+Figure~\ref{fig:graph-td} depicts a graph~$G$
+and a TD~$\TTT$ of~$G$ of width~$2$.
+  The treewidth of~$G$ is also~$2$ since~$G$ contains
+	a complete graph with~$3$ vertices~\cite{Kloks94a}.
+ % are depicted in
+ % Figure~\ref{fig:graph-td}. 
+\end{example}
+%
+%
+%
+%
+%The formula~$F_{\leq s}$ denotes the union over all~$F_t$ for all
+%descendant nodes~$t\in V(T)$ of~$s$. In other words, $F_{\leq s}$ is
+%the sub-formula of~$F$ that contains all clauses that have been
+%entirely covered by a bag~$\chi(s)$ for $t$ and any of its descendant
+%nodes.
+%
+
+\vspace{-1.5em}
+\paragraph*{Relational Algebra.}%
+We use relational algebra~\cite{Codd70} for manipulation of relations,
+which forms the theoretical basis of its the well-known implementation database standard 
+\emph{Structured Query Language (SQL)}~\cite{Ullman89} on tables.
+%\todo{mh: db master ref}
+An \emph{attribute}~$a$ is of a certain finite \emph{domain~$\dom(a)$}.
+Then, a \emph{tuple}~$r$ over set~$\attr(r)$ of attributes
+is a set of pairs of the form~$(a, v)$ with~$a\in\attr(r),v\in \dom(a)$ s.t.\ for each~$a\in \attr(r)$, there is exactly one~$v\in\dom(a)$ with~$(a,v)\in r$.
+A \emph{relation~$R$} is a finite set of tuples~$r$ over set~$\attr(R)\eqdef\attr(r)$ of attributes.
+Given a relation~$R$ over~$\attr(R)$.
+Then, we let~$\dom(R)\eqdef \bigcup_{a\in \attr(R)}\dom(a)$, and let relation~$R$ \emph{projected to~$A\subseteq \attr(R)$} be given by $\Pi_{A}(R)\eqdef \{r_A \mid r\in R\}$, where~$r_A \eqdef \{(a, v) \mid (a, v) \in r, a \in A\}$.
+This concept can be lifted to \emph{extended projection~$\dot\Pi_{A,S}$}, where we assume in addition to~$A\subseteq \attr(R)$, a set~$S$ of expressions of the form~$a \leftarrow f$, such that $a\in \attr(R)\setminus A$, and $f$ is an arithmetic function that takes a tuple~$r\in R$,
+such that there is at most one expression in~$S$ for each $a\in \attr(R)\setminus A$.
+Formally, we define $\dot\Pi_{A,S}(R)\eqdef \{r_A \cup r^S \mid r\in R\}$ with~$r^S \eqdef \{(a, f(r)) \mid a \in \attr(r), (a \leftarrow f) \in S\}$.
+%This can be lifted to \emph{extended projection~$\dot\Pi_{E}(R)$}, where
+Later, we use \emph{aggregation by grouping~$_A G_{(a\leftarrow g)}$}, where we assume~$A\subseteq \attr(R), a\in\attr(R)\setminus A$ and a so-called \emph{aggregate function~$g$}, which takes a relation~$R'\subseteq R$ and returns a value of domain~$\dom(a)$. Therefore, we let~$_A G_{(a\leftarrow g)}(R)\eqdef \{r\cup \{(a,g(R[r]))\} \mid r\in\Pi_{A}(R)\}$, where $R[r]\eqdef\{r'\mid r'\in R, r\subseteq r'\}$.
+We define \emph{renaming} of~$R$ given set~$A$ of attributes, and a bijective mapping~$m:\attr(R) \rightarrow A$ s.t.\ $\dom(a)=\dom(m(a))$ for~$a\in\attr(R)$, by~$\rho_m(R) \eqdef \{(m(a),v) \mid (a,v)\in R\}$.
+\emph{Selection} of rows in $R$ according to a given Boolean formula~$\varphi$ with equality\footnote{We allow for~$\varphi$ to contain expressions~$v{\approx}v'$ as variables for $v,v'\in\dom(R)\cup\attr(R)$, and we abbreviate for $v\in\attr(R)$ with~$\dom(v)=\{0,1\}$, $v{\approx}1$ by~$v$ and~$v{\approx}0$ by~$\neg v$.} is defined by~$\sigma_{\varphi}(R)\eqdef \{ r \mid r\in R, \varphi(r^E)=\emptyset \}$, where~$r^{E}$ is a truth assignment over~$\var(\varphi)$ such that for each~$v,v',v''\in\dom(R)\cup\attr(R)$ (1) $r^E(v{\approx}v')=1$ if $(v, v')\in r$, (2) $r^E(v{\approx}v)=1$, (3) $r^E(v{\approx}v')=r^E(v'{\approx}v)$, and (4) if $r^E(v{\approx}v')=1$, and $r^E(v'{\approx}v'')=1$, then $r^E(v{\approx}v'')=1$.
+Given a relation~$R'$ with~$\attr(R')\cap\attr(R)=\emptyset$. Then, we refer to the \emph{cross-join} by~$R\times R'\eqdef \{ r\cup r' \mid r\in R, r'\in R'\}$.
+Further, a \emph{$\theta$-join} (according to $\varphi$) corresponds to~$R \bowtie_\varphi R' \eqdef \sigma_\varphi(R\times R')$.
+
+
+\section{Towards Relational Algebra for Dynamic Programming}
+A solver based on \emph{dynamic programming (DP)} %for formulas
+evaluates the input~$\mathcal{I}$ in parts along a given TD of a graph representation~$G$
+of the input.
+%primal graph~$P_F$.  
+Thereby, for each node~$t$ of the TD, intermediate results are %usually
+stored in a \emph{table}~$\tab{t}$. %
+This is achieved by running a so-called \emph{table algorithm}~$\algo{A}$,
+which is designed for a certain graph representation, 
+and stores in~$\tab{t}$ results of problem parts of~$\mathcal{I}$,
+thereby considering tables~$\tab{t'}$ for child nodes~$t'$ of~$t$. %solves for each node~$t$ 
+%
+DP works for many problems~$\mathcal{P}$ as follows. %proceeds in four steps.
+\vspace{-.5em}
+\begin{enumerate}%
+\item Construct a graph representation~$G$ of the given input instance~$\mathcal{I}$.
+\item Heuristically compute a tree decomposition~$\TTT=(T,\chi)$ of~$G$.
+\item\label{step:dp} Traverse the nodes in~$V(T)$ in
+  post-order, i.e., perform a bottom-up traversal of~$T$.
+  At every node~$t$ during post-order traversal, execute a table algorithm~$\algo{A}$ 
+  that takes as input $t$, bag $\chi(t)$, a \emph{local problem}~$\mathcal{P}(t,\mathcal{I})=\mathcal{I}_t$ depending on~$\mathcal{P}$, as well as previously computed child tables of~$t$ and stores the result in~$\tab{t}$.
+  %, which in turn is used by the table algorithm at
+  %the parent (if exists). 
+\item Interpret table~$\tab{n}$ for the root~$n$ of~$T$ in order to output the solution of~$\mathcal{I}$.
+\end{enumerate}
+
+\begin{algorithm}[t]
+%\centering
+  \KwData{Node~$t$, bag $\chi(t)$, clauses~$\varphi_t$,
+    sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table~$\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
+   %
+  {$\type(t) = \leaf$}{%
+    $\tab{t} \eqdef \{ \langle
+    \tuplecolor{\specialPredColor}{\emptyset},
+    \tuplecolor{\statePredColor}{1} \rangle \}$%
+  }%
+  \uElseIf{$\type(t) = \intr$, and
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
+      \tuplecolor{\specialPredColor}{J},
+      \tuplecolor{\statePredColor}{c} \rangle$
+       %
+    }%
+    $|\;\langle \tuplecolor{\specialPredColor}{I},
+    \tuplecolor{\statePredColor}{c} \rangle \in \tab{1}, \tuplecolor{\specialPredColor}{J \in \{\MAIR{I}{a\mapsto 0}, \MAIR{I}{a\mapsto 1}\}},
+    \varphi_t(\tuplecolor{\specialPredColor}{J})=\emptyset\}\hspace{-5em}$\vspace{-0.05em}
+       % 
+  }\vspace{-0.05em}%
+  % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{%
+    \makebox[5.425cm][l]{$\tab{t} \eqdef \{ \langle
+      \tuplecolor{\specialPredColor}{\MAR{I}},
+      \tuplecolor{\statePredColor}{\Sigma_{\langle {J}, {c}\rangle
+          \in \tab{1}: \MAR{I} = \MAR{J}}{c}}
+      \rangle$}$|\;\langle \tuplecolor{\specialPredColor}{I},
+    \tuplecolor{\statePredColor}{\cdot} \rangle \in \tab{1}
+    \}\hspace{-5em}$ \vspace{-0.1em}
+     %
+  } %
+  \uElseIf{$\type(t) = \join$}{%
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \{ \langle
+      \tuplecolor{\specialPredColor}{I},
+      \tuplecolor{\statePredColor}{c_1 \cdot c_2}
+      \rangle$}$|\;\langle \tuplecolor{\specialPredColor}{I},
+    \tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
+    \tuplecolor{\specialPredColor}{I},
+    \tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}
+    \}\hspace{-5em}$
+    % 
+    \vspace{-0.1em}
+    % 
+  } %
+  %\Return $\tab{t}$ \vspace{-0.25em}
+  \caption{Table algorithm~$\algo{S}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT~\cite{SamerSzeider10b} using nice~TD.}
+  \label{alg:prim}
+  \algorithmfootnote{%
+    \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
+    \label{foot:sigma}\label{foot:abrevtwo}
+    %\vspace{-0.3em}
+    $\MARR{S}{e} \eqdef S \setminus \{e \mapsto 0, e \mapsto
+    1\}$, $\MAIR{S}{s} \eqdef S \cup \{s\}$.
+    %\vspace{-1em}
+    % 
+  }%
+\end{algorithm}%
+
+
+\begin{figure}[t]
+%\centering
+\hspace{-0.5em}\begin{tikzpicture}[node distance=0.5mm]
+%
+\tikzset{every path/.style=thick}
+
+%
+\node (l1) [stdnode,label={[tdlabel, xshift=0em,yshift=+0em]right:${t_1}$}]{$\emptyset$};
+\node (i1) [stdnode, above=of l1, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_2}$}]{$\{a\}$};
+\node (i12) [stdnode, above=of i1, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_3}$}]{$\{a,c\}$};
+\node (i13) [stdnode, above=of i12, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_4}$}]{$\{a,b,c\}$};
+\node (r1) [stdnode, above=of i13, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_5}$}]{$\{a,b\}$};
+\node (r12) [stdnode, above=of r1, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_6}$}]{$\{a\}$};
+\node (l2) [stdnode, right=2.5em of i12, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_7}$}]{$\emptyset$};
+\node (i2) [stdnode, above=of l2, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_8}$}]{$\{d\}$};
+\node (i22) [stdnode, above=of i2, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_9}$}]{$\{a,d\}$};
+\node (r2) [stdnode, above=of i22, label={[tdlabel, xshift=0em,yshift=+0em]left:${t_{10}}$}]{$\{a\}$};
+\node (j) [stdnode, above left=of r2, yshift=-0.25em, label={[tdlabel, xshift=0em,yshift=+0.15em]right:${t_{11}}$}]{$\{a\}$};
+\node (rt) [stdnode,ultra thick, above=of j, label={[tdlabel, xshift=0em,yshift=+0em]right:${t_{12}}$}]{$\emptyset$};
+\node (label) [font=\scriptsize,left=of rt]{${\cal T}'$:};
+%
+\node (leaf1) [stdnode, left=1.25em of i1, yshift=0.5em, label={[tdlabel, xshift=2.75em,yshift=+.1em]above left:$\tab{4}$}]{%
+	\begin{tabular}{l}%
+		\multicolumn{1}{l}{$\langle \tuplecolor{\inputPredColor}{I_{4.i}}, \tuplecolor{\statePredColor}{c_{4.i}} \rangle$}\\
+		%
+		\hline\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 0, c\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 1, c\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		\rowcolor{yellow}$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 1, c\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 0, c\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 0,c\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 1,c\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\
+	\end{tabular}%
+};
+\node (leaf1b) [stdnodenum,left=of leaf1,xshift=0.6em,yshift=0pt]{%
+	\begin{tabular}{c}%
+		\multirow{1}{*}{$i$}\\ %
+		%
+		\hline\hline
+		$1$ \\\hline
+		$2$ \\\hline
+		$3$ \\\hline
+		$4$ \\\hline
+		$5$ \\\hline
+		$6$
+	\end{tabular}%
+};
+\node (leaf0x) [stdnode, left=-0.1em of leaf1b, yshift=1.5em, label={[tdlabel, xshift=2em,yshift=+.5em]above left:$\tab{5}$}]{%
+	\begin{tabular}{l}%
+		\multicolumn{1}{l}{$\langle \tuplecolor{\inputPredColor}{I_{5.i}}, \tuplecolor{\statePredColor}{c_{5.i}} \rangle$}\\
+		%
+		\hline\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 0, b\mapsto 0\}}, \tuplecolor{\statePredColor}{2}\rangle$\\\hline
+		%
+		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1, b\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 0,b\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		\rowcolor{yellow}$\langle\tuplecolor{\inputPredColor}{\{a\mapsto 1,b\mapsto 1\}}, \tuplecolor{\statePredColor}{2}\rangle$\\
+	\end{tabular}%
+};
+\node (leaf0b) [stdnodenum,left=of leaf0x,xshift=0.6em,yshift=0pt]{%
+	\begin{tabular}{c}%
+		\multirow{1}{*}{$i$}\\ %
+		%
+		\hline\hline
+		$1$ \\\hline
+		$2$ \\\hline
+		$3$ \\\hline
+		$4$ %
+	\end{tabular}%
+};
+\node (leaf2b) [stdnodenum,right=2.5em of j,xshift=-0.75em,yshift=+0.25em]  {%
+	\begin{tabular}{c}%
+		\multirow{1}{*}{$i$}\\ %
+		%
+		\hline\hline
+		$1$\\\hline
+		$2$\\%\hline
+		%
+	\end{tabular}%
+};
+\node (leaf2) [stdnode,right=-0.4em of leaf2b, label={[tdlabel, xshift=0em,yshift=-0.25em]below:$\tab{9}$}]  {%
+	\begin{tabular}{l}%
+		\multirow{1}{*}{$\langle \tuplecolor{\inputPredColor}{I_{9.i}}, \tuplecolor{\statePredColor}{c_{9.i}} \rangle$}\\ %
+		%
+		\hline\hline
+		$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 1, d\mapsto 0\}}, \tuplecolor{\statePredColor}{1}\rangle$\\\hline
+		%
+		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 1,d\mapsto 1\}}, \tuplecolor{\statePredColor}{1}\rangle$\\
+	\end{tabular}%
+};
+\coordinate (middle) at ($ (leaf1.north east)!.5!(leaf2.north west) $);
+\node (join) [stdnode,left=6.5em of r12, yshift=0.5em, label={[tdlabel, xshift=2em,yshift=+0.25em]above left:$\tab{{11}}$}] {%
+	\begin{tabular}{l}%
+		\multirow{1}{*}{$\langle \tuplecolor{\inputPredColor}{I_{11.i}}, \tuplecolor{\statePredColor}{c_{11.i}} \rangle$}\\
+		\hline\hline
+		%
+		%
+		%
+		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\{a\mapsto 1\}}, \tuplecolor{\statePredColor}{6} \rangle$\\
+	\end{tabular}%
+};
+\node (joinb) [stdnodenum,left=-0.45em of join] {%
+	\begin{tabular}{c}
+		\multirow{1}{*}{$i$}\\
+		\hline\hline
+		%
+		%
+		%
+		$1$\\
+	\end{tabular}%
+};
+\node (rtx) [stdnode,left=0.0em of r12, yshift=2.75em, label={[tdlabel, xshift=0em,yshift=-1em]right:$\tab{{12}}$}] {%
+	\begin{tabular}{l}%
+		\multirow{1}{*}{$\langle \tuplecolor{\inputPredColor}{I_{12.i}}, \tuplecolor{\statePredColor}{c_{12.i}} \rangle$}\\
+		\hline\hline
+		%
+		%
+		%
+		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\emptyset}, \tuplecolor{\statePredColor}{6} \rangle$\\
+	\end{tabular}%
+};
+\node (rtb) [stdnodenum,left=-0.45em of rtx] {%
+	\begin{tabular}{c}
+		\multirow{1}{*}{$i$}\\
+		\hline\hline
+		%
+		%
+		%
+		$1$\\
+	\end{tabular}%
+};
+\node (leaf0n) [stdnodenum,yshift=0.5em, right=2.5em of l1] {%
+	\begin{tabular}{c}%
+		\multirow{1}{*}{$i$}\\ %
+		%
+		\hline\hline
+		$1$
+	\end{tabular}%
+};
+%
+\node (leaf0) [stdnode,right=-0.5em of leaf0n, label={[tdlabel, xshift=-1em,yshift=0.15em]above right:$\tab{1}$}] {%
+	\begin{tabular}{l}%
+		\multicolumn{1}{l}{$\langle \tuplecolor{\inputPredColor}{I_{1.i}}, \tuplecolor{\statePredColor}{c_{1.i}} \rangle$}\\
+		%
+		\hline\hline
+		\rowcolor{yellow}$\langle \tuplecolor{\inputPredColor}{\emptyset}, \tuplecolor{\statePredColor}{1} \rangle$
+	\end{tabular}%
+};
+\coordinate (top) at ($ (leaf2.north east)+(0.6em,-0.5em) $);
+\coordinate (bot) at ($ (top)+(0,-12.9em) $);
+
+\draw [<-] (j) to (rt);
+\draw [->] (j) to ($ (r12.north)$);
+%
+%
+\draw [->] (j) to ($ (r2.north)$);
+\draw [->](r2) to (i22);
+\draw [<-](i2) to (i22);
+\draw [<-](l2) to (i2);
+\draw [<-](l1) to (i1);
+\draw [->](i12) to (i1);
+\draw [->](i13) to (i12);
+\draw [->](r1) to (i13);
+\draw [->](r12) to (r1);
+
+\draw [dashed, bend left=0] (j) to (join);
+\draw [dashed, bend right=15] (rtx) to (rt);
+\draw [dashed, bend right=20] (i22) to (leaf2);
+\draw [dashed, bend right=40] (i13) to (leaf1);
+%
+\draw [dashed, bend left=22] (leaf0) to (l1);
+\draw [dashed, bend left=14] (leaf0x) to (r1);
+%
+%
+\end{tikzpicture}
+\caption{Selected tables obtained by DP on~${\cal T}'$ for~$\varphi$ of Example~\ref{ex:running0} using algorithm~\algo{S}.}
+\label{fig:running1}
+\end{figure}
+
+
+\noindent For solving problem~$\mathcal{P}=\cSAT$, we need the following graph representation.
+The \emph{primal graph}~$G_\varphi$~\cite{SamerSzeider10b} of a formula~$\varphi$
+has as vertices its variables, where two variables are joined by an edge
+if they occur together in a clause of~$\varphi$.
+Given formula~$\varphi$, a TD~$\mathcal{T}=(T,\chi)$ of~$G_\varphi$
+and a node~$t$ of $T$.
+Sometimes, we refer to the treewidth of the primal graph of a given formula
+by the \emph{treewidth of the formula}.
+%For brevity, we refer
+%by~\emph{treewidth} \emph{of} a \emph{formula} to the treewidth of its
+%primal graph. 
+Then, we
+let local problem~$\cSAT(t, \varphi)=\varphi_t$ be $\varphi_t \eqdef \SB c \SM c \in \varphi, \var(c) \subseteq \chi(t)\SE$, which are the clauses entirely covered by~$\chi(t)$.
+
+
+%
+%\begin{figure*}[t]%
+%  {\noindent\includegraphics[trim={4.7cm 11.35cm 5cm 11.64cm},clip,page=1]{2-includes/prim.pdf}}
+%%
+%\end{figure*}
+
+Table algorithm~$\algo{S}$ as presented in Listing~\ref{alg:prim} shows all the cases that are needed to solve~\cSAT by means of DP over nice TDs.
+Each table~$\tab{t}$ consist of rows of the form~$\langle I, c\rangle$,
+where~$I$ is an assignment of~$\varphi_t$ and~$c$ is a counter. %within a table~$\tab{t}
+Nodes~$t$ with~$\type(t)=\leaf$ consist of the empty assignment and counter~$1$, cf., Line~1.
+For a node~$t$ with introduced variable~$a\in\chi(t)$, we guess in Line~3 for each assignment~$\beta$ of the child table, whether~$a$ is set to true or to false, and ensure that~$\varphi_t$ is satisfied.
+When an atom~$a$ is removed in node~$t$, we project assignments of child tables to~$\chi(t)$, cf., Line~5, and sum up counters of the same assignments.
+For join nodes, counters of common assignments are multiplied, cf., Line~7.
+
+\vspace{-1em}
+\begin{example}\label{ex:running0}
+  Consider
+  formula~$\varphi\eqdef \{\overbrace{\{\neg a, b, c\}}^{c_1},
+  \overbrace{\{a, \neg b, \neg c\}}^{c_2}, \overbrace{\{a,
+    d\}}^{c_3}, \overbrace{\{a, \neg d\}}^{c_4}\}$.
+    %
+  %
+  %
+  Satisfying assignments of formula~$\varphi$ are, e.g., 
+  $\{a\mapsto 1,b\mapsto 1, c\mapsto 0, d\mapsto 0\}$, $\{a\mapsto 1, b\mapsto 0,c\mapsto 1, d\mapsto 0\}$ or $\{a\mapsto 1, b\mapsto 1,c\mapsto 1, d\mapsto 1\}$.
+  %
+  %
+  %
+  In total, there are 6 satisfying assignments of~$\varphi$. 
+  %
+  %
+%
+%
+%
+%
+%
+%
+  %
+  %
+  Observe that graph~$G$ of Figure~\ref{fig:graph-td} actually depicts
+  the primal graph~$G_\varphi$ of~$\varphi$.
+  %The primal graph~$G_\varphi$ of formula~$F$ and a tree
+  %decomposition~$\TTT$ of~$G_\varphi$ are depicted in
+  %Figure~\ref{fig:graph-td}. 
+  Intuitively, ${\cal T}$ of Figure~\ref{fig:graph-td} allows to
+  evaluate formula~$\varphi$ in parts. 
+  %When evaluating $F_{\leq t_3}$, we
+  %split into $F_{\leq t_1}=\{c_1,c_2\}$ and
+  %$F_{\leq t_2}=\{c_3, c_4\}$, respectively.
+%
+%
+%
+%
+%
+  %
+%
+  %
+  Figure~\ref{fig:running1} illustrates a nice TD~$\TTT'=(\cdot, \chi)$ of the 
+  primal graph~$G_\varphi$ and
+  tables~$\tab{1}$, $\ldots$, $\tab{12}$ that are obtained during the
+  execution of~${\algo{S}}$ on nodes~$t_1,\ldots,t_{12}$.
+  %
+  %
+  We assume that each row in a table $\tab{t}$ is identified by a
+  number,~i.e., row $i$ corresponds to
+  $\vec{u_{t.i}} = \langle I_{t.i}, c_{t.i} \rangle$.
+
+  %
+  Table~$\tab{1}=\SB \langle\emptyset, 1\rangle \SE$ has
+  $\type(t_1) = \leaf$.
+  %
+  Since $\type(t_2) = \intr$, we construct table~$\tab{2}$
+  from~$\tab{1}$ by taking~$I_{1.i}\cup\{a\mapsto 0\}$ and $I_{1.i}\cup \{a \mapsto 1\}$ for
+  each~$\langle I_{1.i}, c_{1.i}\rangle \in \tab{1}$. Then,
+  $t_3$ introduces $c$ and $t_4$ introduces $b$.
+  $\varphi_{t_1}=\varphi_{t_2}=\varphi_{t_3} = \emptyset$, but since
+  $\chi(t_4) \subseteq \var(c_1)$ we have
+  $\varphi_{t_4} = \{c_1,c_2\}$ for $t_4$.
+  %
+  %
+  %
+  In consequence, for each~$I_{4.i}$ of table~$\tab{4}$, we have
+  $\{c_1,c_2\}({{I_{4.i}}})=\emptyset$ since \algo{S} enforces
+  satisfiability of $\varphi_t$ in node~$t$.  
+  %
+  %
+  Since $\type(t_5) = \rem$, we remove variable~$c$ from all
+  elements in $\tab{4}$ and sum up counters accordingly to construct $\tab{5}$. 
+  Note that we have
+  already seen all rules where $c$ occurs and hence $c$ can no
+  longer affect interpretations during the remaining traversal. We
+  similarly create $\tab{6}=\{\langle \{a\mapsto 0\}, 3 \rangle, \langle \{a \mapsto 1\}, 3 \rangle\}$
+  and~$\tab{{10}}=\{\langle \{a \mapsto 1\}, 2 \rangle\}$.
+  %
+  Since $\type(t_{11})=\join$, we build table~$\tab{11}$ by taking
+  the intersection of $\tab{6}$ and $\tab{{10}}$. Intuitively, this
+  combines assignments agreeing on~$a$, where counters are multiplied accordingly.
+  %
+  %
+  %
+  By definition (primal graph and TDs), for every~$c \in \varphi$,
+  variables~$\var(c)$ occur together in at least one common bag.
+  %
+  Hence, %$\varphi=\Ft{t_{12}}$ and 
+  since
+  $\tab{12} = \{\langle \emptyset, 6 \rangle \}$, we can reconstruct for example
+  model~$\{a\mapsto 1,b \mapsto 1, c\mapsto 0, d\mapsto 1\} = I_{11.1} \cup I_{5.4} \cup I_{9.2}$ of~$\varphi$ using highlighted (yellow) rows in Figure~\ref{fig:running1}.
+  On the other hand, if~$\varphi$ was unsatisfiable, $\tab{12}$ would be empty ($\emptyset$). %\todo{really? just count 0?}%
+  %
+  %
+  %
+%
+%
+%
+\end{example}%
+
+
+\begin{algorithm}[t]
+%\centering
+  \KwData{Node~$t$, bag $\chi(t)$, clauses~$\varphi_t$,
+    sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table $\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
+   %
+  {$\type(t) = \leaf$}{%
+    $\tab{t} \eqdef \tuplecolor{\inputPredColor}{\{ \{{(\text{cnt}, 1)}\} \}}$ \label{line:leaf}%
+  }%
+  \uElseIf{$\type(t) = \intr$, and
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
+    $\tab{t}\eqdef \tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\varphi_t}} \tuplecolor{\inputPredColor}{\{\{(\cid{a},0)\},\{(\cid{a},1)\}\}}$\label{line:intr}
+    \hspace{-5em}\vspace{-0.05em}
+       % 
+  }\vspace{-0.05em}%
+  % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{%
+    $\tab{t} \eqdef {_{\chi(t)}G}_{\tuplecolor{\inputPredColor}{\text{cnt$\leftarrow$\ttfamily SUM}(\text{cnt})}}(\Pi_{{\attr(\tab{1})\setminus\{\cid{a}}\}}\tab{1})$\label{line:rem} \hspace{-5em} \vspace{-0.1em}
+     %
+  } %
+  \uElseIf{$\type(t) = \join$}{%
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\{\text{cnt} \leftarrow \text{cnt} \cdot \text{cnt}'\}}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})$} \label{line:join} %\{ \langle
+      %\tuplecolor{\inputPredColor}{I},
+      %\tuplecolor{\statePredColor}{c_1 \* cdot c_2}
+      %\rangle
+      %$}%$|\;\langle \tuplecolor{\inputPredColor}{I},
+    %\tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
+    %\tuplecolor{\inputPredColor}{I},
+    %\tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}
+    %\}
+    \hspace{-5em}%$
+    % 
+    \vspace{-0.1em}
+    % 
+  } %
+  %\Return $\tab{t}$ \vspace{-0.25em}
+  \caption{Alternative table algorithm~$\algo{S_{RAlg}}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT.}
+  \label{alg:primdb}
+   %\algorithmfootnote{%
+   % \renewcommand{\eqdef}{{\ensuremath{\,\mathrel{\mathop:}=}}}
+   % \label{foot:sigma}\label{foot:abrevtwo}
+   % %\vspace{-0.3em}
+   % %$\MARR{I}{e} \eqdef I \setminus \{e \mapsto 0, e \mapsto
+   % %1\}$, 
+   % $\MAIR{S}{s} \eqdef S \cup \{s\}$.
+   % %\vspace{-1em}
+   % % 
+  %}%
+\end{algorithm}%
+
+\vspace{-1.35em}
+\paragraph*{Alternative: Relational Algebra.}
+\noindent Instead of using set theory to describe how tables are obtained during dynamic programming,
+%are performed, 
+one could alternatively use relational algebra. % or equivalent.
+There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
+Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute \text{cnt} for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
+Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
+This step from set notation to relational algebra is driven by the observation that in these table algorithms one can identify recurring patterns, and one mainly has to adjust problem-specific parts of it (highlighted by coloring in Listing~\ref{alg:prim}).
+%
+%
+In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fresh initial table $\tab{t}$, cf., Line~\ref{line:leaf} of Listing~\ref{alg:primdb}.
+Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins 
+with a fresh initial table for the introduced variable~$a$ representing potential values for~$a$. In Line~\ref{line:intr} the selection of the $\theta$-join is performed according to~$\varphi_t$, i.e.\ corresponding to the local problem of~\cSAT.
+Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms typically need projection. 
+In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
+Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use extended projection and $\theta$-joins, where we join on the same truth assignments, which allows us later to leverage advanced database technology. %of the last decades.
+Extended projection is needed for multiplying the counters of the two rows containing the same assignment.
+
+\begin{figure*}[t]%
+\centering
+  {\noindent\includegraphics[scale=0.9]{1-figs/figure.pdf}}
+  \caption{Architecture of Dynamic Programming with Databases. Steps highlighted in red are provided by the system depending on specification of yellow and blue parts, which is given by the user for specific problems~$\mathcal{P}$. The yellow ``E''s represent events that can be intercepted and handled by the user. 
+  The blue part concentrates on table algorithm~$\algo{A_{RAlg}}$, where the user specifies how SQL code~is~generated in a modular~way.}
+  \label{fig:arch}
+%
+\end{figure*}
+
+\vspace{-.5em}
+\section{Dynamic Programming on TDs using Databases~\&~SQL}
+%
+%\begin{figure*}[t]%
+%  {\noindent\includegraphics[trim={4.7cm 11.35cm 5cm 11.64cm},clip,page=1]{2-includes/prmdp.pdf}}
+%
+%\end{figure*}
+%\paragraph*{Dynamic Programming on TDs.} %
+%
+%
+\vspace{-.5em}
+In this section, we present a general architecture to model table algorithms
+by means of database management systems.
+The architecture is influenced by the DP approach of the previous section
+and works as depicted in Figure~\ref{fig:arch},
+where the steps highlighted in yellow and blue need to be specified
+depending on the problem~$\mathcal{P}$. Steps outside Step~3 are mainly setup tasks,
+the yellow ``E''s indicate \emph{events} that might be needed to solve more complex problems
+on the polynomial hierarchy. 
+For example, one could create and drop auxiliary sub-tables for each node during Step~3 within such events.
+Observe that after the generation of a TD~$\mathcal{T}=(T,\chi)$, 
+Step~2b automatically creates tables~$\tab{t}$ for each node~$t$ of~$T$,
+where the corresponding table schema of~$\tab{t}$ is specified in the blue part, i.e., 
+within~$\algo{A_{RAlg}}$. 
+The \emph{default schema} of such a table~$\tab{t}$ that is assumed in this section foresees one column for each element of the bag~$\chi(t)$, where additional columns such as counters or costs can be added.
+
+Actually, the core of this architecture is focused on the table algorithm~$\algo{A_{RAlg}}$ executed for each node~$t$ of~$T$ of TD~$\mathcal{T}=(T,\chi)$. 
+Besides the definition of table schemes, the blue part concerns specification of the table algorithm by means of a procedural \emph{generator template} that describes 
+how to dynamically obtain SQL code%\footnote{Recall that SQL is a specific implementation standard (set) of relational algebra.} 
+for each node~$t$ thereby oftentimes depending on~$\chi(t)$.
+This generated SQL code is then used internally for manipulation of 
+tables~$\tab{t}$ during the tree decomposition 
+traversal in Step~3 of dynamic programming.
+%
+Listing~\ref{alg:template} presents a general template, where parts of table algorithms for problems that are typically problem-specific are replaced by colored placeholders of the form~$\textcolor{\inputPredColor}{\#\mathsf{placeHolder}\#}$, cf., Listing~\ref{alg:primdb}.
+Observe that Line~\ref{line:intr2} of Listing~\ref{alg:template}
+uses extended projection as in Line~\ref{line:join2}. % compared to Listing~\ref{alg:primdb}.
+This is needed for some problems requiring changes on vertex introduction.
+
+Note, however, that the whole architecture does not depend 
+on certain normalization or forms of TDs, e.g., whether it is nice or not.
+%the architecture foresees 
+Instead, a table algorithm of any TD is simply specified by 
+handling \emph{problem-specific} implementations of the placeholders of Listing~\ref{alg:template}, where the system following this architecture is responsible for interleaving and overlapping these cases within a node~$t$.
+In fact, we discuss an implementation of a system according to this architecture next, where it is crucial to implement non-nice TDs to obtain higher efficiency.
+
+%
+%
+\begin{algorithm}[t]
+%\centering
+  \KwData{Node~$t$, bag $\chi(t)$, instance~$\mathcal{I}_t$,
+    sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table $\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
+   %
+  {$\type(t) = \leaf$}{%
+    $\tab{t} \eqdef \tuplecolor{\inputPredColor}{\#\epsilon\mathsf{Tab}\#}$ \label{line:leaf2}%
+  }%
+  \uElseIf{$\type(t) = \intr$, and
+    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
+    $\tab{t}\eqdef \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\#\mathsf{extProj}\#}}(\tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\#\mathsf{localProbFilter}\#}} \tuplecolor{\inputPredColor}{\#\mathsf{intrTab}\#})$ \label{line:intr2}
+    \hspace{-5em}\vspace{-0.05em}
+       % 
+  }\vspace{-0.05em}%
+  % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
+  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{%
+    $\tab{t} \eqdef {_{\chi(t)}G}_{\tuplecolor{\inputPredColor}{\#\mathsf{aggrExp}\#}}(\Pi_{\attr(\tab{1})\setminus\{\cid{a}\}}\tab{1})$ \label{line:rem2}\hspace{-5em} \vspace{-0.1em}
+     %
+  } %
+  \uElseIf{$\type(t) = \join$}{%
+    \makebox[3.3cm][l]{$\tab{t} \eqdef \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\#\mathsf{extProj}\#}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})$} \label{line:join2} %\{ \langle
+      %\tuplecolor{\inputPredColor}{I},
+      %\tuplecolor{\statePredColor}{c_1 \cdot c_2}
+      %\rangle
+      %$}%$|\;\langle \tuplecolor{\inputPredColor}{I},
+    %\tuplecolor{\statePredColor}{c_1} \rangle \in \tab{1}, \langle
+    %\tuplecolor{\inputPredColor}{I},
+    %\tuplecolor{\statePredColor}{c_2} \rangle \in \tab{2}
+    %\}
+    \hspace{-5em}%$
+    % 
+    \vspace{-0.1em}
+    % 
+  }
+  %\Return $\tab{t}$ \vspace{-0.25em}
+  \caption{Template of~$\algo{A_{RAlg}}(t,\chi(t),\mathcal{I}_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ of Figure~\ref{fig:arch} for problem~$\mathcal{P}$.}
+  \label{alg:template}
+\end{algorithm}%
+
+
+
+%\paragraph*{Problem}
+%
+%\begin{itemize}
+%	\item events: before solve (table erstellen), after solve (table drop)
+%	\item dynamic sql: introduce (table), filter (where condition), join (where inside), assignment view (for forgetting), candidate extra cols (describe how to add them)
+%	\item setup: prepare input / graph, prepare tables
+%	\item candidates: grundmenge
+%
+%\end{itemize}
+\vspace{-.75em}
+\subsection{System~\dpdb: Dynamic Programming with Databases}
+
+We implemented the proposed architecture of the previous section in the prototypical \dpdb system.
+The system is open-source\footnote{Our system~\dpdb is available under GPL3 license
+    at~\href{https://github.com/hmarkus/dp_on_dbs/releases/tag/v1.001-pre}{\nolinkurl{github.com/hmarkus/dp_on_dbs}}.}, written in Python 3 and uses PostgreSQL as DBMS.
+We are convinced though that one can easily replace PostgreSQL by any other state-of-the-art relational database that uses SQL.
+%
+%
+In the following, we discuss implementation specifics that are crucial for a performant system that is still extendable and flexible.
+
+
+\vspace{-.65em}
+\paragraph*{Computing TDs.}
+TDs are computed mainly with the library \emph{htd} version~1.2 with default
+settings~\cite{AbseherMusliuWoltran17a}, %\todo{actually, we require the normalize-cli branch...}, 
+which finds TDs extremely quick
+also for interesting instances~\cite{FichteHecherZisser19} due to heuristics.
+Note that \dpdb directly supports the TD format of recent competitions~\cite{DellKomusiewiczTalmon18a},
+i.e., one could easily replace the TD library.
+It is important though to not enforce htd to compute nice TDs, as this would cause a lot of overhead later in \dpdb for copying tables.
+However, in order to benefit from the implementation of $\theta$-joins,
+query optimization and state-of-the-art database technology in general, 
+we observed that it is crucial to limit the number of child nodes of every TD node.
+Then, especially when there are huge tables involved, $\theta$-joins among child node tables
+cover at most a limited number of child node tables.
+In consequence, the query optimizer of the database system still has a chance
+to come up with meaningful execution plans depending on the contents of the table.
+Note that though one should consider $\theta$-joins with more than just two tables,
+since such binary $\theta$-joins already fix in which order these tables shall be combined,
+thereby again limiting the query optimizer. %\todo{this sentence is really hard to read/understand; especially due to all the negations}
+Apart from this trade-off, we tried to outsource the task of joining tables to the DBMS, %as much as possible, 
+since the performance of database systems highly depends on query optimization. % and should know best, how to join.
+The actual limit, which is a restriction from experience and practice only, highly depends on the DBMS that is used.
+For PostgreSQL, we set a limit of at most~$5$ child nodes for each node of the TD,
+i.e., each $\theta$-join covers at most 5 child tables.
+
+\vspace{-.65em}
+\paragraph*{Towards non-nice TDs.}
+Although this paper presents the algorithms for nice TDs (mainly due to simplicity),
+the system \dpdb interleaves these cases as presented in 
+Listing~\ref{alg:template}.
+Concretely, the system executes one query per table~$\tab{t}$ for each node~$t$ during the traversal of TD~$\mathcal{T}$. 
+This query consists of serveral parts and we briefly explain its parts from outside to inside. 
+First of all, the inner-most part concerns the \emph{row candiates} for~$\tab{t}$ consisting of the $\theta$-join as in Line~\ref{line:join} of Listing~\ref{alg:template}, including parts of Line~\ref{line:intr}, namely cross-joins for each introduced variable, involving $\#\mathsf{intrTab}\#$ without the filtering on $\#\mathsf{localProbFilter}\#$.
+Then, there are different configurations of \dpdb concerning these row candidates.
+For debugging (see below) one could (1) actually materialize the result in a table,
+whereas for performance runs, one should use (2) \emph{common table expressions (CTEs or {\ttfamily WITH}-queries)} or (3) \emph{sub-queries (nested queries)}, which both result in one nested SQL query per table~$\tab{t}$. 
+On top of these row candidates, projection\footnote{Actually, \dpdb keeps only columns relevant for the table of the parent node of~$t$.} and grouping involving~$\#\mathsf{aggrExp}\#$ as in Line~\ref{line:rem} of Listing~\ref{alg:template}, as well as selection acording to~$\#\mathsf{localProbFilter}\#$, cf., Line~\ref{line:intr}, is specified.
+It turns out that PostgreSQL can do better with sub-queries, where the query optimizer
+oftentimes pushes selection and projection into the sub-query if needed, which
+is not the case for CTEs, as discussed in the PostgreSQL manual~\cite[Sec. 7.8.1]{postgres}. On different DBMS or other vendors, e.g., Oracle, it might be better to use CTEs instead.
+
+\vspace{-.4em}
+\begin{example}\label{ex:dbviews}
+Consider again Example~\ref{ex:running0} and Figure~\ref{fig:graph-td}.
+If we use table algorithm~$\mathsf{S_{RAlg}}$ with \dpdb on formula~$\varphi$ of TD~$\mathcal{T}$ and Option (3): sub-queries, where the row candidates are expressed via a sub-queries. Then, for each node~$t_i$ of~$\mathcal{T}$, \dpdb generates a view~$vi$ 
+as well as a table~$\tab{i}$ containing in the end the content of~$vi$.
+Observe that each view only has one column~$\cid{a}$ for each variable~$a$ of~$\varphi$ since the
+truth assignment of the other variables are not needed later.
+%Actually, in \dpdb the additional columns are empty (null) for readability.
+This keeps the tables compact, only $\tab{1}$ has two rows, $\tab{2}$, and $\tab{3}$ have only one row.
+We obtain the following views.
+%
+\begin{alltt}\small
+CREATE VIEW v1 AS SELECT a, sum(cnt) AS cnt FROM 
+ (WITH intrTab AS (SELECT true AS val UNION ALL SELECT false)
+   SELECT i1.val AS a, i2.val AS b, i3.val AS c, 1 AS cnt 
+          FROM intrTab i1, intrTab i2, intrTab i3)  
+WHERE (NOT a OR b OR c) AND (a OR NOT b OR NOT c) GROUP BY a
+
+CREATE VIEW v2 AS SELECT a, sum(cnt) AS cnt FROM 
+ (WITH intrTab AS (SELECT true AS val UNION ALL SELECT false) 
+   SELECT i1.val AS a, i2.val AS d, 1 AS cnt FROM intrTab i1, intrTab i2) 
+WHERE (a OR d) AND (a OR NOT d) GROUP BY a
+
+CREATE VIEW v3 AS SELECT a, sum(cnt) AS cnt FROM 
+ (SELECT \ensuremath{\tab{1}}.a, \ensuremath{\tab{1}}.cnt * \ensuremath{\tab{2}}.cnt AS cnt FROM \ensuremath{\tab{1}}, \ensuremath{\tab{2}} WHERE \ensuremath{\tab{1}}.a = \ensuremath{\tab{2}}.a)
+GROUP BY a\end{alltt}%verbatim}%
+\vspace{-2em}
+\end{example}%
+
+%In other words, for each table~$\tab{t}$ of each node~$t$ of~$T$
+
+\vspace{-.6em}
+\paragraph*{Parallelization.} A further reason to not over-restrict the number of child nodes within the TD, lies in parallelization.
+In \dpdb, we compute tables in parallel along the TD,
+where multiple tables can be computed at the same time,
+as long as the child tables are computed.
+Therefore, we tried to keep the number of child nodes in the TD as high as possible.
+In our system \dpdb, we currently allow 
+for at most 24 worker threads for table computations and 24 database connections at the same time (both pooled and configurable).
+On top of that we have 2 additional threads and database connections for job assignments to workers, as well as one dedicated watcher thread for clean-up and connection termination, respectively.
+
+\vspace{-.5em}
+\paragraph*{Logging, Debugging and Extensions.} Currently, we have two versions of the \dpdb system implemented.
+One version aims for performance and the other one tries to achieve comprehensive logging and easy debugging of problem (instances), thereby increasing explainability.
+The former for instance does neither keep intermediate results 
+nor create database tables in advance (Step 2b),
+as depicted in Figure~\ref{fig:arch}, but creates tables according 
+to an SQL {\ttfamily SELECT} statement.
+In the latter we keep all the intermediate results, we record database timestamps before and after certain nodes, provide statistics as, e.g., width, number of rows, etc.
+Further, since for each table~$\tab{t}$, exactly one SQL statement is executed for filling this table, we also have a dedicated view of the SQL {\ttfamily SELECT} statement, whose result is then inserted in~$\tab{t}$.
+Together with the power and flexibility of SQL queries, we observed that this helps in finding errors in the table algorithm specifications.
+
+Besides convient debugging, system \dpdb immediately
+contains an extension for \emph{approximation}.
+There, we restrict the table contents to a maximum number of rows.
+This allows for certain approximations on counting problems or
+optimization problems, where it is infeasible to compute the full tables.
+Further, \dpdb foresees a dedicated \emph{randomization} on these restricted number of rows
+such that we obtain different approximate results on different random seeds.
+
+Note that \dpdb can be easily extended. 
+Each problem can overwrite existing default behavior and \dpdb also supports
+problem-specific argument parser for each problem individually.
+Out-of-the-box, we support the formats DIMACS sat and DIMACS graph~\cite{LiuZhongJiao06} as well as the common format for TDs~\cite{DellKomusiewiczTalmon18a}.
+%sibility, 
+%Supported DIMACS formats: cnf, td, tw, edge
+
+
+\subsection{Table algorithms with~\dpdb for selected problems}
+
+The system \dpdb allows for \emph{easy protyping} of DP algorithms on TDs.
+This covers decision problems, counting problems as well as optimization problems.
+As a proof of concept, we present the relevant parts of table algorithm specification
+according to the template in Listing~\ref{alg:template} for a selection of problems below\footnote{Implementation for problems~\cSAT as well as~\VC is readily available in~\dpdb.}.
+To this end, we assume in this section a not necessarily nice TD~$\mathcal{T}=(T,\chi)$ of the corresponding graph representation of our given instance~$\mathcal{I}$.
+Further, for the following specifications of the table algorithm using the template~$\algo{A_{RAlg}}$ 
+in Listing~\ref{alg:primdb}, we assume any node~$t$ of~$T$ and its child nodes~$t_1, \ldots, t_\ell$.
+
+\paragraph*{Problem~$\cSAT$.}
+Given instance formula~$\mathcal{I}=\varphi$.
+Then, specific parts for~$\cSAT$ for node~$t$ with $\varphi_t = \{\{l_{1,1},\ldots,l_{1,k_1}\}, \ldots, \{l_{n,1},\ldots,l_{n,k_n}\}\}$.
+%where  refers to the \emph{database table}~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
+\begin{itemize}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily $(l_{1,1}$ OR $\ldots$ OR $l_{1,k_1})$ AND $\ldots$ AND $(l_{n,1}$ OR $\ldots$ OR $l_{n,k_n})$}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily \tab{1}.cnt * $\ldots$ * $\tab{\ell}$.cnt AS cnt }
+\end{itemize}
+
+Observe that for the corresponding decision problem~$\SAT$, where the goal is to decide only the existence of a satisfying assignment for given formula~$\varphi$, 
+$\#\mathsf{\epsilon Tab}\#$ returns the empty table and 
+parts $\#\mathsf{aggrExp}\#, \#\mathsf{extProj}\#$ are just empty 
+since there is no counter needed.
+
+
+\paragraph*{Problem~$\cTCOL$.}
+For given input graph~$\mathcal{I}=G=(V,E)$, a \emph{$o$-coloring} is a mapping~$\iota: V \rightarrow \{1,\ldots,o\}$
+such that for each edge~$\{u,v\}\in E$, we have~$\iota(u)\neq \iota(v)$.
+Problem~$\cTCOL$ asks to count the number of $o$-colorings of~$G$.
+Local problem~$\cTCOL(t,G)$ is defined by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
+
+Specific parts for~$\cTCOL$ for node~$t$ with~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$.
+%
+%where {\ttfamily ti} refers to the database table~$\tab{i}$ for node~$t_i$ as in Example~\ref{ex:dbviews}.
+\begin{itemize}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 1 AS cnt}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL $\ldots$ UNION ALL $o$}
+	%\item\makebox[6em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily \cid{u1} OR \cid{ SELECT 1 AS val UNION ALL 2 UNION ALL 3}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily NOT $(\cid{u_1}=\cid{v_1})$ AND $\ldots$ AND NOT $(\cid{u_n}=\cid{v_n})$}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily SUM(cnt) AS cnt}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily $\tab{1}$.cnt * $\ldots$ * $\tab{\ell}$.cnt AS cnt }
+\end{itemize}
+
+
+
+\paragraph*{Problem~\VC.}
+Given input graph~$\mathcal{I}=G=(V,E)$, a \emph{vertex cover} is a set of vertices~$C\subseteq V$ of~$G$
+such that for each edge~$\{u,v\}\in E$, we have~$\{u,v\}\cap C\neq \emptyset$.
+Then, \VC asks to find the minimum cardinality~$|C|$ among all vertex covers~$C$, i.e., $C$ is such that there is no vertex cover~$C'$ with~$|C'| < |C|$. 
+Local problem~$\VC(t,G)\eqdef G_t$ is defined as above. 
+%by the graph $G_t \eqdef (V\cap\chi(t), E\cap [\chi(t)\times\chi(t)])$.
+%To this end, we 
+We use an additional column {\ttfamily card} for storing cardinalities.
+
+Problem $\VC$ for node~$t$ with~$E(G_t)=\{\{u_1,v_1\},\ldots, \{u_n,v_n\}\}$ and~$\chi(t)=\{a_1,\ldots,a_{k}\}$ can be specified as follows.
+
+\begin{itemize}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{\epsilon Tab}\#$}:}{\ttfamily SELECT 0 AS card}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{intrTab}\#$}:}{\ttfamily SELECT 1 AS val UNION ALL 0}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{localProbFilter}\#$}:}{\ttfamily $(\cid{u_1}$ OR $\cid{v_1})$ AND $\ldots$ AND $(\cid{u_n}$ OR $\cid{v_n})$}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{aggrExp}\#$}:}{\ttfamily MIN(card) AS card}
+	\item\makebox[8.25em][l]{\tuplecolor{\inputPredColor}{$\#\mathsf{extProj}\#$}:}{\ttfamily $\tab{1}$.card + $\ldots$ + $\tab{\ell}$.card - ($\Sigma_{i=1}^\ell \Card{\chi(t_i)\cap \{a_1\}}$ - 1) *}\newline 
+	%\item 
+	\makebox[8.25em][l]{}{\ttfamily $\tab{1}$.$\cid{a_1}$ - $\ldots$ - ($\Sigma_{i=1}^\ell \Card{\chi(t_i) \cap\{a_{k}\}}$ - 1) * $\tab{1}$.$\cid{a_k}$}
+	%\makebox[8.25em][l]{}where ${ovcnt}(a)\eqdef \Sigma_{i=1}^\ell$
+	%$\Sigma_{i=1}^{\ell} \Card{\{a_1\}\cap\chi(t_i)}$ - $\ldots$ - $\Sigma_{i=1}^{\ell}\Card{\{a_{\ell}\}\cap\tab{\ell}}$}
+\end{itemize}
+
+Observe that $\#\mathsf{ExtProj}\#$ is a bit more involved on non-nice TDs, as, whenever 
+the column for a vertex~$a$ is set to~$1$, i.e., vertex~$a$ is in the vertex cover,
+we have to consider~$a$ only with cost~$1$, also if $a$ appears in several child node bags.
+%
+
+Note that concrete implementations could generate and apply parts of this specification, as for example in $\#\mathsf{localProbFilter}\#$ only edges involving newly introduced vertices need to be checked. %\todo{more detail}
+
+Similar to \VC and \cTCOL one can model several other (graph) problems.
+One could also think of counting the number of solutions of problem \VC,
+where both a column for cardinalities and one for counting is used. 
+There, in addition to grouping with {\ttfamily GROUP BY} in \dpdb, we additionally could use the {\ttfamily HAVING} construct of SQL,
+where only rows are kept, whose column {\ttfamily card} is minimal.
+
+
+%#\begin{algorithm}[h]
+%#  \KwData{Node~$t${~\bf Out:} SQL query}
+%#  \KwRet{\{0,1\}}\;
+%#  \caption{introduce}
+%#  \label{alg:introduce}
+%#\end{algorithm}
+%#
+%#\begin{algorithm}[h]
+%#  \KwData{Node~$t${~\bf Out:} SQL expression}
+%#  \KwRet{"sum(cnt)"}\;
+%#  \caption{aggregate}
+%#  \label{alg:aggregate}
+%#\end{algorithm}
+%#
+%#\begin{algorithm}[h]
+%#  \KwData{Node~$t${~\bf Out:} SQL WHERE-condition}
+%#  \KwRet{$\varphi_t$}\;
+%#  \caption{filter}
+%#  \label{alg:filter}
+%#\end{algorithm}
+%#
+%#\begin{algorithm}[h]
+%#  \KwData{Node~$t$, sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} SQL expression}
+%#  \KwRet{"$\tab{1}.cnt * \ldots * \tab{\ell}.cnt$"}\;
+%#  \caption{extra\_projection}
+%#  \label{alg:extraprojection}
+%#\end{algorithm}
+%#
+%#\if 0
+%#["{} AS model_count".format(
+%#                " * ".join(set([var2cnt(node,v) for v in node.vertices] +
+%#                               [node2cnt(n) for n in node.children])) if node.vertices or node.children else "1"
+%#                )]
+%#\fi
+%#
+
+%\paragraph*{TODO:}
+%\begin{itemize}
+	%\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
+	%\item limit result rows (+ possibly randomize) of each node for faster approximations.
+	%\item approximate memory used by db for one of the largest problems solved
+	%\item Supported DIMACS formats: cnf, td, tw, edge
+	%\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
+%\end{itemize}
+
+
+
+\section{Experiments}
+\label{sec:experiments}
+%
+We conducted a series of experiments using publicly available benchmark sets for~\cSAT.
+%model counting and weighted model counting. 
+Our tested benchmarks~\cite{FichteEtAl18b} 
+are publicly available,
+and our results are
+also on github at
+\href{https://github.com/hmarkus/dp_on_dbs/tree/padl2020}{\nolinkurl{github.com/hmarkus/dp_on_dbs/padl2020}}.
+
+\subsection{Setup}
+
+\paragraph{Measure \& Resources.}
+%As we use different types of hardware in our experiments and other
+%natural measures such as power consumption cannot be recorded with
+%current hardware, 
+We mainly compare wall clock time and number of
+timeouts. 
+In the time we include \emph{preprocessing
+  time} as well as \emph{decomposition time} for computing a %30
+TD with a fixed random seed. % and decomposition selection time.
+%
+%However, we avoid IO access on the CPU solvers whenever possible,
+%i.e., we load instances into the RAM before we start solving.
+%
+For parallel solvers we allowed access to 24 physical cores on
+machines. %, where hyperthreading was disabled.
+%
+%
+%
+%
+%
+We set a timeout of 900 seconds and limited available RAM to~14 GB per
+instance and solver.
+
+\vspace{-.3em}
+\paragraph{Benchmark Instances.}
+We considered a selection of overall 1494 instances from various
+publicly available benchmark sets~\cSAT consisting of %
+%
+%
+%
+%
+\instances{fre/meel} benchmarks\footnote{See:
+  \href{http://tinyurl.com/countingbenchmarks}{\nolinkurl{tinyurl.com/countingbenchmarks}}}(1480
+instances), %
+and \instances{c2d} benchmarks\footnote{See:
+  \href{http://reasoning.cs.ucla.edu/c2d/results.html}{\nolinkurl{reasoning.cs.ucla.edu/c2d}}}
+(14 instances).
+However, we considered instances preprocessed by regular~\cSAT preprocessor 
+\emph{pmc}~\cite{LagniezMarquis14}, similar to results of recent work on~\cSAT~\cite{FichteHecherZisser19}, where it was also shown that more than 80\% of the \cSAT instances have primal treewidth below~19
+after preprocessing.
+
+%, for which decomposer takes 0.1 seconds in median.
+%
+%Overall, both B+E and pmc managed to \emph{drastically reduce} the
+%widths, the decomposer ran below 0.1 seconds in median.
+%
+%
+%For~\WMC, we used the overall 1091 instances from the
+%\instances{Cachet} benchmark set\footnote{See:
+%  \href{https://www.cs.rochester.edu/u/kautz/Cachet/Model_Counting_Benchmarks/index.html}{\nolinkurl{cs.rochester.edu/u/kautz/Cachet}}}.
+%
+
+\vspace{-.3em}
+\paragraph{Benchmarked system \dpdb.}
+We used PostgreSQL 9.5 for our system~\dpdb, 
+which was available on our benchmark described hardware below.
+However, we expect major performance increases if higher versions are used,
+which was not available on our benchmark machines.
+In particular, parallel queries, where a query is evaluated in parallel,
+were added and improved in every version greater than 9.6.
+
+\vspace{-0.5em}
+\paragraph{Other benchmarked systems.}
+In our experimental work, we present results for the most recent
+versions of publicly available \cSAT solvers, namely,
+%
+\href{http://reasoning.cs.ucla.edu/c2d/download.php}{\textit{c2d}~2.20}~\cite{Darwiche04a},
+\href{http://www.cril.univ-artois.fr/KC/d4.html}{\textit{d4}~1.0}~\cite{LagniezMarquis17a},
+\href{https://bitbucket.org/haz/dsharp}{\textit{DSHARP}~1.0}~\cite{MuiseEtAl12a},
+\href{http://reasoning.cs.ucla.edu/minic2d/}{\textit{miniC2D}~1.0.0}~\cite{OztokDarwiche15a},
+\href{http://www.cril.univ-artois.fr/KC/eadt.html}{\textit{cnf2eadt}~1.0}~\cite{KoricheLagniezMarquisThomas13a}, 
+\href{http://www.sd.is.uec.ac.jp/toda/code/cnf2obdd.html}{\textit{bdd\_{}minisat\_\allowbreak{}all}~1.0.2}~\cite{TodaSoh15a},
+and \href{http://reasoning.cs.ucla.edu/sdd/}{\textit{sdd}~2.0}~\cite{Darwiche11a}, which are all based on %
+knowledge compilation techniques.
+%
+%
+%
+%
+%
+\begin{figure}[t]
+  %
+  %
+  \centering
+  \resizebox{.7\columnwidth}{!}{\includegraphics{plot_pmc.pdf}}
+  %\resizebox{.65\columnwidth}{!}{\includegraphics{plot_pmc_35_enlarged.pdf}}
+  %
+  %
+  %
+  %
+  %
+  %
+  \caption{Runtime for the top 15 solvers over {all}~\cSAT instances.
+  %, (top) / \emph{only} instances up to treewidth upper bound 35 (bottom). %
+    %
+    %
+    The x-axis refers to the number of instances and the y-axis
+    depicts the runtime sorted in ascending order for each solver
+    individually.}
+  \label{fig:runtime}
+\end{figure}
+%
+%
+%
+%
+We also considered rather recent approximate solvers
+\href{https://bitbucket.org/kuldeepmeel/approxmc}{\textit{ApproxMC2}, \textit{ApproxMC3}}~\cite{ChakrabortyEtAl14a}
+and
+\href{http://cs.stanford.edu/~ermon/code/STS.zip}{\textit{sts}~1.0}~\cite{ErmonGomesSelman12a},
+%
+as well as %
+CDCL-based solvers
+%
+\href{https://www.cs.rochester.edu/u/kautz/Cachet/cachet-wmc-1-21.zip}{\textit{Cachet}~1.21}~\cite{SangEtAl04},
+\href{http://tools.computational-logic.org/content/sharpCDCL.php}{\textit{sharpCDCL}}\footnote{See:
+  \href{http://tools.computational-logic.
+    org/content/sharpCDCL.php}{\nolinkurl{tools.computational-logic.
+      org}}}, %
+and
+\href{https://sites.google.com/site/marcthurley/sharpsat}{\textit{sharpSAT}~13.02}~\cite{Thurley06a}.
+%
+Finally, we also included multi-core solvers
+\href{https://github.com/daajoe/GPUSAT/releases/tag/v0.815-pre}{\textit{gpusat}~1.0 and \textit{gpusat}~2.0}~\cite{FichteHecherZisser19}, which both are based on dynamic programming, as well as
+\textit{countAntom}~1.0~\cite{BurchardSchubertBecker15a} on 12 physical CPU
+cores, which performed better than on 24 cores.
+%
+%
+%
+%
+%
+%
+%
+%
+%Note that we benchmarked additional solvers, which we omitted from the
+%presentation here and where we placed results online in our result
+%data repository.
+%%
+%For~\WMC, 
+%We considered also additional solvers, e.g., %\textit{sts},
+%%\textit{\gpusatone}, \gpusatnu, \textit{miniC2D}, \textit{Cachet},
+%%\textit{d4}, and
+%\href{http://www.cril.univ-artois.fr/kc/ressources/query-dnnf-0.4.180625.zip}{\textit{d-DNNF
+%    reasoner}~0.4.180625} on top of d4 as underlying knowledge
+%compiler, where detailed results can be found online. %
+Experiments were conducted with default~solver~options.
+%
+%
+%For solver~\gpusatnu, we also benchmarked variant~\gpusatnuv{A+B}
+%where we used 30 as threshold above which we apply the BST.
+%
+%
+%
+%
+%
+%
+%
+
+
+
+%\begin{figure}[bt]
+%\centering
+%\vspace{0pt}\includegraphics[height=13em]{plot_Width_sat.pdf}%
+%%\hspace{6pt}\includegraphics[height=13em]{plot_Width_wmc.pdf}%
+%\caption{%
+%  Width distribution of~\cSAT instances (left) before and after
+%  preprocessing (using both B+E and pmc).  Width distribution of~\WMC
+%  instances (right) before and after preprocessing using pmc*.
+%  Results are based on the primal treewidth and presented in
+%  intervals.  X-axis labels the intervals, y-axis labels the number of
+%  instances.
+%%
+%}%
+%\label{fig:distribution}
+%\end{figure}
+%
+
+\vspace{-.7em}
+\paragraph{Benchmark Hardware.}
+%
+%
+%
+%
+Almost all solvers were executed on a cluster of 12 nodes. Each node is equipped
+with two Intel Xeon E5-2650 CPUs consisting of 12 physical cores each
+at 2.2 GHz clock speed, 256 GB RAM and 1 TB hard disc drives (\emph{not} an SSD) Seagate ST1000NM0033. %
+The results were gathered on Ubuntu~16.04.1 LTS machines with disabled hyperthreading
+on kernel~4.4.0-139. %, which is already a post-Spectre and
+%post-Meltdown kernel\footnote{Details on spectre and meltdown: \href{https://spectreattack.com/}{\nolinkurl{spectreattack.com}}.}.
+%
+%
+As we also took into account solvers using a GPU, 
+for~\gpusatone and~\gpusatnu we used a machine equipped with a consumer GPU:
+%
+Intel Core i3-3245 CPU operating at 3.4 GHz, 16 GB RAM, and one
+Sapphire Pulse ITX Radeon RX 570 GPU running at 1.24 GHz with 32
+compute units, 2048 shader units, and 4GB VRAM using driver
+amdgpu-pro-18.30-641594 and OpenCL~1.2.
+The system operated on Ubuntu~18.04.1 LTS with kernel 4.15.0-34.
+%
+
+
+
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+
+
+%\begin{table}[bt]
+%  \centering
+%  \resizebox{\columnwidth}{!}{%
+%    \begin{tabular}{{l|l|rr|rHr|rHr||rrrrr||rrrH}}
+%      \toprule
+%      prob & pre &  vMdn & cMdn & t[s] Mdn & t[s] Max & to & t[s] Mdn pre & t[s] Max pre & to & Mdn & 50\% & 80\% & 90\% & 95\% & min & max & mdn & mean \\
+%      \midrule
+%      \cSAT & w/o pre & 637 & 810 & 0.07 & 1800.0 & \textbf{6} & n/a & n/a & n/a & 31 & 31 & 166 & 378 & 922 & n/a & n/a & n/a & n/a \\
+%      & pmc, B+E & \textbf{231} & 350 & 0.02 & 1800.0 & \textbf{6} & 0.06 & 900.0 & 192 & \textbf{3} & \textbf{3} & \textbf{17} & 201 & \textbf{823} & -72 & \textbf{755} & 22 & \textbf{31.9} \\
+%      & pmc & \textbf{231} & 189 & 0.03 & 1800.0 & \textbf{6} & \textbf{0.03} & 900.0 & \textbf{103} & \textbf{3} & 4 & 19 & 228 & \textbf{823} & -1839 & 547 & \textbf{23} & 23.1 \\
+%      & B+E & \textbf{231} & \textbf{185} & \textbf{0.02} & 1800.0 & \textbf{6} & 0.04 & 900.0 & 189 & \textbf{3} & \textbf{3} & 18 & \textbf{192} & \textbf{823} & 
+%                                                                                                                                                                    \textbf{-2} & 633 & \textbf{23} & 31.7 \\
+%      \midrule
+%      \WMC & w/o pre & \textbf{200} & 519 & 0.04 & 9.21 & \textbf{0} & n/a & n/a & n/a & 28 & 28 & 40 & 43 & 54 & n/a & n/a & n/a & n/a \\
+%           & pmc* & \textbf{200} & \textbf{300} & \textbf{0.03} & 1.6 & \textbf{0} & \textbf{0.03} & 1.6 & \textbf{0} & \textbf{11} & \textbf{11} & \textbf{20} & \textbf{25} & \textbf{30} & \textbf{0} & \textbf{330} & \textbf{16} & \textbf{18.8} \\
+%      \bottomrule
+%    \end{tabular}
+%  }
+%  \medskip
+%  \caption{Overview on upper bounds of the primal treewidth for
+%    considered \cSAT and \WMC benchmarks before and after
+%    preprocessing.  vMdn median of variables, cMdn median of clauses,
+%    t[s] Mdn of the decomposition runtime in seconds, maximum runtime
+%    t[s] Max, median Mdn and percentiles of upper bounds on treewidth,
+%    and min/max/mdn %
+%    of the width improvement after preprocessing. Negative values
+%    indicate worse results.  }
+%\label{tab:tw_combined}
+%  \label{tab:tw_combined_wmc}
+%\label{tab:detailed}
+%\end{table}
+%
+
+\newcommand{\inacc}[1]{\ensuremath{\diamond{}}#1}
+\begin{table}[tb]
+  \centering
+  \resizebox{0.8\columnwidth}{!}{%
+    \begin{tabular}{{l|lH||rrrrrrrr||r||rHr}}
+      \toprule
+      & solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
+      \midrule
+      \parbox[t]{1em}{\multirow{17}{*}{\rotatebox[origin=c]{90}{preprocessed by pmc~\cite{LagniezMarquis14}}}}&miniC2D & \textbf{0} & 1193 & 29 & \textbf{10} & 2 & 1 & 7 & 13 & 0 & \textbf{1242} & \textbf{68.77} & 1 \\
+      &\gpusatnu & 4.7E-15 & \textbf{1196} & \textbf{32} & 1 & 0 & 0 & 0 & 250 & %
+                                                                                     2 & 1229 & 71.27 & 2 \\
+     %
+      &d4 & \textbf{0} & 1163 & 20 & \textbf{10} & 2 & \textbf{4} & 28 & 52 & 1 & 1227 & 76.86 & 3 \\
+      %
+      %& \gpusatnuv{A+B} & {4.6E-15} & {1187} & 18 & 1 & 0 & 0 & 0 & 120 & 7 & 1206 & 74.56 & 4 \\
+      &countAntom 12 & \textbf{0} & 1141 & 18 & \textbf{10} & {5} & \textbf{4} & 13 & 101 & 0 & 1191 & 84.39 & 5 \\
+       & \dpdb & 0 & 1159 & 19 & 5 & 2 & 0 & 0 & 2 & 1 & 1185 & 100.99 \\
+      &c2d & \textbf{0} & 1124 & 31 & \textbf{10} & 3 & 3 & 10 & 20 & 0 & 1181 & 84.41 & 6 \\
+      &sharpSAT & \textbf{0} & 1029 & 16 & \textbf{10} & 2 & \textbf{4} & {30} & {253} & 1 & 1091 & 106.88 & 7 \\
+      &\gpusatone & 1.7E-13 & 1020 & 16 & 0 & 0 & 0 & 0 & 106 & 1 & 1036 & 114.86 & 8 \\
+      & sdd & \textbf{0} & 1014 & 4 & 7 & 1 & 0 & 2 & 0 & 0 & 1028 & 124.23 & 9 \\
+      & sts & 0 & 927 & 4 & 8 & \textbf{7} & 5 & \textbf{52} & 73 & \textbf{21} & 1003 & 128.43 \\
+    & dsharp & 0 & 853 & 3 & 7 & 2 & 0 & 0 & 83 & 0 & 865 & 157.87 \\
+    & cnf2eadt & 0 & 799 & 3 & 7 & 2 & 0 & 7 & \textbf{328} & 0 & 818 & 170.17 \\
+    & approxmc 3 & 0 & 794 & 3 & 7 & 2 & 0 & 6 & 10 & 0 & 812 & 173.35 \\
+    & bdd\_minisat\_all & 0 & 791 & 4 & 1 & 0 & 0 & 0 & 99 & 0 & 796 & 175.09 \\
+    & cachet & 0 & 624 & 3 & 8 & 2 & 3 & 24 & 3 & 0 & 664 & 209.26 \\
+    & approxmc 2 & 0 & 447 & 3 & 0 & 0 & 0 & 0 & 1 & 0 & 450 & 265.31 \\
+    & sharpCDCL & 0 & 340 & 3 & 0 & 0 & 0 & 0 & 0 & 0 & 343 & 289.17 \\
+      %
+      %
+      %\midrule
+%      & solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
+%      \midrule
+%      \parbox[t]{1em}{\multirow{8}{*}{\rotatebox[origin=c]{90}{B+E preprocessing}}}&c2d & \textbf{0} & 1199 & 24 & \textbf{9} & 0 & 2 & 23 & 14 & 0 & \textbf{1257} & \textbf{63.46} & 1 \\
+%      &miniC2D & \textbf{0} & 1203 & \textbf{27} & 8 & 0 & 2 & 12 & 8 & 0 & 1252 & 64.92 & 2 \\
+%      &d4 & \textbf{0} & 1182 & 15 & \textbf{9} & \textbf{1} & \textbf{3} & 31 & 79 & 1 & 1241 & 69.32 & 3 \\
+%      &countAntom 12 & \textbf{0} & 1177 & 14 & 8 & 0 & 2 & \textbf{34} & 100 & 0 & 1235 & 69.79 & 4 \\
+%      %
+%      &\gpusatnu & 6.4E-16 & \textbf{1204} & 26 & 1 & 0 & 0 & 0 & \textbf{150} & \textbf{3} & 1231 & 68.15 & 5 \\
+%      %
+%      &\gpusatnuv{A+B} & {6.4E-16} & 1201 & 21 & 1 & 0 & 0 & 0 & 67 & \textbf{3} & 1223 & 70.39 & 6 \\
+%      &sdd & \textbf{0} & 1106 & 11 & 4 & \textbf{1} & 1 & 4 & 0 & 0 & 1127 & 100.48 & 7 \\
+%      &\gpusatone & 9.9E-12 & 1037 & 16 & 0 & 0 & 0 & 0 & 87 & %
+%                                                               \textbf{3} & 1053 & 110.87 & 8 \\
+%                                                               %
+%      &bdd\_minisat\_all & \textbf{0} & 926 & 6 & 3 & \textbf{1} & 1 & 0 & 101 & 0 & 937 & 140.59 & 9 \\
+%      %
+%      \midrule
+%      &solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
+%      %
+%      \midrule
+%      \parbox[t]{1em}{\multirow{9}{*}{\rotatebox[origin=c]{90}{without preprocessing}}}& countAntom 12 & \textbf{0} & 118 & 511 & 139 & \textbf{175} & \textbf{21} & \textbf{181} & 318 & 15 & \textbf{1145} & \textbf{96.64} & 1 \\
+%      & d4 & \textbf{0} & 124 & 514 & 148 & 162 & \textbf{21} & 168 & 69 & 15 & 1137 & 104.94 & 2 \\
+%      & c2d & \textbf{0} & 119 & 525 & \textbf{165} & 161 & 18 & 120 & 48 & 15 & 1108 & 110.53 & 3 \\
+%      & miniC2D & \textbf{0} & 122 & 514 & 128 & 149 & 9 & 62 & 0 & 0 & 984 & 141.22 & 4 \\
+%      & sharpSAT & \textbf{0} & 100 & 467 & 124 & 156 & 12 & 123 & \textbf{390} & 4 & 982 & 135.41 & 5 \\
+%      %
+%      %
+%      %
+%      & \gpusatnuv{A+B} & {9.8E-18} & \textbf{125} & \textbf{539} & 96 & 138 & 0 & 0 & 94 
+%                                                                            & \textbf{19} & 898 & 151.16 & 8 \\
+%      %
+%                                                                            %
+%                                                                            %
+%                                                                            %
+%                                                                            %
+%                                                                            %
+%      &\gpusatnu & 9.7E-18 & \textbf{125} & 523 & 96 & 138 & 0 & 0 & 78 & 17 & 882 & 155.43 & 8 \\
+%      %
+%      &\gpusatone & 1.4E-10 & \textbf{125} & 524 & 67 & 140 & 0 & 0 & 82 & %
+%                                                                           9 & 856 & 162.03 & 11 \\
+%      &cachet & \textbf{0} & 99 & 430 & 71 & 152 & 8 & 57 & 3 & 0 & 817 & 176.26 & 12 \\
+%      %
+      %\midrule
+      %&solver & racc & 0-20 & 21-30 & 31-40 & 41-50 & 51-60 & $>$60 & best & unique & $\sum$ & time[h] & rank \\
+      \bottomrule
+    \end{tabular}
+  }
+  \caption{%
+    Number of solved~\cSAT instances, preprocessed by pmc and grouped by intervals of upper bounds of the treewidth.
+    time[h] is the cumulated  wall clock time in hours, where unsolved instances 
+    are counted as 900 seconds.
+%
+  }%
+  \label{tab:sat:merged}
+%
+\end{table}%
+
+\vspace{-.75em}
+\subsection{Results} % \& Discussion}
+%\todo{write}
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+Figure~\ref{fig:runtime} illustrates the top 15 solvers,
+where instances are preprocessed by pmc, %
+%
+in a cactus-like plot, which provides an overview over all the benchmarked~\cSAT instances.
+ The x-axis of these plots refers to the number 
+of instances and the y-axis depicts the runtime sorted in ascending order for each solver individually.
+Overall, \dpdb seems to be quite competitive and beats most of the solvers, as for example \gpusatone, sharpSAT, dsharp, approxmc as well as cachet.
+%
+Surprisingly, our system shows a different runtime behavior than the other solvers. 
+We believe that the reason lies in an initial overhead caused by the creation of the tables that seems to depend on the number of nodes of the used TD.
+There, \emph{I/O operations} of writing from main memory to hard disk seem to kick in.
+%
+%
+Table~\ref{tab:sat:merged} presents more detailed runtime results, showing a solid fifth place for \dpdb as our system solves the vast majority of the instances. %B+E, and without preprocessing, respectively.
+Assume we only have instances up to an upper bound\footnote{These upper bounds were obtained via decomposer htd in at most two seconds.} of treewidth 35.
+Then, if instances with TDs up to width 35 are considered, \dpdb solves even slightly more instances than~countAntom.
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%Note that the solver sts produced results that varied from the correct
+%result on average more than the value of the correct result.  
+%
+%
+%
+%
+%
+%If one uses the B+E preprocessor shown in
+%Table~\ref{tab:sat:merged} (mid), \gpusatnu solves even more instances
+%as well as the other solvers. Still, it ranks fifth solving only 26
+%instances less than the best solver and 10 less than the third best
+%solver and solves the most instances having width below 30.
+
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%\subsection{Discussion}
+%\todo{write}
+%\begin{itemize}
+	%\item Examples (pseudo-code) for sharpsat (and maybe min-VC)
+	%\item limit result rows (+ possibly randomize) of each node for faster approximations.
+	%\item approximate memory used by db for one of the largest problems solved
+	%\item Discussion section: we don't create/use any indices... Meaningful/useful B*Tree indices hard to create. Exploration of Bitmap indices (Oracle Enterprise feature) would be interesting.
+%\end{itemize}
+
+
+
+
+\section{Final Discussion \& Conclusions}
+%
+%\todo{write}
+%
+%
+%
+%
+%%
+%
+%
+%%
+%
+%
+%\paragraph{Conclusion.}
+We presented a generic system~\dpdb for explicitly exploiting treewidth
+by means of dynamic programming on databases.
+The idea of~\dpdb is to use database management systems (DBMS)
+for table manipulation, which makes it (1) easy and elegant to
+perform \emph{rapid prototyping} for problems,
+and (2) allows to leverage from decades of database theory and 
+database system tuning.
+%
+It turned out that all the cases that occur in dynamic programming can be handled
+quite elegantly with plain SQL queries.
+%
+Our system~\dpdb can be used for both decision and counting problems,
+thereby also considering optimization.
+We see our system particularly well-suited for counting problems,
+especially, since it was shown that for model counting (\cSAT)
+instances of practical relevance typically have small treewidth~\cite{FichteHecherZisser19}.
+%
+%
+In consequence, we carried out preliminary experiments on publicly available instances for~\cSAT, 
+where we see competitive behavior compared to most recent solvers.
+%
+%
+
+%\vspace{-.5em}
+\paragraph{Future Work.}
+Our results give rise to several research questions.
+%
+First of all, we want to push towards PostgreSQL 12, but at the same time
+also consider other vendors and systems, e.g., Oracle.
+In particular, the behavior of different systems might change,
+when we use different strategies on how to write and evaluate our SQL queries, 
+e.g., sub-queries vs.\ common table expressions.
+%
+Currently, we do not create or use any indices,
+as preliminary tests showed that \emph{meaningful B*tree indices} are hard to create
+and oftentimes cost too much time to create. % in our case.
+%
+Further, the exploration of bitmap indices, as available in Oracle \emph{enterprise DBMS} would be worth trying in our case (and for~\cSAT), 
+since one can efficiently combine database columns by 
+using extremely \emph{efficient bit operations}.
+%
+
+It might be worth to rigorously test and explore our extensions on limiting the number of rows per table for \emph{approximating} \cSAT or other counting problems, cf.,~\cite{ChakrabortyMeelVardi16a,MeelEtAl17a}.
+%
+%
+Another interesting research direction is to study whether
+efficient data representation techniques on DBMS can be combined with dynamic
+programming in order to lift our solver to quantified Boolean formulas.
+%
+%
+Finally, we are also interested in extending this work to projected
+model counting~\cite{FichteEtAl18d}.
+%
+%
+%
+
+%\clearpage
+%
+\bibliographystyle{splncs04}
+{\small
+\bibliography{dpdb-padl2020}}
+%
+
+
+
+
+
+\end{document}
+
