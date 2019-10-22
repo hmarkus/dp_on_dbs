@@ -6,6 +6,7 @@ Solve dynamic programming problems on tree decompositions using databases
 ### htd
 
 [htd on github](https://github.com/TU-Wien-DBAI/htd/)
+Branch `normalize_cli` is required by dpdb (currently not included in htd's master)
 
 ### Database
 [PostgreSQL](https://www.postgresql.org)
@@ -13,6 +14,7 @@ Solve dynamic programming problems on tree decompositions using databases
 ### Python
 * Python 3
 * psycopg2
+* future-fstrings (for compatibility with older versions)
 ```
 pip install -r requirements.txt
 ```
@@ -23,7 +25,7 @@ Basic configuration (database connection, htd path, ...) are configured in **con
 ## Usage
 
 ```
-python dpdb.py [GENERAL-OPTIONS] <PROBLEM> [PROBLEM-SPECIFIC-OPTIONS] <INPUT-FILE>
+python dpdb.py [GENERAL-OPTIONS] -f <INPUT-FILE> <PROBLEM> [PROBLEM-SPECIFIC-OPTIONS]
 ```
 
 ### Currently implemented problems
@@ -42,11 +44,6 @@ python dpdb.py <PROBLEM> --help
 for problem specific help/options
 
 ## TODO / Future Work
-
-### Parallel setup
-
-Setup is currently not concurrent.
-For some instances setup is even the bottleneck right now.
 
 ### Indexing
 
