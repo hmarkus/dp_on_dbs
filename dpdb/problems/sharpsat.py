@@ -52,13 +52,14 @@ class SharpSat(Problem):
             ])
 
         def insert_data():
-            #self.db.ignore_next_praefix(2)
-            self.db.ignore_next_praefix(1)
-            #self.db.insert("problem_option",("id", "name", "value"),(self.id,"store_formula",self.store_formula))
+            self.db.ignore_next_praefix()
             self.db.insert("problem_sharpsat",("id","num_vars","num_clauses"),
                 (self.id, self.num_vars, self.num_clauses))
-            #if self.store_formula:
-            #    store_clause_table(self.db, self.clauses)
+            if "faster" not in self.kwargs or not self.kwargs["faster"]:
+                self.db.ignore_next_praefix()
+                self.db.insert("problem_option",("id", "name", "value"),(self.id,"store_formula",self.store_formula))
+                if self.store_formula:
+                    store_clause_table(self.db, self.clauses)
 
         create_tables()
         insert_data()

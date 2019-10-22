@@ -159,18 +159,6 @@ class DB(object):
         select = self.replace_dynamic_tabs(select)
         self.insert_select(table, select)
 
-    def create_persist_view(self, table, view):
-        #select = f"SELECT * FROM {view}"
-        #select = self.replace_dynamic_tabs(select)
-        #create = f"CREATE TABLE {table} AS SELECT * FROM {view}"
-        #create = self.replace_dynamic_tabs(create)
-        #self.insert_select(table, select)
-        q = sql.SQL("CREATE TABLE {} AS SELECT * FROM {}").format(
-                    self.__table_name__(table),
-                    self.__table_name__(view),
-                    )
-        self.execute_ddl(q)
-
     def create_select(self,table,ass_sql):
         q = sql.SQL("CREATE TABLE {} AS {}").format(
                     self.__table_name__(table),

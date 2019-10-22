@@ -34,7 +34,6 @@ def lit2expr (lit):
         return "NOT {}".format(lit2var(lit))
 
 def filter(clauses, node):
-    #cur_cl = [clause for clause in clauses if all(abs(lit) in node.vertices for lit in clause)]
     vertice_set = set(node.vertices)
     cur_cl = set()
     for v in node.vertices:
