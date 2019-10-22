@@ -159,6 +159,16 @@ class DB(object):
         select = self.replace_dynamic_tabs(select)
         self.insert_select(table, select)
 
+    def select(self, table, columns, where = None):
+        q = sql.SQL("SELECT {} FROM {}").format(
+                    sql.SQL(', ').join(sql.SQL(c) for c in columns),
+                    self.__table_name__(table)
+                    )
+        if where:
+            q = sql.Composed([q,sql.SQL(" WHERE {}").format(sql.SQL(' AND ').join(map(sql.SQL,where)))])
+
+        return self.exec_and_fetch(q)
+
     def create_select(self,table,ass_sql):
         q = sql.SQL("CREATE TABLE {} AS {}").format(
                     self.__table_name__(table),
