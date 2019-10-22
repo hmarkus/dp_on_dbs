@@ -159,6 +159,13 @@ class DB(object):
         select = self.replace_dynamic_tabs(select)
         self.insert_select(table, select)
 
+    def create_select(self,table,ass_sql):
+        q = sql.SQL("CREATE TABLE {} AS {}").format(
+                    self.__table_name__(table),
+                    sql.SQL(ass_sql)
+                    )
+        self.execute_ddl(q)
+
     def update(self, table, columns, values, where = None, returning = None):
         sql_str = "UPDATE {} SET {}"
         q = sql.SQL(sql_str).format(

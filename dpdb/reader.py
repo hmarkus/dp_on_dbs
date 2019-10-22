@@ -1,4 +1,5 @@
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -47,27 +48,33 @@ class DimacsReader(Reader):
                 self.format = line[1] 
                 self._problem_vars = line[2:]
                 return lineno+1
-            elif self.is_comment(line):
+            elif not line or self.is_comment(line):
                 continue
             else:
                 logger.warning("Invalid content in preamble at line %d: %s", lineno, line)
         logger.error("No type found in DIMACS file!")
-        return lineno
+        sys.exit(1)
         
 class CnfReader(DimacsReader):
     def __init__(self):
         super().__init__()
         self.vars = []
         self.clauses = []
+        self.solution = -1
 
     def store_problem_vars(self):
-        self.num_vars = int(self._problem_vars[0])
-        self.num_clauses = int(self._problem_vars[1])
+        # We assume a CNF file containing a solution is pre-solved by pmc and
+        # the solution line contains only the number of models for sharpsat
+        if self.problem_solution_type == 's':
+            logger.info("Problem has %d models (solved by pre-processing)", int(self.format))
+        else:
+            self.num_vars = int(self._problem_vars[0])
+            self.num_clauses = int(self._problem_vars[1])
 
     def body(self, lines):
         if self.format != "cnf":
             logger.error("Not a cnf file!")
-            return
+            sys.exit(1)
         
         maxvar = 0
         for lineno, line in enumerate(lines):
@@ -131,7 +138,7 @@ class TdReader(DimacsReader):
     def body(self, lines):
         if self.format != "td":
             logger.error("Not a td file!")
-            return
+            sys.exit(1)
         
         for lineno, line in enumerate(lines):
             if not line:
@@ -174,7 +181,7 @@ class TwReader(DimacsReader):
     def body(self, lines):
         if self.format != "tw":
             logger.error("Not a tw file!")
-            return
+            sys.exit(1)
 
         for lineno, line in enumerate(lines):
             if not line or self.is_comment(line):
@@ -205,7 +212,7 @@ class EdgeReader(DimacsReader):
     def body(self, lines):
         if self.format != "edge":
             logger.error("Not a edge file!")
-            return
+            sys.exit(1)
 
         for lineno, line in enumerate(lines):
             if not line or self.is_comment(line):
