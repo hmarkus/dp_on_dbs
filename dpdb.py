@@ -39,7 +39,10 @@ def flatten_cfg(dd, filter=[], separator='.', prefix=''):
 
 def solve_problem(cfg, cls, file, **kwargs):
     def signal_handler(sig, frame):
-        logger.warning("Killing all connections")
+        if sig == signal.SIGUSR1:
+            logger.warning("Terminating because of error in worker thread")
+        else:
+            logger.warning("Killing all connections")
         problem.interrupt()
 
         app_name = None
@@ -51,6 +54,7 @@ def solve_problem(cfg, cls, file, **kwargs):
     admin_db = DBAdmin.from_cfg(cfg["db_admin"])
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGUSR1, signal_handler)
 
     pool = BlockingThreadedConnectionPool(1,cfg["db"]["max_connections"],**cfg["db"]["dsn"])
     problem = cls(file,pool, **cfg["dpdb"], **kwargs)

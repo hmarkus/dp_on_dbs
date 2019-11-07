@@ -1,5 +1,7 @@
 # -*- coding: future_fstrings -*-
 import logging
+import os
+import signal
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
@@ -378,6 +380,7 @@ class Problem(object):
             return node
         except Exception:
             logger.exception("Error in worker thread")
+            os.kill(os.getpid(), signal.SIGUSR1)
 
     def solve_node(self, node, db):
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
