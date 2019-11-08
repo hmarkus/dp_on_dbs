@@ -61,6 +61,7 @@ class CnfReader(DimacsReader):
         self.vars = []
         self.clauses = []
         self.solution = -1
+        self.projected = []
 
     def store_problem_vars(self):
         # We assume a CNF file containing a solution is pre-solved by pmc and
@@ -71,6 +72,21 @@ class CnfReader(DimacsReader):
             self.num_vars = int(self._problem_vars[0])
             self.num_clauses = int(self._problem_vars[1])
 
+    def read_terminated(self, lines, line, lineno):
+        i = 1
+        while line[-1] != '0':
+            if lineno + i >= len(lines):
+                logger.warning("Clause at line %d not terminated with 0", lineno)
+                # Ignore clause instead of "fixing" it?
+                line += " 0"
+                break
+            line += lines[lineno + i]
+            lines[lineno + i] = None
+            i += 1
+        content = [int(v) for v in line.split()[:-1]]
+
+        return (content, lines)
+
     def body(self, lines):
         if self.format != "cnf":
             logger.error("Not a cnf file!")
@@ -80,23 +96,20 @@ class CnfReader(DimacsReader):
         for lineno, line in enumerate(lines):
             if not line or self.is_comment(line):
                 continue
-            i = 1
-            if line.startswith("c ") or line == "c":
+            elif line.startswith("pv "):
+                projected, lines = self.read_terminated(lines, line[3:], lineno)
+                self.projected = projected
+            elif line.startswith("a "):
+                projected, lines = self.read_terminated(lines, line[2:], lineno)
+                self.projected = projected
+            elif line.startswith("e "):
                 continue
-            while line[-1] != '0':
-                if lineno + i >= len(lines):
-                    logger.warning("Clause at line %d not terminated with 0", lineno)
-                    # Ignore clause instead of "fixing" it?
-                    line += " 0"
-                    break
-                line += lines[lineno + i]
-                lines[lineno + i] = None
-                i += 1
-            clause = [int(v) for v in line.split()[:-1]]
-            self.clauses.append(clause)
-            atoms = [abs(lit) for lit in clause]
-            self.vars.append(atoms)
-            maxvar = max(maxvar,max(atoms))
+            else:
+                clause, lines = self.read_terminated(lines, line, lineno)
+                self.clauses.append(clause)
+                atoms = [abs(lit) for lit in clause]
+                self.vars.append(atoms)
+                maxvar = max(maxvar,max(atoms))
 
         if maxvar != self.num_vars:
             logger.warning("Effective number of variables mismatch preamble (%d vs %d)", maxvar, self.num_vars)

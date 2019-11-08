@@ -75,6 +75,16 @@ class Node(object):
     def vertex_children(self,vertex):
         return self._vertex_child_map[vertex]
 
+    def add_vertices(self, vertices):
+        for v in vertices:
+            if v not in self._vertex_child_map:
+                self._vertex_child_map[v] = []
+            if v not in self.vertices:
+                self.vertices.append(v)
+                for c in self.children:
+                    if v in c.vertices:
+                        self._vertex_child_map[v].append(c)
+
     def add_child(self, child):
         self.children.append(child)
         child.parent = self
