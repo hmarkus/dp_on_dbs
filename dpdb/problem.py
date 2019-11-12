@@ -204,6 +204,9 @@ class Problem(object):
             q += " LIMIT 1"
         return q
 
+    def get_root(self, bags, adj, htd_root):
+        return htd_root
+
     # the following methods should be considered final
     def set_td(self, td):
         self.td = td
@@ -221,6 +224,7 @@ class Problem(object):
                 ("num_bags", "INTEGER"),
                 ("tree_width", "INTEGER"),
                 ("num_vertices", "INTEGER"),
+                ("td_root", "INTEGER"),
                 ("setup_start_time", "TIMESTAMP"),
                 ("calc_start_time", "TIMESTAMP"),
                 ("end_time", "TIMESTAMP")
@@ -234,8 +238,8 @@ class Problem(object):
 
         def init_problem():
             problem_id = self.db.insert("problem",
-                ["name","type","num_bags","tree_width","num_vertices"],
-                [self.name,self.type,self.td.num_bags,self.td.tree_width,self.td.num_orig_vertices],"id")[0]
+                ["name","type","num_bags","tree_width","num_vertices","td_root"],
+                [self.name,self.type,self.td.num_bags,self.td.tree_width,self.td.num_orig_vertices,self.td.root.id],"id")[0]
             self.set_id(problem_id)
             logger.info("Created problem with ID %d", self.id)
             

@@ -24,7 +24,6 @@ class TreeDecomp(object):
                     if a not in visited:
                         self.edges.append((node,a))
                         visited.add(a)
-                        #add_node(new_node,n)
                         worklist.append((a,new_node))
                         leaf = False
                 if leaf:

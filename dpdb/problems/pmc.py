@@ -17,19 +17,6 @@ class Pmc(Problem):
     def td_node_column_def(self,var):
         return td_node_column_def(var)
         
-    def td_node_extra_columns(self):
-        #return [(f"v{p}", "BOOLEAN") for p in self.projected] + [("model_count","NUMERIC")]
-        return [("model_count","NUMERIC")]
-
-    def candidate_extra_cols(self,node):
-        return ["{} AS model_count".format(
-                " * ".join(set([var2cnt(node,v) for v in node.vertices] +
-                               [node2cnt(n) for n in node.children])) if node.vertices or node.children else "1"
-                )]
-
-    def assignment_extra_cols(self,node):
-        return ["sum(model_count) AS model_count"]
-
     def filter(self,node):
         return filter(self.var_clause_dict, node)
 
@@ -65,24 +52,40 @@ class Pmc(Problem):
         self.var_clause_dict = defaultdict(set)
 
         num_vars, edges = cnf2primal(input.num_vars, input.clauses, self.var_clause_dict)
-        #num_vars = num_vars - len(self.projected)
-        # TODO: filter?
-        edges = [e for e in edges if e[0] not in self.projected and e[1] not in self.projected]
+        # Create clique over projected variables
+        for a in self.projected:
+            for b in self.projected:
+                if a < b:
+                    edges.add((a,b))
         return (num_vars, edges)
-
-    def set_td(self, td):
-        for n in td.nodes:
-            n.add_vertices(self.projected)
-        super().set_td(td)
 
     def after_solve(self):
         root_tab = f"td_node_{self.td.root.id}"
-        #sum_count = self.db.replace_dynamic_tabs(f"(select coalesce(sum(model_count),0) from {root_tab})")
         projected_cols = ", ".join([f"v{p}" for p in self.projected])
         sum_count = self.db.replace_dynamic_tabs(f"(select count(*) from (select distinct {projected_cols} from {root_tab}) as projected)")
         self.db.ignore_next_praefix()
         model_count = self.db.update("problem_pmc",["model_count"],[sum_count],[f"ID = {self.id}"],"model_count")[0]
         logger.info("Problem has %d models", model_count)
+
+    def get_root(self, bags, adj, htd_root):
+        def is_valid(bag):
+            for p in self.projected:
+                if p not in bag:
+                    return False
+            return True
+
+        wl = [htd_root]
+        visited = set([htd_root])
+        for n in wl:
+            if is_valid(bags[n]):
+                return n
+            else:
+                for c in adj[n]:
+                    if not c in visited:
+                        visited.add(c)
+                        wl.append(c)
+
+        return htd_root
 
 def var2cnt(node,var):
     if node.needs_introduce(var):
