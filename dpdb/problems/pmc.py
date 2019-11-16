@@ -9,7 +9,6 @@ from .sat_util import *
 logger = logging.getLogger(__name__)
 
 class Pmc(Problem):
-
     def __init__(self, name, pool, store_formula=False, **kwargs):
         super().__init__(name, pool, **kwargs)
         self.store_formula = store_formula
