@@ -62,7 +62,9 @@
 
 
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
-\renewcommand*{\algorithmcfname}{Listing}
+\newcommand*{\algorithmcfnameold}{Algorithm}
+\newcommand*{\algorithmcfnamenew}{Listing}
+\renewcommand*{\algorithmcfname}{\algorithmcfnameold}
 \SetKwInput{KwData}{In}
 \SetKwInput{KwResult}{Out}
 \setlength{\textfloatsep}{1em}
@@ -380,7 +382,7 @@ and present the following contributions.
 (i) Our system \dpdb uses database management systems to handle table operations needed
 for performing dynamic programming efficiently. The system \dpdb is written in Python and employs PostgreSQL as DBMS,
 but can work with other DBMSs easily.
-(ii) The architecture of \dpdb allows to solve general problems of bounded treewidth that can be solved by
+(ii) The architecture of \dpdb allows to solve general problems of bounded treewidth that can be solved
 by means of table operations (in form of relational algebra and SQL) on tree decompositions. As a result, \dpdb is a generalized framework 
 for dynamic programming on tree decompositions, where one only needs to specify the essential and problem-specific parts of dynamic programming
 in order to solve (counting) problems.
@@ -563,7 +565,8 @@ and a TD~$\TTT$ of~$G$ of width~$2$.
 \vspace{-1.5em}
 \paragraph*{Relational Algebra.}%
 We use relational algebra~\cite{Codd70} for manipulation of relations,
-which forms the theoretical basis of its the well-known implementation database standard 
+which forms the theoretical basis of the 
+database standard 
 \emph{Structured Query Language (SQL)}~\cite{Ullman89} on tables.
 %\todo{mh: db master ref}
 An \emph{attribute}~$a$ is of a certain finite \emph{domain~$\dom(a)$}.
@@ -871,7 +874,7 @@ let local problem~$\cSAT(t, \varphi)=\varphi_t$ be $\varphi_t \eqdef \SB c \SM c
 %%
 %\end{figure*}
 
-Table algorithm~$\algo{S}$ as presented in Listing~\ref{alg:prim} shows all the cases that are needed to solve~\cSAT by means of DP over nice TDs.
+Table algorithm~$\algo{S}$ as presented in \algorithmcfname~\ref{alg:prim} shows all the cases that are needed to solve~\cSAT by means of DP over nice TDs.
 Each table~$\tab{t}$ consist of rows of the form~$\langle I, c\rangle$,
 where~$I$ is an assignment of~$\varphi_t$ and~$c$ is a counter. %within a table~$\tab{t}
 Nodes~$t$ with~$\type(t)=\leaf$ consist of the empty assignment and counter~$1$, cf., Line~1.
@@ -1038,15 +1041,15 @@ For join nodes, counters of common assignments are multiplied, cf., Line~7.
 one could alternatively use relational algebra. % or equivalent.
 There, tables~$\tab{t}$ for each TD node~$t$ are pictured as relations, where~$\tab{t}$ distinguishes a unique column (attribute)~$\cid{x}$ for each~$x\in\chi(t)$.
 Further, there might be additional attributes required depending on the problem at hand, e.g., we need an attribute \text{cnt} for counting in~\cSAT, or an attribute for modeling costs or weights in case of optimization problems.
-Listing~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to Listing~\ref{alg:prim}, but relies on relational algebra only for computing tables.
-This step from set notation to relational algebra is driven by the observation that in these table algorithms one can identify recurring patterns, and one mainly has to adjust problem-specific parts of it (highlighted by coloring in Listing~\ref{alg:prim}).
+\algorithmcfname~\ref{alg:primdb} presents a table algorithm for problem~\cSAT that is equivalent to \algorithmcfname~\ref{alg:prim}, but relies on relational algebra only for computing tables.
+This step from set notation to relational algebra is driven by the observation that in these table algorithms one can identify recurring patterns, and one mainly has to adjust problem-specific parts of it (highlighted by coloring in \algorithmcfname~\ref{alg:prim}).
 %
 %
-In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fresh initial table $\tab{t}$, cf., Line~\ref{line:leaf} of Listing~\ref{alg:primdb}.
+In particular, one typically derives for nodes~$t$ with~$\type(t)=\leaf$, a fresh initial table $\tab{t}$, cf., Line~\ref{line:leaf} of \algorithmcfname~\ref{alg:primdb}.
 Then, whenever an atom~$a$ is introduced, such algorithms often use~$\theta$-joins 
 with a fresh initial table for the introduced variable~$a$ representing potential values for~$a$. In Line~\ref{line:intr} the selection of the $\theta$-join is performed according to~$\varphi_t$, i.e.\ corresponding to the local problem of~\cSAT.
 Further, for nodes~$t$ with~$\type(t)=\rem$, these table algorithms typically need projection. 
-In case of Listing~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
+In case of \algorithmcfname~\ref{alg:primdb}, Line~\ref{line:rem} also needs grouping in order to maintain the counter, as several rows of~$\tab{1}$ might collapse in~$\tab{t}$.
 Finally, for a node~$t$ with~$\type(t)=\join$, in Line~\ref{line:join} we use extended projection and $\theta$-joins, where we join on the same truth assignments, which allows us later to leverage advanced database technology. %of the last decades.
 Extended projection is needed for multiplying the counters of the two rows containing the same assignment.
 
@@ -1093,18 +1096,20 @@ This generated SQL code is then used internally for manipulation of
 tables~$\tab{t}$ during the tree decomposition 
 traversal in Step~3 of dynamic programming.
 %
-Listing~\ref{alg:template} presents a general template, where parts of table algorithms for problems that are typically problem-specific are replaced by colored placeholders of the form~$\textcolor{\inputPredColor}{\#\mathsf{placeHolder}\#}$, cf., Listing~\ref{alg:primdb}.
-Observe that Line~\ref{line:intr2} of Listing~\ref{alg:template}
-uses extended projection as in Line~\ref{line:join2}. % compared to Listing~\ref{alg:primdb}.
+\algorithmcfnamenew~\ref{alg:template} presents a general template, where parts of table algorithms for problems that are typically problem-specific are replaced by colored placeholders of the form~$\textcolor{\inputPredColor}{\#\mathsf{placeHolder}\#}$, cf., \algorithmcfname~\ref{alg:primdb}.
+Observe that Line~\ref{line:intr2} of \algorithmcfnamenew~\ref{alg:template}
+uses extended projection as in Line~\ref{line:join2}. % compared to \algorithmcfname~\ref{alg:primdb}.
 This is needed for some problems requiring changes on vertex introduction.
 
 Note, however, that the whole architecture does not depend 
 on certain normalization or forms of TDs, e.g., whether it is nice or not.
 %the architecture foresees 
 Instead, a table algorithm of any TD is simply specified by 
-handling \emph{problem-specific} implementations of the placeholders of Listing~\ref{alg:template}, where the system following this architecture is responsible for interleaving and overlapping these cases within a node~$t$.
+handling \emph{problem-specific} implementations of the placeholders of \algorithmcfnamenew~\ref{alg:template}, where the system following this architecture is responsible for interleaving and overlapping these cases within a node~$t$.
 In fact, we discuss an implementation of a system according to this architecture next, where it is crucial to implement non-nice TDs to obtain higher efficiency.
 
+
+\renewcommand*{\algorithmcfname}{\algorithmcfnamenew}
 %
 %
 \begin{algorithm}[t]
@@ -1198,14 +1203,14 @@ i.e., each $\theta$-join covers at most 5 child tables.
 \paragraph*{Towards non-nice TDs.}
 Although this paper presents the algorithms for nice TDs (mainly due to simplicity),
 the system \dpdb interleaves these cases as presented in 
-Listing~\ref{alg:template}.
+\algorithmcfname~\ref{alg:template}.
 Concretely, the system executes one query per table~$\tab{t}$ for each node~$t$ during the traversal of TD~$\mathcal{T}$. 
 This query consists of serveral parts and we briefly explain its parts from outside to inside. 
-First of all, the inner-most part concerns the \emph{row candiates} for~$\tab{t}$ consisting of the $\theta$-join as in Line~\ref{line:join} of Listing~\ref{alg:template}, including parts of Line~\ref{line:intr}, namely cross-joins for each introduced variable, involving $\#\mathsf{intrTab}\#$ without the filtering on $\#\mathsf{localProbFilter}\#$.
+First of all, the inner-most part concerns the \emph{row candiates} for~$\tab{t}$ consisting of the $\theta$-join as in Line~\ref{line:join} of \algorithmcfname~\ref{alg:template}, including parts of Line~\ref{line:intr}, namely cross-joins for each introduced variable, involving $\#\mathsf{intrTab}\#$ without the filtering on $\#\mathsf{localProbFilter}\#$.
 Then, there are different configurations of \dpdb concerning these row candidates.
 For debugging (see below) one could (1) actually materialize the result in a table,
 whereas for performance runs, one should use (2) \emph{common table expressions (CTEs or {\ttfamily WITH}-queries)} or (3) \emph{sub-queries (nested queries)}, which both result in one nested SQL query per table~$\tab{t}$. 
-On top of these row candidates, projection\footnote{Actually, \dpdb keeps only columns relevant for the table of the parent node of~$t$.} and grouping involving~$\#\mathsf{aggrExp}\#$ as in Line~\ref{line:rem} of Listing~\ref{alg:template}, as well as selection acording to~$\#\mathsf{localProbFilter}\#$, cf., Line~\ref{line:intr}, is specified.
+On top of these row candidates, projection\footnote{Actually, \dpdb keeps only columns relevant for the table of the parent node of~$t$.} and grouping involving~$\#\mathsf{aggrExp}\#$ as in Line~\ref{line:rem} of \algorithmcfname~\ref{alg:template}, as well as selection acording to~$\#\mathsf{localProbFilter}\#$, cf., Line~\ref{line:intr}, is specified.
 It turns out that PostgreSQL can do better with sub-queries, where the query optimizer
 oftentimes pushes selection and projection into the sub-query if needed, which
 is not the case for CTEs, as discussed in the PostgreSQL manual~\cite[Sec. 7.8.1]{postgres}. On different DBMS or other vendors, e.g., Oracle, it might be better to use CTEs instead.
@@ -1223,13 +1228,13 @@ We obtain the following views.
 %
 \begin{alltt}\small
 CREATE VIEW v1 AS SELECT a, sum(cnt) AS cnt FROM 
- (WITH intrTab AS (SELECT true AS val UNION ALL SELECT false)
+ (WITH intrTab AS (SELECT 1 AS val UNION ALL SELECT 0)
    SELECT i1.val AS a, i2.val AS b, i3.val AS c, 1 AS cnt 
           FROM intrTab i1, intrTab i2, intrTab i3)  
 WHERE (NOT a OR b OR c) AND (a OR NOT b OR NOT c) GROUP BY a
 
 CREATE VIEW v2 AS SELECT a, sum(cnt) AS cnt FROM 
- (WITH intrTab AS (SELECT true AS val UNION ALL SELECT false) 
+ (WITH intrTab AS (SELECT 1 AS val UNION ALL SELECT 0) 
    SELECT i1.val AS a, i2.val AS d, 1 AS cnt FROM intrTab i1, intrTab i2) 
 WHERE (a OR d) AND (a OR NOT d) GROUP BY a
 
@@ -1283,10 +1288,10 @@ Out-of-the-box, we support the formats DIMACS sat and DIMACS graph~\cite{LiuZhon
 The system \dpdb allows for \emph{easy protyping} of DP algorithms on TDs.
 This covers decision problems, counting problems as well as optimization problems.
 As a proof of concept, we present the relevant parts of table algorithm specification
-according to the template in Listing~\ref{alg:template} for a selection of problems below\footnote{Implementation for problems~\cSAT as well as~\VC is readily available in~\dpdb.}.
+according to the template in \algorithmcfname~\ref{alg:template} for a selection of problems below\footnote{Implementation for problems~\cSAT as well as~\VC is readily available in~\dpdb.}.
 To this end, we assume in this section a not necessarily nice TD~$\mathcal{T}=(T,\chi)$ of the corresponding graph representation of our given instance~$\mathcal{I}$.
 Further, for the following specifications of the table algorithm using the template~$\algo{A_{RAlg}}$ 
-in Listing~\ref{alg:primdb}, we assume any node~$t$ of~$T$ and its child nodes~$t_1, \ldots, t_\ell$.
+in \algorithmcfnameold~\ref{alg:primdb}, we assume any node~$t$ of~$T$ and its child nodes~$t_1, \ldots, t_\ell$.
 
 \paragraph*{Problem~$\cSAT$.}
 Given instance formula~$\mathcal{I}=\varphi$.
@@ -1958,7 +1963,7 @@ since one can efficiently combine database columns by
 using extremely \emph{efficient bit operations}.
 %
 
-It might be worth to rigorously test and explore our extensions on limiting the number of rows per table for \emph{approximating} \cSAT or other counting problems, cf.,~\cite{ChakrabortyMeelVardi16a,MeelEtAl17a}.
+It might be worth to rigorously test and explore our extensions on limiting the number of rows per table for \emph{approximating} \cSAT or other counting problems, cf.,~\cite{ChakrabortyMeelVardi16a,MeelEtAl17a,SharmaEtAl19}.
 %
 %
 Another interesting research direction is to study whether
