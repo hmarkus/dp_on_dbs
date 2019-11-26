@@ -28,12 +28,20 @@ class Pmc(Problem):
                 ("num_clauses", "INTEGER NOT NULL"),
                 ("model_count", "NUMERIC")
             ])
+            if "faster" not in self.kwargs or not self.kwargs["faster"]:
+                self.db.create_table("projected_vars", [
+                    ("id", "INTEGER NOT NULL REFERENCES PROBLEM(id)"),
+                    ("var", "INTEGER NOT NULL")
+                ])
+                self.db.create_pk("projected_vars",["id","var"])
 
         def insert_data():
             self.db.ignore_next_praefix()
             self.db.insert("problem_pmc",("id","num_vars","num_clauses"),
                 (self.id, self.num_vars, self.num_clauses))
             if "faster" not in self.kwargs or not self.kwargs["faster"]:
+                for p in self.projected:
+                    self.db.insert("projected_vars",("id", "var"),(self.id, p))
                 self.db.ignore_next_praefix()
                 self.db.insert("problem_option",("id", "name", "value"),(self.id,"store_formula",self.store_formula))
                 if self.store_formula:

@@ -111,6 +111,13 @@ class DB(object):
                     )
         self.execute_ddl(q)
 
+    def create_pk(self, table, columns):
+        q = sql.SQL("ALTER TABLE {} ADD PRIMARY KEY ({})").format(
+                    self.__table_name__(table),
+                    sql.SQL(', ').join(sql.Identifier(c) for c in columns)
+                    )
+        self.execute_ddl(q)
+
     def create_view(self, name, text):
         q = sql.SQL("CREATE VIEW {} AS ").format(self.__table_name__(name))
         q = sql.Composed([q,sql.SQL(text)])

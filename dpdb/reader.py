@@ -63,6 +63,12 @@ class CnfReader(DimacsReader):
         self.solution = -1
         self.projected = []
 
+    def is_comment(self, line):
+        if line.startswith("c ind "):
+            return False
+        else:
+            return super().is_comment(line)
+
     def store_problem_vars(self):
         # We assume a CNF file containing a solution is pre-solved by pmc and
         # the solution line contains only the number of models for sharpsat
@@ -93,15 +99,20 @@ class CnfReader(DimacsReader):
             sys.exit(1)
         
         maxvar = 0
+        projected_vars = set()
+
         for lineno, line in enumerate(lines):
             if not line or self.is_comment(line):
                 continue
             elif line.startswith("pv "):
                 projected, lines = self.read_terminated(lines, line[3:], lineno)
-                self.projected = projected
+                [projected_vars.add(p) for p in projected]
+            elif line.startswith("c ind "):
+                projected, lines = self.read_terminated(lines, line[6:], lineno)
+                [projected_vars.add(p) for p in projected]
             elif line.startswith("a "):
                 projected, lines = self.read_terminated(lines, line[2:], lineno)
-                self.projected = projected
+                [projected_vars.add(p) for p in projected]
             elif line.startswith("e "):
                 continue
             else:
@@ -111,6 +122,7 @@ class CnfReader(DimacsReader):
                 self.vars.append(atoms)
                 maxvar = max(maxvar,max(atoms))
 
+        self.projected = projected_vars
         if maxvar != self.num_vars:
             logger.warning("Effective number of variables mismatch preamble (%d vs %d)", maxvar, self.num_vars)
         if len(self.clauses) != self.num_clauses:
