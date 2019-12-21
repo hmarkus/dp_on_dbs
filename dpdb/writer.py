@@ -22,6 +22,11 @@ class Writer(object):
             self.writeline("b {0} {1}".format(b, " ".join(map(str,v))))
         for e in edges:
             self.writeline("{0} {1}".format(e[0],e[1]))
+
+    def write_cnf(self, num_vars, clauses):
+        self.writeline("p cnf {} {}".format(num_vars, len(clauses)))
+        for c in clauses:
+            self.writeline("{} 0".format(" ".join(map(str,c))))
         
 class StreamWriter(Writer):
     def __init__(self, stream):

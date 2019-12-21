@@ -57,7 +57,10 @@ def solve_problem(cfg, cls, file, **kwargs):
     signal.signal(signal.SIGUSR1, signal_handler)
 
     pool = BlockingThreadedConnectionPool(1,cfg["db"]["max_connections"],**cfg["db"]["dsn"])
-    problem = cls(file,pool, **cfg["dpdb"], **kwargs)
+    problem_cfg = {}
+    if "problem_specific" in cfg and cls.__name__.lower() in cfg["problem_specific"]:
+        problem_cfg = cfg["problem_specific"][cls.__name__.lower()]
+    problem = cls(file,pool, **cfg["dpdb"], **flatten_cfg(problem_cfg, [], '_'), **kwargs)
 
     logger.info("Using tree decomposition seed: {}".format(kwargs["runid"]))
     # Run htd
@@ -99,13 +102,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(usage="%(prog)s [general options] -f input-file problem-type [problem specific-options]", formatter_class=MyFormatter)
 
     # add problem types
-    problem_parsers = parser.add_subparsers(
-        title="problem types",
-        description="Type of problems that can be solved\n%(prog)s problem-type --help for additional information on each type and problem specific options",
-        metavar="problem-type",
-        help="Type of the problem to solve",
-        required=True
-    )
+    if sys.version_info >= (3,7):
+        problem_parsers = parser.add_subparsers(
+            title="problem types",
+            description="Type of problems that can be solved\n%(prog)s problem-type --help for additional information on each type and problem specific options",
+            metavar="problem-type",
+            help="Type of the problem to solve",
+            required=True
+        )
+    else:
+        problem_parsers = parser.add_subparsers(
+            title="problem types",
+            description="Type of problems that can be solved\n%(prog)s problem-type --help for additional information on each type and problem specific options",
+            metavar="problem-type",
+            help="Type of the problem to solve"
+        )
 
     for cls, prob_args in args.specific.items():
         options = {}

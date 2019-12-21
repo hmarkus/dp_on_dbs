@@ -80,6 +80,7 @@ class Problem(object):
         self.type = type(self).__name__
         self.db = DB.from_pool(pool)
         self.interrupted = False
+        self.store_all_vertices = False
 
     # overwrite the following methods (if required)
     def td_node_column_def(self, var):
@@ -169,8 +170,11 @@ class Problem(object):
         return q
 
     def assignment_select(self,node):
-        sel_list = ",".join([var2col(v) if v in node.stored_vertices
-                                        else "null::{} {}".format(self.td_node_column_def(v)[1],var2col(v)) for v in node.vertices])
+        if self.store_all_vertices:
+            sel_list = ",".join([var2col(v) for v in node.vertices])
+        else:
+            sel_list = ",".join([var2col(v) if v in node.stored_vertices
+                                            else "null::{} {}".format(self.td_node_column_def(v)[1],var2col(v)) for v in node.vertices])
         extra_cols = self.assignment_extra_cols(node)
         if extra_cols:
             sel_list += "{}{}".format(", " if sel_list else "", ",".join(extra_cols))
@@ -190,7 +194,10 @@ class Problem(object):
         q = "{} {}".format(self.assignment_select(node),self.filter(node))
 
         if node.stored_vertices:
-            q += " GROUP BY {}".format(",".join([var2col(v) for v in node.stored_vertices]))
+            if self.store_all_vertices:
+                q += " GROUP BY {}".format(",".join([var2col(v) for v in node.vertices]))
+            else:
+                q += " GROUP BY {}".format(",".join([var2col(v) for v in node.stored_vertices]))
 
         extra_group = self.group_extra_cols(node)
         if extra_group:

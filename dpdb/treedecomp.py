@@ -20,12 +20,13 @@ class TreeDecomp(object):
                 else:
                     self.root = new_node
                 leaf = True
-                for a in adj[node]:
-                    if a not in visited:
-                        self.edges.append((node,a))
-                        visited.add(a)
-                        worklist.append((a,new_node))
-                        leaf = False
+                if adj:
+                    for a in adj[node]:
+                        if a not in visited:
+                            self.edges.append((node,a))
+                            visited.add(a)
+                            worklist.append((a,new_node))
+                            leaf = False
                 if leaf:
                     self.leafs.append(new_node)
             

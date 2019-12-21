@@ -6,17 +6,32 @@ class hashabledict(dict):
     def __hash__(self):
         return hash(frozenset(self))
 
-def cnf2primal (num_vars, clauses, var_clause_dict = defaultdict(set)):
+def _add_directed_edge(edges, adjacency_list, vertex1, vertex2):
+    if vertex1 == vertex2:
+        return
+
+    if vertex1 in adjacency_list:
+        adjacency_list[vertex1].add(vertex2)
+    else:
+        adjacency_list[vertex1] = set([vertex2])
+    if vertex1 < vertex2:
+        edges.add((vertex1,vertex2))
+
+def cnf2primal (num_vars, clauses, var_clause_dict = defaultdict(set), ret_adj=False):
     edges = set([])
+    adj = {}
     for clause in clauses:
         atoms = [abs(lit) for lit in clause]
         clause_set = hashabledict({frozenset(atoms): frozenset(clause)})
         for i in atoms:
             var_clause_dict[i].add(clause_set)
             for j in atoms:
-                if i < j:
-                    edges.add((i,j))
-    return (num_vars, edges)
+                _add_directed_edge(edges,adj,i,j)
+                _add_directed_edge(edges,adj,j,i)
+    if ret_adj:
+        return (num_vars, edges, adj)
+    else:
+        return (num_vars, edges)
 
 def td_node_column_def(var):
     return (var2col(var), "BOOLEAN")
