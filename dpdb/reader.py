@@ -4,18 +4,21 @@ import sys
 logger = logging.getLogger(__name__)
 
 class Reader(object):
+    def __init__(self,silent=False):
+        self.silent = silent
+
     @classmethod
-    def from_file(cls, fname):
+    def from_file(cls, fname, silent=False):
         with open(fname, "r") as f:
             return cls.from_string(f.read())
 
     @classmethod
-    def from_stream(cls, stream):
-        return cls.from_string(stream.read().decode())
+    def from_stream(cls, stream, silent=False):
+        return cls.from_string(stream.read().decode(),silent)
 
     @classmethod
-    def from_string(cls, string):
-        instance = cls()
+    def from_string(cls, string, silent=False):
+        instance = cls(silent)
         instance.parse(string)
         return instance
 
@@ -26,10 +29,12 @@ class DimacsReader(Reader):
     def parse(self, string):
         self.problem_solution_type = "?"
         self.format = "?"
+        self.done = False
         lines = string.split("\n")
         body_start = self.preamble(lines)
         self.store_problem_vars()
-        self.body(lines[body_start:])
+        if not self.done:
+            self.body(lines[body_start:])
 
     def store_problem_vars(self):
         pass
@@ -39,6 +44,9 @@ class DimacsReader(Reader):
 
     def body(self, string):
         pass
+
+    def preamble_special(self, line):
+        return False
 
     def preamble(self,lines):
         for lineno, line in enumerate(lines):
@@ -51,29 +59,52 @@ class DimacsReader(Reader):
             elif not line or self.is_comment(line):
                 continue
             else:
-                logger.warning("Invalid content in preamble at line %d: %s", lineno, line)
+                if self.preamble_special(line):
+                    return lineno+1
+                else:
+                    logger.warning("Invalid content in preamble at line %d: %s", lineno, line)
         logger.error("No type found in DIMACS file!")
         sys.exit(1)
         
 class CnfReader(DimacsReader):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, silent=False):
+        super().__init__(silent)
         self.vars = []
         self.clauses = []
         self.solution = -1
         self.projected = []
+        self.maybe_sat = True
+        self.models = None
 
     def is_comment(self, line):
-        if line.startswith("c ind "):
+        if line.startswith("c ind ") or line == 'c UNSATISFIABLE':
             return False
         else:
             return super().is_comment(line)
+
+    def preamble_special(self,line):
+        if line == 'c UNSATISFIABLE':
+            self.maybe_sat = False
+            return True
+        return False
 
     def store_problem_vars(self):
         # We assume a CNF file containing a solution is pre-solved by pmc and
         # the solution line contains only the number of models for sharpsat
         if self.problem_solution_type == 's':
-            logger.info("Problem has %d models (solved by pre-processing)", int(self.format))
+            self.models = int(self.format)
+            if not self.silent:
+                logger.info("Problem has %d models (solved by pre-processing)", int(self.format))
+            self.done = True
+            self.num_vars = 0
+            self.num_clauses = 0
+        elif not self.maybe_sat:
+            self.models = 0
+            if not self.silent:
+                logger.info("Problem has 0 models (solved by pre-processing)")
+            self.done = True
+            self.num_vars = 0
+            self.num_clauses = 0
         else:
             self.num_vars = int(self._problem_vars[0])
             self.num_clauses = int(self._problem_vars[1])
@@ -136,8 +167,8 @@ def _add_directed_edge(edges, adjacency_list, vertex1, vertex2):
     edges.append((vertex1,vertex2))
 
 class TdReader(DimacsReader):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, silent=False):
+        super().__init__(silent)
         self.edges = []
         self.bags = {}
         self.adjacency_list = {}
@@ -194,8 +225,8 @@ class TdReader(DimacsReader):
                 logger.warning("Effective number of bags mismatch preamble (%d vs %d)", len(self.bags), self.num_bags)
 
 class TwReader(DimacsReader):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, silent=False):
+        super().__init__(silent)
         self.edges = []
         self.adjacency_list = {}
 
@@ -225,8 +256,8 @@ class TwReader(DimacsReader):
             logger.warning("Effective number of edges mismatch preamble (%d vs %d)", len(self.edges)/2, self.num_edges)
 
 class EdgeReader(DimacsReader):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, silent=False):
+        super().__init__(silent)
         self.edges = []
         self.adjacency_list = {}
 

@@ -12,13 +12,17 @@ from .sat_util import *
 logger = logging.getLogger(__name__)
 
 class PmcExt(Problem):
-    def __init__(self, name, pool, sat_solver_path, sat_solver_seed_arg=None, max_solver_threads=12, store_formula=False, **kwargs):
+    def __init__(self, name, pool, sat_solver_path, sat_solver_seed_arg=None, preprocessor_path=None, preprocessor_args=None, max_solver_threads=12, store_formula=False, **kwargs):
         super().__init__(name, pool, **kwargs)
         self.store_formula = store_formula
         self.sat_solver = [sat_solver_path]
         if sat_solver_seed_arg:
             self.sat_solver.append(sat_solver_seed_arg)
             self.sat_solver.append(str(kwargs["runid"]))
+        self.preprocessor = [preprocessor_path]
+        if preprocessor_args:
+            self.preprocessor.extend(preprocessor_args.split(' '))
+
         self.max_solver_threads = max_solver_threads
         self.store_all_vertices = True
 
@@ -113,12 +117,26 @@ class PmcExt(Problem):
                     else:
                         clauses.append([n*(-1)])
                         extra_clauses.append(n*(-1))
-            p = subprocess.Popen(self.sat_solver,stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             logger.debug("Calling SAT solver with {}".format(extra_clauses))
-            StreamWriter(p.stdin).write_cnf(self.num_vars,clauses)
-            p.stdin.close()
-            sat = 1 if p.stdout.readline().decode().rstrip() == "s SATISFIABLE" else 0
-            p.wait()
+            maybe_sat = True
+            num_vars = self.num_vars
+            if self.preprocessor:
+                ppmc = subprocess.Popen(self.preprocessor,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                StreamWriter(ppmc.stdin).write_cnf(self.num_vars,clauses)
+                ppmc.stdin.close()
+                input = CnfReader.from_stream(ppmc.stdout,silent=True)
+                ppmc.wait()
+                maybe_sat = input.maybe_sat
+                num_vars = input.num_vars
+                clauses = input.clauses
+            if maybe_sat:
+                psat = subprocess.Popen(self.sat_solver,stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                StreamWriter(psat.stdin).write_cnf(num_vars,clauses)
+                psat.stdin.close()
+                sat = 1 if psat.stdout.readline().decode().rstrip() == "s SATISFIABLE" else 0
+                psat.wait()
+            else:
+                sat = 0
             db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)
         except Exception as e:
             raise e
