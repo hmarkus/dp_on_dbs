@@ -19,9 +19,12 @@ class PmcExt(Problem):
         if sat_solver_seed_arg:
             self.sat_solver.append(sat_solver_seed_arg)
             self.sat_solver.append(str(kwargs["runid"]))
-        self.preprocessor = [preprocessor_path]
-        if preprocessor_args:
-            self.preprocessor.extend(preprocessor_args.split(' '))
+        if preprocessor_path:
+            self.preprocessor = [preprocessor_path]
+            if preprocessor_args:
+                self.preprocessor.extend(preprocessor_args.split(' '))
+        else:
+            self.preprocessor = None
 
         self.max_solver_threads = max_solver_threads
         self.store_all_vertices = True
@@ -126,6 +129,7 @@ class PmcExt(Problem):
                 ppmc.stdin.close()
                 input = CnfReader.from_stream(ppmc.stdout,silent=True)
                 ppmc.wait()
+                ppmc.stdout.close()
                 maybe_sat = input.maybe_sat
                 num_vars = input.num_vars
                 clauses = input.clauses
@@ -135,6 +139,7 @@ class PmcExt(Problem):
                 psat.stdin.close()
                 sat = 1 if psat.stdout.readline().decode().rstrip() == "s SATISFIABLE" else 0
                 psat.wait()
+                psat.stdout.close()
             else:
                 sat = 0
             db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)
