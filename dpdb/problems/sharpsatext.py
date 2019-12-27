@@ -382,13 +382,12 @@ class MinorGraph:
         with self.lock:
             if tn in self._returned:
                 return list(self._returned[tn])
-        result = set()
-        nodes = set(nodes)
-        for k, v in self._clique_uses_project.items():
-            if nodes.issuperset(k):
-                result.update(v)
+            result = set()
+            nodes = set(nodes)
+            for k, v in self._clique_uses_project.items():
+                if nodes.issuperset(k):
+                    result.update(v)
 
-        with self.lock:
             for k, v in self._returned.items():
                 result -= v
             self._returned[tn] = result
