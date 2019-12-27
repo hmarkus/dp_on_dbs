@@ -193,7 +193,7 @@ class Problem(object):
     def assignment_view(self,node):
         q = "{} {}".format(self.assignment_select(node),self.filter(node))
 
-        if node.stored_vertices:
+        if node.stored_vertices or (self.store_all_vertices and node.vertices):
             if self.store_all_vertices:
                 q += " GROUP BY {}".format(",".join([var2col(v) for v in node.vertices]))
             else:
@@ -207,7 +207,7 @@ class Problem(object):
                 q += ", "
             q += "{}".format(",".join(extra_group))
 
-        if not node.stored_vertices and not extra_group:
+        if not node.stored_vertices and not extra_group and not self.store_all_vertices:
             q += " LIMIT 1"
         return q
 

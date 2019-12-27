@@ -1,3 +1,18 @@
+import math
+def normalize_cnf(clauses):
+    var_map = {}
+    num_vars = 0
+    mapped_clauses = []
+    for c in clauses:
+        mapped_clause = []
+        for v in c:
+            if not abs(v) in var_map:
+                num_vars += 1
+                var_map[abs(v)] = num_vars
+            mapped_clause.append(int(math.copysign(var_map[abs(v)],v)))
+        mapped_clauses.append(mapped_clause)
+    return mapped_clauses
+
 class Writer(object):
     def write(self, str):
         pass
@@ -23,7 +38,9 @@ class Writer(object):
         for e in edges:
             self.writeline("{0} {1}".format(e[0],e[1]))
 
-    def write_cnf(self, num_vars, clauses):
+    def write_cnf(self, num_vars, clauses, normalize=False):
+        if normalize:
+            clauses = normalize_cnf(clauses)
         self.writeline("p cnf {} {}".format(num_vars, len(clauses)))
         for c in clauses:
             self.writeline("{} 0".format(" ".join(map(str,c))))
