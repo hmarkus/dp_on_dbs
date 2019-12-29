@@ -1,4 +1,5 @@
 import logging
+import re
 import sys
 
 logger = logging.getLogger(__name__)
@@ -8,25 +9,39 @@ class Reader(object):
         self.silent = silent
 
     @classmethod
-    def from_file(cls, fname, silent=False):
+    def from_file(cls, fname, **kwargs):
         with open(fname, "r") as f:
-            return cls.from_string(f.read())
+            return cls.from_string(f.read(),**kwargs)
 
     @classmethod
-    def from_stream(cls, stream, silent=False):
-        return cls.from_string(stream.read().decode(),silent)
+    def from_stream(cls, stream, **kwargs):
+        return cls.from_string(stream.read().decode(),**kwargs)
 
     @classmethod
-    def from_string(cls, string, silent=False):
-        instance = cls(silent)
+    def from_string(cls, string, **kwargs):
+        instance = cls(**kwargs)
         instance.parse(string)
         return instance
 
     def parse(self, string):
         pass
 
+class RegExReader(Reader):
+    def __init__(self,pattern,silent=False):
+        super().__init__(silent)
+        self.pattern = pattern
+        self.result = None
+
+    def parse(self, string):
+        m = re.search(self.pattern,string)
+        if m:
+            self.result = m.group(1)
+        else:
+            logger.warning("Unable to parse input")
+
 class DimacsReader(Reader):
     def parse(self, string):
+        self.string = string
         self.problem_solution_type = "?"
         self.format = "?"
         self.done = False
@@ -92,7 +107,16 @@ class CnfReader(DimacsReader):
         # We assume a CNF file containing a solution is pre-solved by pmc and
         # the solution line contains only the number of models for sharpsat
         if self.problem_solution_type == 's':
-            self.models = int(self.format)
+            try:
+                self.models = int(self.format)
+            except ValueError:
+                if self.format == "UNSATISFIABLE":
+                    self.models = 0
+                    self.maybe_sat = False
+                elif self.format == "SATISFIABLE":
+                    self.models = 1
+                else:
+                    logger.warning("Unable to parse solution %s", self.string)
             if not self.silent:
                 logger.info("Problem has %d models (solved by pre-processing)", int(self.format))
             self.done = True

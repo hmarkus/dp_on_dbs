@@ -67,6 +67,10 @@ class Problem(object):
     id = None
     td = None
 
+    @classmethod
+    def keep_cfg(cls):
+        return []
+
     def __init__(self, name, pool, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
             randomize_rows=False, **kwargs):
@@ -311,10 +315,14 @@ class Problem(object):
             self.db.insert("problem_option",("id", "name", "value"),(self.id,"candidate_store",self.candidate_store))
             self.db.insert("problem_option",("id", "name", "value"),(self.id,"limit_result_rows",self.limit_result_rows))
             self.db.insert("problem_option",("id", "name", "value"),(self.id,"randomize_rows",self.randomize_rows))
-            for k, v in self.kwargs.items():
-                if v:
-                    self.db.ignore_next_praefix()
-                    self.db.insert("problem_option",("id", "name", "value"),(self.id,k,v))
+            if "options" in args.specific[self.__class__]:
+                for k,v in args.specific[self.__class__]["options"].items():
+                    o = k
+                    if "dest" in v:
+                        o = v["dest"]
+                    if o in self.kwargs:
+                        self.db.ignore_next_praefix()
+                        self.db.insert("problem_option",("id", "name", "value"),(self.id,o,self.kwargs[o]))
 
             for n in self.td.nodes:
                 self.db.insert("td_node_status", ["node"],[n.id])

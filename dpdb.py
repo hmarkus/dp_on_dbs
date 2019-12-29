@@ -22,18 +22,30 @@ def read_cfg(cfg_file):
         cfg = json.load(c)
     return cfg
 
-def flatten_cfg(dd, filter=[], separator='.', prefix=''):
+def flatten_cfg(dd, filter=[], separator='.', keep=[],prefix='',fullprefix=''):
     if prefix.startswith(tuple(filter)):
         return {}
-
+    if separator+fullprefix in map(lambda s: (separator+s+separator), keep):
+        return {prefix:dd}
     if isinstance(dd, dict):
         return { prefix + separator + k if prefix else k : v
             for kk, vv in dd.items()
-            for k, v in flatten_cfg(vv, filter, separator, kk).items()
+            for k, v in flatten_cfg(vv, filter, separator, keep,kk,fullprefix+kk+separator).items()
                 if not (prefix + separator + k).startswith(tuple(filter))
             }
     elif isinstance(dd, list):
-        return { prefix : " ".join(dd) }
+        if isinstance(dd[0],dict):
+            all_keys = set().union(*(d.keys() for d in dd))
+            tmp = {k:[] for k in all_keys}
+            for d in dd:
+                for k in all_keys:
+                    if k in d:
+                        tmp[k].append(d[k])
+                    else:
+                        tmp[k].append(None)
+            return flatten_cfg(tmp,filter,separator,keep,prefix,fullprefix)
+        else:
+            return { prefix : " ".join(map(str,dd)) }
     else:
         return { prefix : dd }
 
@@ -60,7 +72,7 @@ def solve_problem(cfg, cls, file, **kwargs):
     problem_cfg = {}
     if "problem_specific" in cfg and cls.__name__.lower() in cfg["problem_specific"]:
         problem_cfg = cfg["problem_specific"][cls.__name__.lower()]
-    problem = cls(file,pool, **cfg["dpdb"], **flatten_cfg(problem_cfg, [], '_'), **kwargs)
+    problem = cls(file,pool, **cfg["dpdb"], **flatten_cfg(problem_cfg, [], '_',cls.keep_cfg()), **kwargs)
 
     logger.info("Using tree decomposition seed: {}".format(kwargs["runid"]))
     # Run htd
@@ -128,6 +140,7 @@ if __name__ == "__main__":
             prob_args["aliases"] = [cls.__name__.lower()]
         p = problem_parsers.add_parser(cls.__name__, **prob_args, usage="%(prog)s")
         p.set_defaults(cls=cls)
+        prob_args["options"] = options
         for arg, kwargs in options.items():
             p.add_argument(arg,**kwargs)
 
