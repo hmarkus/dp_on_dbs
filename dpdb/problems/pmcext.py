@@ -141,6 +141,18 @@ args.specific[PmcExt] = dict(
             dest="store_formula",
             help="Store formula in database",
             action="store_true",
+        ),
+        "--projected-size": dict(
+            dest="projected_size",
+            help="Size of projection to be generated for abstraction",
+            type=int,
+            default=8
+        ),
+        "--asp-timeout": dict(
+            dest="asp_timeout",
+            help="Timeout in seconds to find abstraction",
+            type=int,
+            default=30
         )
     }
 )
