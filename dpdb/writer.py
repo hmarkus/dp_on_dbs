@@ -1,8 +1,9 @@
 import math
-def normalize_cnf(clauses):
+def normalize_cnf(clauses, var=None):
     var_map = {}
     num_vars = 0
     mapped_clauses = []
+    mapped_vars = None
     for c in clauses:
         mapped_clause = []
         for v in c:
@@ -11,7 +12,12 @@ def normalize_cnf(clauses):
                 var_map[abs(v)] = num_vars
             mapped_clause.append(int(math.copysign(var_map[abs(v)],v)))
         mapped_clauses.append(mapped_clause)
-    return mapped_clauses
+    if var is not None:
+        mapped_vars = []
+        for v in var:
+            if v in var_map:
+                mapped_vars.append(var_map[v])
+    return mapped_clauses, mapped_vars 
 
 class Writer(object):
     def write(self, str):
@@ -38,9 +44,11 @@ class Writer(object):
         for e in edges:
             self.writeline("{0} {1}".format(e[0],e[1]))
 
-    def write_cnf(self, num_vars, clauses, normalize=False):
+    def write_cnf(self, num_vars, clauses, normalize=False, proj_vars=None):
         if normalize:
-            clauses = normalize_cnf(clauses)
+            clauses,proj_vars = normalize_cnf(clauses, proj_vars)
+        if proj_vars is not None:
+            self.writeline("c ind {} 0".format(" ".join(map(str,proj_vars))))
         self.writeline("p cnf {} {}".format(num_vars, len(clauses)))
         for c in clauses:
             self.writeline("{} 0".format(" ".join(map(str,c))))

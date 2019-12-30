@@ -43,6 +43,7 @@ class Abstraction:
                 timeout = self.asp_timeout if "timeout" not in enc else enc["timeout"]
                 logger.debug("Running clingo %s for size %d and timeout %d", enc["file"],size,timeout)
                 c = ClingoControl(edges,projected)
+
                 projected = c.choose_subset(min(size,len(projected)),enc["file"],timeout)[2][0]
                 logger.debug("Clingo done%s", " (timeout)" if c.timeout else "")
         proj_out = set(range(1,num_vars+1)) - set(projected)
@@ -51,12 +52,13 @@ class Abstraction:
         self.mg.add_cliques()
         return len(projected), self.mg.edges
 
-    def solve_external(self, num_vars, clauses, extra_clauses):
+    def solve_external(self, num_vars, clauses, extra_clauses, proj_vars=None):
         logger.debug("Calling external solver with {}".format(extra_clauses))
         maybe_sat = True
         tmp = tempfile.NamedTemporaryFile().name
         normalize_cnf = True
         if self.preprocessor:
+            logger.debug("Preprocessing")
             ppmc = subprocess.Popen(self.preprocessor,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             StreamWriter(ppmc.stdin).write_cnf(num_vars,clauses, normalize=True)
             normalize_cnf = False
@@ -68,8 +70,9 @@ class Abstraction:
             num_vars = input.num_vars
             clauses = input.clauses
         if maybe_sat:
+            logger.debug("Solving")
             with FileWriter(tmp) as fw:
-                fw.write_cnf(num_vars,clauses,normalize=normalize_cnf)
+                fw.write_cnf(num_vars,clauses,normalize=normalize_cnf, proj_vars=proj_vars)
             psat = subprocess.Popen(self.sat_solver + [tmp], stdout=subprocess.PIPE)
             output = self.sat_solver_parser_cls.from_stream(psat.stdout,**self.sat_solver_parser["args"])
             psat.wait()
@@ -116,13 +119,13 @@ class ClingoControl:
         aset = [sys.maxsize, False, [], None, []]
         
         def __on_model(model):
-            if len(model.cost) == 0:
-                return
+            #if len(model.cost) == 0:
+            #    return
             
             logger.debug("better answer set found: %s %s %s", model, model.cost, model.optimality_proven)
             
             aset[1] |= model.optimality_proven
-            opt = abs(model.cost[0])
+            opt = abs(model.cost[0] if len(model.cost) > 0 else 0)
             if opt <= aset[0]:
                 if opt < aset[0]:
                     aset[2] = []
@@ -161,7 +164,7 @@ class ClingoControl:
         aset[3] = c
 
         c.add("prog{0}".format(select_subset), [], str(prog))
-
+        
         def solver(c, om):
             c.ground([("prog{0}".format(select_subset), [])])
             self.grounded = True
