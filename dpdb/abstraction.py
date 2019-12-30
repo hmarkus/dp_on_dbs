@@ -53,7 +53,7 @@ class Abstraction:
         return len(projected), self.mg.edges
 
     def solve_external(self, num_vars, clauses, extra_clauses, proj_vars=None):
-        logger.debug("Calling external solver with {}".format(extra_clauses))
+        logger.debug("Calling external solver for {} with {} clauses and proj {}".format(extra_clauses, len(clauses), proj_vars))
         maybe_sat = True
         tmp = tempfile.NamedTemporaryFile().name
         normalize_cnf = True
@@ -70,7 +70,6 @@ class Abstraction:
             num_vars = input.num_vars
             clauses = input.clauses
         if maybe_sat:
-            logger.debug("Solving")
             with FileWriter(tmp) as fw:
                 fw.write_cnf(num_vars,clauses,normalize=normalize_cnf, proj_vars=proj_vars)
             psat = subprocess.Popen(self.sat_solver + [tmp], stdout=subprocess.PIPE)
