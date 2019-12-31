@@ -114,7 +114,7 @@ class PmcExt(Problem):
                         clauses.append([n*(-1)])
                         extra_clauses.append(n*(-1))
             sat = self.abstr.solve_external(self.num_vars,clauses,extra_clauses,self.projected)
-            db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)
+            db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where) # if not sat is None else 0)],where)
         except Exception as e:
             raise e
 

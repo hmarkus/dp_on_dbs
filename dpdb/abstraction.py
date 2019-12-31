@@ -6,6 +6,7 @@ import subprocess
 import sys
 import threading
 import tempfile
+import random
 
 from dpdb.reader import *
 from dpdb.writer import StreamWriter, FileWriter
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class Abstraction:
     def __init__(self, sat_solver, asp_encodings=None, sat_solver_seed_arg=None, preprocessor_path=None, preprocessor_args=None, projected_size=8, asp_timeout=30, **kwargs):
+        random.seed(kwargs["runid"])
         self.sat_solver = [sat_solver["path"]]
         if "seed_arg" in sat_solver:
             self.sat_solver.append(sat_solver["seed_arg"])
@@ -72,11 +74,19 @@ class Abstraction:
         if maybe_sat:
             with FileWriter(tmp) as fw:
                 fw.write_cnf(num_vars,clauses,normalize=normalize_cnf, proj_vars=proj_vars)
-            psat = subprocess.Popen(self.sat_solver + [tmp], stdout=subprocess.PIPE)
-            output = self.sat_solver_parser_cls.from_stream(psat.stdout,**self.sat_solver_parser["args"])
-            psat.wait()
-            psat.stdout.close()
-            result = getattr(output,self.sat_solver_parser["result"])
+            for i in range(0,64,1):
+                if len(self.sat_solver) == 3:	#seed given
+                    self.sat_solver[2] = str(random.randrange(13423423471))
+                psat = subprocess.Popen(self.sat_solver + [tmp], stdout=subprocess.PIPE)
+                output = self.sat_solver_parser_cls.from_stream(psat.stdout,**self.sat_solver_parser["args"])
+                psat.wait()
+                psat.stdout.close()
+                result = getattr(output,self.sat_solver_parser["result"])
+                if psat.returncode == 245 or psat.returncode == 250:
+                    logger.debug("Retrying call to external solver, returncode {}, index {}".format(psat.returncode, i))
+                else:
+                    logger.debug("No Retry, returncode {}, result {}, index {}".format(psat.returncode, psat.returncode, i))
+                    break
         else:
             result = 0
         return result

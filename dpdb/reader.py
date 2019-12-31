@@ -37,7 +37,7 @@ class RegExReader(Reader):
         if m:
             self.result = m.group(1)
         else:
-            logger.warning("Unable to parse input {0}".format(string))
+            logger.error("Unable to parse input {0}".format(string))
 
 class DimacsReader(Reader):
     def parse(self, string):
