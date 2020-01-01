@@ -91,8 +91,16 @@ class CnfReader(DimacsReader):
         self.maybe_sat = True
         self.models = None
 
+    def parse(self, string):
+        self.projected = set()
+        super().parse(string)
+
     def is_comment(self, line):
-        if line.startswith("c ind ") or line == 'c UNSATISFIABLE':
+        if line.startswith("c ind "):
+            projected, lines = self.read_terminated(None, line[6:], 0)
+            [self.projected.add(p) for p in projected]
+            return False
+        elif line == 'c UNSATISFIABLE':
             return False
         else:
             return super().is_comment(line)
@@ -154,20 +162,20 @@ class CnfReader(DimacsReader):
             sys.exit(1)
         
         maxvar = 0
-        projected_vars = set()
+        #projected_vars = set()
 
         for lineno, line in enumerate(lines):
             if not line or self.is_comment(line):
                 continue
             elif line.startswith("pv "):
                 projected, lines = self.read_terminated(lines, line[3:], lineno)
-                [projected_vars.add(p) for p in projected]
+                [self.projected.add(p) for p in projected]
             elif line.startswith("c ind "):
                 projected, lines = self.read_terminated(lines, line[6:], lineno)
-                [projected_vars.add(p) for p in projected]
+                [self.projected.add(p) for p in projected]
             elif line.startswith("a "):
                 projected, lines = self.read_terminated(lines, line[2:], lineno)
-                [projected_vars.add(p) for p in projected]
+                [self.projected.add(p) for p in projected]
             elif line.startswith("e "):
                 continue
             else:
@@ -177,7 +185,7 @@ class CnfReader(DimacsReader):
                 self.vars.append(atoms)
                 maxvar = max(maxvar,max(atoms))
 
-        self.projected = projected_vars
+        #self.projected = projected_vars
         if maxvar != self.num_vars:
             logger.warning("Effective number of variables mismatch preamble (%d vs %d)", maxvar, self.num_vars)
         if len(self.clauses) != self.num_clauses:
