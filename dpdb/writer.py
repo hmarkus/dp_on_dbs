@@ -15,8 +15,10 @@ def normalize_cnf(clauses, var=None):
     if var is not None:
         mapped_vars = []
         for v in var:
-            if v in var_map:
-                mapped_vars.append(var_map[v])
+            if not v in var_map:
+                num_vars += 1
+                var_map[v] = num_vars
+            mapped_vars.append(var_map[v])
     return mapped_clauses, mapped_vars 
 
 class Writer(object):

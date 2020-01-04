@@ -55,7 +55,7 @@ class Abstraction:
         return len(projected), self.mg.edges
 
     def solve_external(self, num_vars, clauses, extra_clauses, proj_vars=None):
-        logger.debug("Calling external solver for {} with {} clauses and proj {}".format(extra_clauses, len(clauses), proj_vars))
+        logger.debug("Calling external solver for {} with {} clauses, {} vars, and proj {}".format(extra_clauses, len(clauses), num_vars, proj_vars))
         maybe_sat = True
         tmp = tempfile.NamedTemporaryFile().name
         normalize_cnf = True
@@ -85,7 +85,7 @@ class Abstraction:
                 if psat.returncode == 245 or psat.returncode == 250:
                     logger.debug("Retrying call to external solver, returncode {}, index {}".format(psat.returncode, i))
                 else:
-                    logger.debug("No Retry, returncode {}, result {}, index {}".format(psat.returncode, psat.returncode, i))
+                    logger.debug("No Retry, returncode {}, result {}, index {}".format(psat.returncode, result, i))
                     break
         else:
             result = 0
