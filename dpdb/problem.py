@@ -85,6 +85,8 @@ class Problem(object):
         self.db = DB.from_pool(pool)
         self.interrupted = False
         self.store_all_vertices = False
+        self.sub_procs = set()
+        self.interrupt_handler = []
 
     # overwrite the following methods (if required)
     def td_node_column_def(self, var):
@@ -377,6 +379,11 @@ class Problem(object):
 
     def interrupt(self):
         self.interrupted = True
+        for h in self.interrupt_handler:
+            h()
+        for proc in self.sub_procs:
+            if proc.poll() is None:
+                proc.send_signal(signal.SIGTERM)
 
     def node_worker(self, node, workers):
         try:
@@ -423,6 +430,8 @@ class Problem(object):
         if self.interrupted:
             return
         self.after_solve_node(node, db)
+        if self.interrupted:
+            return
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             row_cnt = db.last_rowcount
             db.update("td_node_status",["end_time","rows"],["statement_timestamp()",str(row_cnt)],[f"node = {node.id}"])

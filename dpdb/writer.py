@@ -17,7 +17,7 @@ def normalize_cnf(clauses, var=None):
         for v in var:
             if v in var_map:
                 mapped_vars.append(var_map[v])
-    return mapped_clauses, mapped_vars 
+    return mapped_clauses, mapped_vars
 
 class Writer(object):
     def write(self, str):
@@ -43,6 +43,7 @@ class Writer(object):
             self.writeline("b {0} {1}".format(b, " ".join(map(str,v))))
         for e in edges:
             self.writeline("{0} {1}".format(e[0],e[1]))
+        self.flush()
 
     def write_cnf(self, num_vars, clauses, normalize=False, proj_vars=None):
         if normalize:
@@ -52,6 +53,7 @@ class Writer(object):
         self.writeline("p cnf {} {}".format(num_vars, len(clauses)))
         for c in clauses:
             self.writeline("{} 0".format(" ".join(map(str,c))))
+        self.flush()
         
 class StreamWriter(Writer):
     def __init__(self, stream):

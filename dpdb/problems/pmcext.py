@@ -20,7 +20,8 @@ class PmcExt(Problem):
     def __init__(self, name, pool, max_solver_threads=12, store_formula=False, **kwargs):
         super().__init__(name, pool, **kwargs)
         self.store_formula = store_formula
-        self.abstr = Abstraction(**kwargs)
+        self.abstr = Abstraction(self.sub_procs, **kwargs)
+        self.interrupt_handler.append(self.abstr.interrupt)
         self.max_solver_threads = max_solver_threads
         self.store_all_vertices = True
 
@@ -114,7 +115,8 @@ class PmcExt(Problem):
                         clauses.append([n*(-1)])
                         extra_clauses.append(n*(-1))
             sat = self.abstr.solve_external(self.num_vars,clauses,extra_clauses,self.projected)
-            db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where) # if not sat is None else 0)],where)
+            if not self.interrupted:
+                db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)
         except Exception as e:
             raise e
 
