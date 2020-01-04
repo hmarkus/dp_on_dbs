@@ -81,7 +81,7 @@ class PmcExt(Problem):
         self.clauses = input.clauses
         self.projected = list(input.projected)
         self.var_clause_dict = defaultdict(set)
-
+        #logger.debug("{} vars, {}={} clauses", input.num_vars, input.num_clauses, len(input.clauses))
         num_vars, edges, adj = cnf2primal(input.num_vars, input.clauses, self.var_clause_dict, True)
         return self.abstr.abstract(num_vars,edges,adj,self.projected)
 
@@ -101,6 +101,7 @@ class PmcExt(Problem):
             where = []
             orig_vars = self.abstr.orig_vertices(node.vertices)
             covered_vars = self.abstr.abstracted_vertices(orig_vars) + orig_vars
+            #logger.debug("Covered Vars {}".format(covered_vars))
             num_vars = len(covered_vars)
             clauses = covered_clauses(self.var_clause_dict, covered_vars)
             extra_clauses = []
