@@ -50,7 +50,7 @@ class Abstraction:
 
                 res = c.choose_subset(min(size,len(projected)),enc["file"],timeout)[2]
                 if len(res) == 0:
-                    logger.warn("Clingo did not produce an answer set, fallback to previous result {}".format(projected))
+                    logger.warning("Clingo did not produce an answer set, fallback to previous result {}".format(projected))
                 else:
                     projected = res[0]
                 logger.debug("Clingo done%s", " (timeout)" if c.timeout else "")
@@ -82,7 +82,7 @@ class Abstraction:
         if maybe_sat and not self.interrupted:
             with FileWriter(tmp) as fw:
                 fw.write_cnf(num_vars,clauses,normalize=normalize_cnf, proj_vars=proj_vars)
-                for i in range(0,64,1):
+                for i in range(0,128,1):
                     if self.interrupted:
                         break
                     if len(self.sat_solver) == 3:	#seed given
@@ -101,6 +101,8 @@ class Abstraction:
                         break
         else:
             result = 0
+        if result is None:
+            logger.warning("Result is None!")
         return result
 
     def orig_vertex(self,vertex):
