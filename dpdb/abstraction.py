@@ -48,7 +48,11 @@ class Abstraction:
                 logger.debug("Running clingo %s for size %d and timeout %d", enc["file"],size,timeout)
                 c = ClingoControl(edges,projected)
 
-                projected = c.choose_subset(min(size,len(projected)),enc["file"],timeout)[2][0]
+                res = c.choose_subset(min(size,len(projected)),enc["file"],timeout)[2]
+                if len(res) == 0:
+                    logger.warn("Clingo did not produce an answer set, fallback to previous result {}".format(projected))
+                else:
+                    projected = res[0]
                 logger.debug("Clingo done%s", " (timeout)" if c.timeout else "")
         proj_out = set(range(1,num_vars+1)) - set(projected)
         self.mg = MinorGraph(range(1,num_vars+1),adj, proj_out)
