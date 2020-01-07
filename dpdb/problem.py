@@ -381,7 +381,7 @@ class Problem(object):
         self.interrupted = True
         for h in self.interrupt_handler:
             h()
-        for proc in self.sub_procs:
+        for proc in list(self.sub_procs):
             if proc.poll() is None:
                 proc.send_signal(signal.SIGTERM)
 

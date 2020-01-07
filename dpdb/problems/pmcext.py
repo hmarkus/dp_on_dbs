@@ -115,7 +115,7 @@ class PmcExt(Problem):
                     else:
                         clauses.append([n*(-1)])
                         extra_clauses.append(n*(-1))
-            sat = self.abstr.solve_external(self.num_vars,clauses,extra_clauses,self.projected)
+            sat = self.abstr.solve_external(self.num_vars,clauses,extra_clauses,set(covered_vars).intersection(self.projected))
             if not self.interrupted:
                 db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)
         except Exception as e:
