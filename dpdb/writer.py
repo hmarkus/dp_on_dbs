@@ -19,7 +19,7 @@ def normalize_cnf(clauses, var=None):
                 num_vars += 1
                 var_map[v] = num_vars
             mapped_vars.append(var_map[v])
-    return mapped_clauses, mapped_vars
+    return mapped_clauses, mapped_vars,num_vars
 
 class Writer(object):
     def write(self, str):
@@ -49,10 +49,10 @@ class Writer(object):
 
     def write_cnf(self, num_vars, clauses, normalize=False, proj_vars=None):
         if normalize:
-            clauses,proj_vars = normalize_cnf(clauses, proj_vars)
+            clauses,proj_vars,num_vars = normalize_cnf(clauses, proj_vars)
+        self.writeline("p cnf {} {}".format(num_vars, len(clauses)))
         if proj_vars is not None:
             self.writeline("c ind {} 0".format(" ".join(map(str,proj_vars))))
-        self.writeline("p cnf {} {}".format(num_vars, len(clauses)))
         for c in clauses:
             self.writeline("{} 0".format(" ".join(map(str,c))))
         self.flush()

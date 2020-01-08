@@ -240,7 +240,7 @@ class MinorGraph:
         if len(self._edges) > 0:
             return self._edges
         last = 0
-        for u in self.adj_list:
+        for u in self._nodes:
             last += 1
             self._node_map[u] = last
             self._node_rev_map[last] = u
@@ -249,12 +249,6 @@ class MinorGraph:
             for v in self.adj_list[u]:
                 if u < v:
                     self._edges.append((self._node_map[u],self._node_map[v]))
-        if len(self.adj_list) == 0:
-            assert(last == 0)
-            for u in self._nodes:
-                last += 1
-                self._node_map[u] = last
-                self._node_rev_map[last] = u
         return self._edges
 
     def orig_node(self,node):
