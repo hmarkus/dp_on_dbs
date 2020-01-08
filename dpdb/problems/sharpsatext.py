@@ -45,7 +45,7 @@ class SharpSatExt(Problem):
         return ["sum(model_count) AS model_count"]
 
     def filter(self,node):
-        return ""
+        return filter(self.var_clause_dict, node)
 
     def setup_extra(self):
         def create_tables():

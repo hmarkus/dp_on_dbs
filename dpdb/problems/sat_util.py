@@ -61,7 +61,7 @@ def covered_clauses(clauses, vertices):
     return list(map(list,cur_cl))
 
 def filter(clauses, node):
-    cur_cl = covered_clauses(node.vertices)
+    cur_cl = covered_clauses(clauses, node.vertices)
     if len(cur_cl) > 0:
         return "WHERE {0}".format(
             "({0})".format(") AND (".join(
