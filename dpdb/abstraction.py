@@ -178,14 +178,18 @@ class ClingoControl:
             c.configuration.solve.solve_limit = solve_limit
 
             for e in self._edges:
-                prog += "edge({0},{1}).\n".format(e[0], e[1])
+                if e[0] < e[1]:
+                    prog += "edge({0},{1}).\n".format(e[0], e[1])
+                else:
+                    assert(e[1] < e[0])
+                    prog += "edge({0},{1}).\n".format(e[1], e[0])
 
             for p in self._nodes:
                 prog += "p({0}).\n".format(p)
 
             # subset (buckets) of proj to select upon 
-            for b in range(1, select_subset + 1, 1):
-                prog += "b({0}).\n".format(b)
+            #for b in range(1, select_subset + 1, 1):
+            prog += "b({0}).\n".format(select_subset)
 
         aset[3] = c
 
@@ -194,6 +198,7 @@ class ClingoControl:
         def solver(c, om):
             c.ground([("prog{0}".format(select_subset), [])])
             self.grounded = True
+            logger.debug("grounded")
             c.solve(on_model=om)
 
         t = threading.Thread(target=solver, args=(c, __on_model))
