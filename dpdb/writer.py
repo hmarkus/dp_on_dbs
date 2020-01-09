@@ -1,6 +1,5 @@
 import math
-def normalize_cnf(clauses, var=None):
-    var_map = {}
+def normalize_cnf(clauses, var=None, var_map={}):
     num_vars = 0
     mapped_clauses = []
     mapped_vars = None
@@ -13,12 +12,12 @@ def normalize_cnf(clauses, var=None):
             mapped_clause.append(int(math.copysign(var_map[abs(v)],v)))
         mapped_clauses.append(mapped_clause)
     if var is not None:
-        mapped_vars = []
+        mapped_vars = set()
         for v in var:
             if not v in var_map:
                 num_vars += 1
                 var_map[v] = num_vars
-            mapped_vars.append(var_map[v])
+            mapped_vars.add(var_map[v])
     return mapped_clauses, mapped_vars,num_vars
 
 class Writer(object):

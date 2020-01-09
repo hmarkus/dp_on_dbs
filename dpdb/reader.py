@@ -84,15 +84,14 @@ class DimacsReader(Reader):
 class CnfReader(DimacsReader):
     def __init__(self, silent=False):
         super().__init__(silent)
-        self.vars = []
+        self.vars = set()
         self.clauses = []
         self.solution = -1
-        self.projected = []
+        self.projected = set()
         self.maybe_sat = True
         self.models = None
 
     def parse(self, string):
-        self.projected = set()
         super().parse(string)
 
     def is_comment(self, line):
@@ -182,7 +181,7 @@ class CnfReader(DimacsReader):
                 clause, lines = self.read_terminated(lines, line, lineno)
                 self.clauses.append(clause)
                 atoms = [abs(lit) for lit in clause]
-                self.vars.append(atoms)
+                [self.vars.add(a) for a in atoms]
                 maxvar = max(maxvar,max(atoms))
 
         #self.projected = projected_vars

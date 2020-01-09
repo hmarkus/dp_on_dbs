@@ -239,20 +239,26 @@ class MinorGraph:
     def edges(self):
         if len(self._edges) > 0:
             return self._edges
-        last = 0
-        for u in self._nodes:
-            last += 1
-            self._node_map[u] = last
-            self._node_rev_map[last] = u
 
         for u in self.adj_list:
             for v in self.adj_list[u]:
                 if u < v:
-                    self._edges.append((self._node_map[u],self._node_map[v]))
+                    self._edges.append((u,v))
         return self._edges
+
+    @property
+    def nodes(self):
+        return self._nodes()
+
+    @property
+    def node_map(self):
+        return self._node_map
 
     def orig_node(self,node):
         return self._node_rev_map[node]
+
+    def normalized_node(self,node):
+        return self._node_map[node]
 
     def _nonProjectNgbs(self, v, todo, ngbs, rem=True):
         if v not in self._nodes:
@@ -353,4 +359,29 @@ class MinorGraph:
             self.remove_node(k)
         self._todo_clique = None
         self._locked = None
+
+    def normalize(self):
+        last = 0
+        normalized_nodes = set()
+        normalized_adj = {}
+        normalized_edges = []
+
+        for u in self._nodes:
+            last += 1
+            self._node_map[u] = last
+            self._node_rev_map[last] = u
+            normalized_nodes.add(last)
+
+        for u in self.adj_list:
+            mu = self._node_map[u]
+            normalized_adj[mu] = set()
+            for v in self.adj_list[u]:
+                mv = self._node_map[v]
+                if u < v:
+                    normalized_edges.append((mu,mv))
+                normalized_adj[mu].add(mv)
+
+        self.normalized_nodes = normalized_nodes
+        self.normalized_adj = normalized_adj
+        self.normalized_edges = normalized_edges
 
