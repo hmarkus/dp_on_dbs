@@ -31,7 +31,7 @@ bucket(B,Z) :- bucket(B,Y), not abs(Y), edge(Z,Y).
 
 %cnt(B,C) :- C = #count {X : bucket(B,X), po(X), not abs(X) }, abs(B). 
 %cnt(0,C) :- C = #count {X : po(X), not bucket(_,X) }. 
-%:~ M = #max {C : cnt(B,C)}, M < 160, M > 30. [2*M]
+%:~ M = #max {C : cnt(B,C)}, M < 180, M > 80. [2*M]
 
 
 
