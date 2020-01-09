@@ -58,7 +58,8 @@
 	  { 
             "file": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/guess_v2.lp",
             "size": 10,
-            "timeout" : 12
+            "timeout" : 12,
+            "pass_orig_projection": true
           }        ]},
       "max_solver_threads": 12
     },
@@ -84,8 +85,8 @@
           },
 	  { 
             "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_increase.lp",
-            "size": 30,
-            "timeout" : 120
+            "size": 25,
+            "timeout" : 150
           }
 ]
       },

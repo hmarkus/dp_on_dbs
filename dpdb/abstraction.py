@@ -42,11 +42,15 @@ class Abstraction:
 
     def abstract(self, num_vars, edges, adj, projected):
         if self.asp_encodings:
+            projected_orig = tuple(projected)
             for enc in self.asp_encodings:
                 size = self.projected_size if "size" not in enc else enc["size"]
                 timeout = self.asp_timeout if "timeout" not in enc else enc["timeout"]
+                orig_proj = False if "pass_orig_projection" not in enc else True                
                 logger.debug("Running clingo %s for size %d and timeout %d", enc["file"],size,timeout)
-                c = ClingoControl(edges,projected)
+                if orig_proj:
+                    logger.debug("Passing original projection to Clingo")
+                c = ClingoControl(edges,projected,projected_orig if orig_proj else tuple())
 
                 res = c.choose_subset(min(size,len(projected)),enc["file"],timeout)[2]
                 if len(res) == 0:
@@ -124,9 +128,10 @@ def safe_int(string):
         return string
 
 class ClingoControl:
-    def __init__(self, edges, nodes):
+    def __init__(self, edges, nodes, nodes_orig):
         self._edges = edges
         self._nodes = nodes
+        self._nodes_orig = nodes_orig
         self.grounded = False
         self.timeout = False
 
@@ -186,6 +191,10 @@ class ClingoControl:
 
             for p in self._nodes:
                 prog += "p({0}).\n".format(p)
+            
+            for p in self._nodes_orig:
+                prog += "po({0}).\n".format(p)
+                #logging.info("po {}".format(p))
 
             # subset (buckets) of proj to select upon 
             #for b in range(1, select_subset + 1, 1):
@@ -330,14 +339,20 @@ class MinorGraph:
                 return list(self._returned[tn])
             result = set()
             nodes = set(nodes)
+            found = []
             for k, v in self._clique_uses_project.items():
                 if nodes.issuperset(k):
+                #if nodes == set(k):
                     result.update(v)
+                    found.append(k)
                     logger.debug("bag {} subsumes {} with {}".format(nodes, k, v))
                     #break
 
-            for k, v in self._returned.items():
-                result -= v
+            for k in found:
+                del self._clique_uses_project[k]
+
+            #for k, v in self._returned.items():
+            #    result -= v
             self._returned[tn] = result
         return list(result)
 
