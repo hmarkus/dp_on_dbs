@@ -1,0 +1,95 @@
+{
+  "db": {
+    "dsn": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "pthier", 
+      "user": "pthier", 
+      "password": "pthier",
+      "application_name": "dpdb"
+    },
+    "max_connections": 100
+  },
+  "db_admin": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "pthier",
+      "user": "pthier",
+      "password": "pthier",
+      "application_name": "dpdb-admin"
+  },
+  "htd": {
+    "path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/htd_main",
+    "parameters": [
+      "--child-limit","6"
+    ]
+  },
+  "dpdb": {
+    "max_worker_threads": 12
+  },
+  "problem_specific": {
+     "sharpsatext": {
+      "preprocessor": {
+        "path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/pmc-1.0",
+	"args": "-vivification -eliminateLit -litImplied -iterate=10 -equiv -orGate -affine"
+      },
+      "sat_solver": {
+        "path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/picosat-1.0",
+        "seed_arg": "-s",
+        "output_parser": {
+          "class": "RegExReader",
+          "args": {
+            "pattern": "(?sm)# solutions.*?\\n(\\d+)\\n# END"
+          },
+          "result":"result"
+        }
+      },
+        "asp": { "encodings": [
+          { 
+            "file": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/guess_min_degree.lp",
+            "size": 32,
+            "timeout": 10
+          },
+          { 
+            "file": "/mnt/vg01/lv01/home/hecher/he-th/dp_on_dbs/guess_v2.lp",
+            "size": 7,
+            "timeout": 12
+          },
+	  { 
+            "file": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/guess_v2.lp",
+            "size": 10,
+            "timeout" : 12
+          }        ]},
+      "max_solver_threads": 12
+    },
+    "pmcext": {
+      
+      "sat_solver": {
+        "path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/projMC-wrapper-1.0",
+        "seed_arg": "-s",
+        "output_parser": {
+          "class": "RegExReader",
+          "args": {
+            "pattern": "s (\\d+)\\n"
+          },
+          "result":"result"
+        }
+      },
+      "asp": {
+        "encodings": [
+          { 
+            "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_min_degree.lp",
+            "size": 100,
+            "timeout": 15
+          },
+	  { 
+            "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_increase.lp",
+            "size": 30,
+            "timeout" : 120
+          }
+]
+      },
+      "max_solver_threads": 12
+    }
+  }
+}

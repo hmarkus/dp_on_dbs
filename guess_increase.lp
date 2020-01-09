@@ -7,15 +7,24 @@
 
 B { abs(X) : p(X)} B :- b(B).
 
+% abs is in its own bucket
 bucket(X,X) :- abs(X).
-bucket(B,Z) :- bucket(B,Y), edge(Y,Z).
-bucket(B,Z) :- bucket(B,Y), edge(Z,Y).
 
+%
+% eat non-abs neighbors of abs bucket
+bucket(X,Y) :- not abs(Y), abs(X), edge(Y,X).
+bucket(X,Y) :- not abs(Y), abs(X), edge(X,Y).
+
+% eat neighbors of eaten non-abs neighbors
+bucket(B,Z) :- bucket(B,Y), not abs(Y), edge(Y,Z).
+bucket(B,Z) :- bucket(B,Y), not abs(Y), edge(Z,Y).
+%
+
+% induced edges
 :~ X < Y, abs(Y), bucket(X,Y). [1,X,Y]
 
-
-%bucket(B,Z) :- bucket(B,Y), not abs(Y), edge(Y,Z).
-%bucket(B,Z) :- bucket(B,Y), not abs(Y), edge(Z,Y).
+% direct edges
+:~ abs(X), abs(Y), edge(X,Y). [1,X,Y]
 
 
 
