@@ -101,6 +101,8 @@ class PmcExt(Problem):
             where = []
             orig_vars = self.abstr.orig_vertices(node.vertices)
             covered_vars = self.abstr.abstracted_vertices(orig_vars) + orig_vars
+            if len(covered_vars) == len(orig_vars): # nothing to do, no inner problem to solve
+                return
             #logger.debug("Covered Vars {}".format(covered_vars))
             num_vars = len(covered_vars)
             clauses = covered_clauses(self.var_clause_dict, covered_vars)
@@ -116,7 +118,7 @@ class PmcExt(Problem):
                         clauses.append([n*(-1)])
                         extra_clauses.append(n*(-1))
             if not self.interrupted:
-                sat = self.abstr.solve_external(self.num_vars,clauses,extra_clauses,set(covered_vars).intersection(self.projected))
+                sat = self.abstr.solve_external(num_vars,clauses,extra_clauses,set(covered_vars).intersection(self.projected))
                 db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)
         except Exception as e:
             raise e

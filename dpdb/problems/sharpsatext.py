@@ -106,6 +106,8 @@ class SharpSatExt(Problem):
             where = []
             orig_vars = self.abstr.orig_vertices(node.vertices)
             covered_vars = self.abstr.abstracted_vertices(orig_vars) + orig_vars
+            if len(covered_vars) == len(orig_vars): # nothing to do, no inner problem to solve
+                return
             num_vars = len(covered_vars)
             clauses = covered_clauses(self.var_clause_dict, covered_vars)
             extra_clauses = []
@@ -119,8 +121,8 @@ class SharpSatExt(Problem):
                     else:
                         clauses.append([n*(-1)])
                         extra_clauses.append(n*(-1))
-            sat = self.abstr.solve_external(num_vars,clauses,extra_clauses)
             if not self.interrupted:
+                sat = self.abstr.solve_external(num_vars,clauses,extra_clauses)
                 db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)
         except Exception as e:
             raise e

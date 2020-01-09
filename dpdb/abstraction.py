@@ -333,6 +333,8 @@ class MinorGraph:
             for k, v in self._clique_uses_project.items():
                 if nodes.issuperset(k):
                     result.update(v)
+                    logger.debug("bag {} subsumes {} with {}".format(nodes, k, v))
+                    #break
 
             for k, v in self._returned.items():
                 result -= v
