@@ -15,11 +15,15 @@ logger = logging.getLogger(__name__)
 
 class Abstraction:
     def __init__(self, sub_procs, sat_solver, asp_encodings=None, sat_solver_seed_arg=None, preprocessor_path=None, preprocessor_args=None, projected_size=8, asp_timeout=30, **kwargs):
+        self.seed_arg = False
         random.seed(kwargs["runid"])
         self.sat_solver = [sat_solver["path"]]
         if "seed_arg" in sat_solver:
+            self.seed_arg = True
             self.sat_solver.append(sat_solver["seed_arg"])
             self.sat_solver.append(str(kwargs["runid"]))
+        if "args" in sat_solver:
+            self.sat_solver.extend(sat_solver["args"].split(' '))
         if "output_parser" in sat_solver:
             self.sat_solver_parser = sat_solver["output_parser"]
             reader_module = importlib.import_module("dpdb.reader")
@@ -89,8 +93,9 @@ class Abstraction:
                 for i in range(0,128,1):
                     if self.interrupted:
                         break
-                    if len(self.sat_solver) == 3:	#seed given
+                    if self.seed_arg:	#seed given
                         self.sat_solver[2] = str(random.randrange(13423423471))
+                    logger.debug("Calling {}".format(self.sat_solver + [tmp]))
                     psat = subprocess.Popen(self.sat_solver + [tmp], stdout=subprocess.PIPE)
                     self.sub_procs.add(psat)
                     output = self.sat_solver_parser_cls.from_stream(psat.stdout,**self.sat_solver_parser["args"])

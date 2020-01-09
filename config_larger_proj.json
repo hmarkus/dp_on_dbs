@@ -85,8 +85,9 @@
           },
 	  { 
             "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_increase.lp",
-            "size": 25,
-            "timeout" : 150
+            "size": 13,
+            "timeout" : 45,
+            "pass_orig_projection": true
           }
 ]
       },
