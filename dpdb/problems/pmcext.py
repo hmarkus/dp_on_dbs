@@ -118,6 +118,8 @@ class PmcExt(Problem):
                         clauses.append([n*(-1)])
                         extra_clauses.append(n*(-1))
             if not self.interrupted:
+                # only pass those projected vars, that are actually visible in the current bag -> notice that there might be a projected var
+                # that do not occur in a clause -> we obtain 2 * result of the call without this projected var
                 sat = self.abstr.solve_external(num_vars,clauses,extra_clauses,set(covered_vars).intersection(self.projected))
                 db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)
         except Exception as e:

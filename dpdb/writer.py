@@ -12,7 +12,7 @@ def normalize_cnf(clauses, var=None):
                 var_map[abs(v)] = num_vars
             mapped_clause.append(int(math.copysign(var_map[abs(v)],v)))
         mapped_clauses.append(mapped_clause)
-    num_vars_clauses = num_vars
+    #num_vars_clauses = num_vars
     if var is not None:
         mapped_vars = []
         for v in var:
@@ -20,7 +20,7 @@ def normalize_cnf(clauses, var=None):
                 num_vars += 1
                 var_map[v] = num_vars
             mapped_vars.append(var_map[v])
-    return mapped_clauses, mapped_vars,num_vars_clauses
+    return mapped_clauses, mapped_vars,num_vars #_clauses
 
 class Writer(object):
     def write(self, str):
@@ -48,6 +48,8 @@ class Writer(object):
             self.writeline("{0} {1}".format(e[0],e[1]))
         self.flush()
 
+    # assumes the given proj_vars, i.e., if there is a proj_var that does not occur in clauses -> 
+    # we get 2 * the result of the instance without this proj_var, see also normalize_cnf
     def write_cnf(self, num_vars, clauses, normalize=False, proj_vars=None):
         if normalize:
             clauses,proj_vars,num_vars = normalize_cnf(clauses, proj_vars)
