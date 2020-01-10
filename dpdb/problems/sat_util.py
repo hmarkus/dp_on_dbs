@@ -20,9 +20,13 @@ def _add_directed_edge(edges, adjacency_list, vertex1, vertex2):
 def cnf2primal (num_vars, clauses, var_clause_dict = defaultdict(set), ret_adj=False):
     edges = set([])
     adj = {}
+    #claus = set()
     for clause in clauses:
         atoms = [abs(lit) for lit in clause]
         clause_set = hashabledict({frozenset(atoms): frozenset(clause)})
+        #if frozenset(clause) in claus:
+        #    logger.warning("duplicate clause {}:".format(clause))
+        #claus.add(frozenset(clause))
         for i in atoms:
             var_clause_dict[i].add(clause_set)
             for j in atoms:
@@ -62,6 +66,7 @@ def covered_clauses(clauses, vertices):
 
 def filter(clauses, node):
     cur_cl = covered_clauses(clauses, node.vertices)
+    #logging.debug("node {} locally subsumes {} clauses".format(node.vertices, len(cur_cl)))
     if len(cur_cl) > 0:
         return "WHERE {0}".format(
             "({0})".format(") AND (".join(

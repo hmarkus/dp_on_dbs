@@ -120,6 +120,9 @@ class Abstraction:
     def orig_vertices(self,vertices):
         return [self.orig_vertex(v) for v in vertices]
 
+    def reverse_vertex(self,v):
+        return self.mg.reverse_node(v)
+
     def abstracted_vertices(self,vertices):
         return self.mg.projectionVariablesOf(vertices)
 
@@ -269,6 +272,12 @@ class MinorGraph:
                 if u < v:
                     self._edges.append((self._node_map[u],self._node_map[v]))
         return self._edges
+    
+    def reverse_node(self,node):
+        return self._node_map[node]
+
+    def orig_node(self,node):
+        return self._node_rev_map[node]
 
     def orig_node(self,node):
         return self._node_rev_map[node]
@@ -321,6 +330,7 @@ class MinorGraph:
             pos += 1
 
         if result:
+            #logging.debug("added {}:{} to clique_uses_proj".format(ngbs,todo))
             if tuple(ngbs) in self._clique_uses_project:
                 self._clique_uses_project[tuple(ngbs)] += tuple(todo)
             else:
@@ -345,6 +355,7 @@ class MinorGraph:
             result = set()
             nodes = set(nodes)
             found = []
+            #logging.debug("consulting projvarsOf {}".format(self._clique_uses_project))
             for k, v in self._clique_uses_project.items():
                 if nodes.issuperset(k):
                 #if nodes == set(k):
@@ -365,6 +376,7 @@ class MinorGraph:
         self._locked = set()
         self._clique_uses_project = {}
         self._todo_clique = []
+        #print("abstract: {}".format(self._project))
         while len(self._project) > 0:
             j = self._project.pop()
             if self.contract(j, rem=initial_rem):

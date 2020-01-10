@@ -45,7 +45,18 @@ class SharpSatExt(Problem):
         return ["sum(model_count) AS model_count"]
 
     def filter(self,node):
-        return filter(self.var_clause_dict, node)
+         lit2exprExt = lambda cl: lit2expr((-1 if cl < 0 else 1) * self.abstr.reverse_vertex(abs(cl)))
+         cur_cl = covered_clauses(self.var_clause_dict, self.abstr.orig_vertices(node.vertices))
+         logging.debug("node {} locally subsumes {} clauses".format(node.vertices, len(cur_cl)))
+         if len(cur_cl) > 0:
+             return "WHERE {0}".format(
+            "({0})".format(") AND (".join(
+                [" OR ".join(map(lit2exprExt,clause)) for clause in cur_cl]
+            )))
+         else:
+             return ""
+
+        #return "" #return filter(self.var_clause_dict, self.abstr.orig_vertices(node.vertices))
 
     def setup_extra(self):
         def create_tables():
@@ -85,7 +96,7 @@ class SharpSatExt(Problem):
         self.clauses = input.clauses
         self.projected = input.projected
         self.var_clause_dict = defaultdict(set)
-
+        logger.debug("input formula: {} vars, {} clauses, {} proj".format(self.num_vars, len(self.clauses), len(self.projected)))
         num_vars, edges, adj = cnf2primal(input.num_vars, input.clauses, self.var_clause_dict, True)
         projected = range(1,num_vars+1)
         return self.abstr.abstract(num_vars,edges,adj,projected)

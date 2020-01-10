@@ -63,11 +63,12 @@
 },
      "sharpsatext": {
  "sat_solver": {
-        "path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/projClingo-wrapper-1.0",
+"path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/miniC2D-1.0.0",
+        "args": "-C -c",
         "output_parser": {
           "class": "RegExReader",
           "args": {
-            "pattern": "Models.*: (\\d+)\\n"
+            "pattern": "Counting... (\\d+) models"
           },
           "result":"result"
         }
@@ -77,7 +78,7 @@
 "encodings": [
           { 
             "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_min_degree.lp",
-            "size": 80,
+            "size": 90,
             "timeout": 15
           }
 	]
@@ -100,7 +101,7 @@
         "encodings": [
           { 
             "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_min_degree.lp",
-            "size": 80,
+            "size": 55,
             "timeout": 15
           }]
       },
