@@ -29,6 +29,18 @@
   },
   "problem_specific": {
      "sharpsatext": {
+
+      "sat_solver_2": {
+        "path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/projMC-wrapper-1.0",
+        "seed_arg": "-s",
+        "output_parser": {
+          "class": "RegExReader",
+          "args": {
+            "pattern": "s (\\d+)\\n"
+          },
+          "result":"result"
+        }
+      },
       "preprocessor": {
         "path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/pmc-1.0",
 	"args": "-vivification -eliminateLit -litImplied -iterate=10 -equiv -orGate -affine"
@@ -64,7 +76,6 @@
       "max_solver_threads": 12
     },
     "pmcext": {
-      
       "sat_solver": {
         "path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/projMC-wrapper-1.0",
         "seed_arg": "-s",
@@ -80,12 +91,12 @@
         "encodings": [
           { 
             "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_min_degree.lp",
-            "size": 100,
+            "size": 80,
             "timeout": 15
           },
 	  { 
             "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_increase.lp",
-            "size": 13,
+            "size": 50,
             "timeout" : 45,
             "pass_orig_projection": true
           }

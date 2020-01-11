@@ -62,24 +62,27 @@
       }
 },
      "sharpsatext": {
- "sat_solver": {
-"path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/miniC2D-1.0.0",
-        "args": "-C -c",
+"sat_solver": {
+        "path": "/mnt/vg01/lv01/home/decodyn/src/benchmark-tool/programs/sharpSAT-git",
         "output_parser": {
           "class": "RegExReader",
           "args": {
-            "pattern": "Counting... (\\d+) models"
+            "pattern": "(?sm)# solutions.*?\\n(\\d+)\\n# END"
           },
           "result":"result"
         }
       },
-   
         "asp": { 
 "encodings": [
           { 
             "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_min_degree.lp",
-            "size": 90,
+            "size": 7000,
             "timeout": 15
+          },
+{ 
+            "file": "/home/hecher/he-th/dev_dp_on_dbs/guess_increase.lp",
+            "size": 7000,
+            "timeout" : 60
           }
 	]
       },
