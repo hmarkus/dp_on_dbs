@@ -125,7 +125,7 @@ class CnfReader(DimacsReader):
                 else:
                     logger.warning("Unable to parse solution %s", self.string)
             if not self.silent:
-                logger.info("Problem has %d models (solved by pre-processing)", int(self.format))
+                logger.info("Problem has %d models (solved by pre-processing)", int(self.models))
             self.done = True
             self.num_vars = 0
             self.num_clauses = 0

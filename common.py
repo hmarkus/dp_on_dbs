@@ -46,19 +46,23 @@ def flatten_cfg(dd, filter=[], separator='.', keep=[],prefix='',fullprefix=''):
     else:
         return { prefix : dd }
 
-def decompose(num_vertices, edges, htd, seed=42, gr_file=None, td_file=None):
+def decompose(num_vertices, edges, htd, seed=42, gr_file=None, td_file=None, node_map=None):
     logger.debug(f"Using tree decomposition seed: {seed}")
     # Run htd
     p = subprocess.Popen([htd["path"], "--seed", str(seed), *htd["parameters"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     if gr_file:
         logger.debug("Writing graph file")
         with FileWriter(gr_file) as fw:
-            fw.write_gr((num_vertices,edges))
+            fw.write_gr(num_vertices,edges)
     logger.debug("Running htd")
     StreamWriter(p.stdin).write_gr(num_vertices,edges)
     p.stdin.close()
     tdr = TdReader.from_stream(p.stdout)
     p.wait()
+
+    if node_map:
+        logger.debug("De-normalizing tree decomposition")
+        tdr.bags = {k: [node_map[vv] for vv in v] for k, v in tdr.bags.items()}
 
     logger.debug("Parsing tree decomposition")
     #td = TreeDecomp(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, problem.get_root(tdr.bags, tdr.adjacency_list, tdr.root), tdr.bags, tdr.adjacency_list)

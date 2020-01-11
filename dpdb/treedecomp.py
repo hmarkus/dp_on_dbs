@@ -7,6 +7,9 @@ class TreeDecomp(object):
         self.num_bags = num_bags
         self.tree_width = tree_width
         self.num_orig_vertices = num_orig_vertices
+        self.root = None
+        self.edges = []
+        self.leafs = []
 
         # iterative because we can hit stack limit for large trees if recursive
         def add_nodes(root):

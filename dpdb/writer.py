@@ -1,5 +1,6 @@
 import math
-def normalize_cnf(clauses, var=None, var_map={}):
+def normalize_cnf(clauses, var=None):
+    var_map={}
     num_vars = 0
     mapped_clauses = []
     mapped_vars = None

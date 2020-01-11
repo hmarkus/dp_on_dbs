@@ -20,6 +20,8 @@ class Abstraction:
         if "seed_arg" in sat_solver:
             self.sat_solver.append(sat_solver["seed_arg"])
             self.sat_solver.append(str(kwargs["runid"]))
+        if "args" in sat_solver:
+            self.sat_solver.extend(sat_solver["args"].split(' '))
         if "output_parser" in sat_solver:
             self.sat_solver_parser = sat_solver["output_parser"]
             reader_module = importlib.import_module("dpdb.reader")
@@ -58,7 +60,9 @@ class Abstraction:
         self.mg = MinorGraph(range(1,num_vars+1),adj, proj_out)
         self.mg.abstract()
         self.mg.add_cliques()
-        return len(projected), self.mg.edges
+        self.mg.normalize()
+        #return len(projected), self.mg.edges
+        return len(projected), self.mg.normalized_edges
 
     def solve_external(self, num_vars, clauses, extra_clauses, proj_vars=None):
         logger.debug("Calling external solver for {} with {} clauses, {} vars, and proj {}".format(extra_clauses, len(clauses), num_vars, proj_vars))
@@ -85,9 +89,12 @@ class Abstraction:
                 for i in range(0,128,1):
                     if self.interrupted:
                         break
-                    if len(self.sat_solver) == 3:	#seed given
-                        self.sat_solver[2] = str(random.randrange(13423423471))
-                    psat = subprocess.Popen(self.sat_solver + [tmp], stdout=subprocess.PIPE)
+                    #if len(self.sat_solver) == 3:	#seed given
+                    #    self.sat_solver[2] = str(random.randrange(13423423471))
+                    added = []
+                    if len(self.sat_solver) > 1 and self.sat_solver[1] == "dpdb.py":
+                        added = ["sharpsat"]
+                    psat = subprocess.Popen(self.sat_solver + [tmp] + added, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     self.sub_procs.add(psat)
                     output = self.sat_solver_parser_cls.from_stream(psat.stdout,**self.sat_solver_parser["args"])
                     psat.wait()
@@ -237,18 +244,25 @@ class MinorGraph:
 
     @property
     def edges(self):
-        if len(self._edges) > 0:
-            return self._edges
+        #if len(self._edges) > 0:
+        #    return self._edges
+        self._edges = []
 
         for u in self.adj_list:
+            if u not in self._nodes:
+                print("WTF?")
+                sys.exit(1)
             for v in self.adj_list[u]:
+                if v not in self._nodes:
+                    print("WTF?")
+                    sys.exit(1)
                 if u < v:
                     self._edges.append((u,v))
         return self._edges
 
     @property
     def nodes(self):
-        return self._nodes()
+        return self._nodes
 
     @property
     def node_map(self):
@@ -328,7 +342,7 @@ class MinorGraph:
         tn = tuple(nodes)
         with self.lock:
             if tn in self._returned:
-                return list(self._returned[tn])
+                return self._returned[tn]
             result = set()
             nodes = set(nodes)
             for k, v in self._clique_uses_project.items():
@@ -338,7 +352,7 @@ class MinorGraph:
             for k, v in self._returned.items():
                 result -= v
             self._returned[tn] = result
-        return list(result)
+        return result
 
     def abstract(self, initial_rem=False):
         self._locked = set()
@@ -377,6 +391,7 @@ class MinorGraph:
             normalized_adj[mu] = set()
             for v in self.adj_list[u]:
                 mv = self._node_map[v]
+
                 if u < v:
                     normalized_edges.append((mu,mv))
                 normalized_adj[mu].add(mv)
