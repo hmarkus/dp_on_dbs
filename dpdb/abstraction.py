@@ -57,11 +57,12 @@ class Abstraction:
                 c = ClingoControl(edges,projected,projected_orig if orig_proj else tuple())
 
                 res = c.choose_subset(min(size,len(projected)),enc["file"],timeout)[2]
+                
                 if len(res) == 0:
                     logger.warning("Clingo did not produce an answer set, fallback to previous result {}".format(projected))
                 else:
                     projected = res[0]
-                logger.debug("Clingo done%s", " (timeout)" if c.timeout else "")
+                logger.debug("Clingo done%s {}".format(res), " (timeout)" if c.timeout else "")
         proj_out = set(range(1,num_vars+1)) - set(projected)
         self.mg = MinorGraph(range(1,num_vars+1),adj, proj_out)
         self.mg.abstract()
@@ -164,7 +165,7 @@ class ClingoControl:
             logger.debug("better answer set found: %s %s %s", model, model.cost, model.optimality_proven)
             
             aset[1] |= model.optimality_proven
-            opt = abs(model.cost[0] if len(model.cost) > 0 else 0)
+            opt = model.cost[0] if len(model.cost) > 0 else 0
             if opt <= aset[0]:
                 if opt < aset[0]:
                     aset[2] = []

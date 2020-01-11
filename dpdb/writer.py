@@ -52,7 +52,7 @@ class Writer(object):
     # we get 2 * the result of the instance without this proj_var, see also normalize_cnf
     def write_cnf(self, num_vars, clauses, normalize=False, proj_vars=None):
         if normalize:
-            clauses,proj_vars,num_vars = normalize_cnf(clauses, proj_vars)
+            clauses,proj_vars,num_vars_IGNORE = normalize_cnf(clauses, proj_vars)
         self.writeline("p cnf {} {}".format(num_vars, len(clauses)))
         if proj_vars is not None:
             self.writeline("c ind {} 0".format(" ".join(map(str,proj_vars))))
