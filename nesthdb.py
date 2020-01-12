@@ -115,7 +115,9 @@ class Problem:
         if not input.error:
             self.maybe_sat = input.maybe_sat
             if not input.done:
-                clauses, vars, proj_vars = denormalize_cnf(input.clauses,range(1,input.num_vars+1),proj_vars,rev_mapping)
+                # fix corner case, where input.vars contains not all of range(1,input.max_vars+1)
+
+                clauses, vars, proj_vars = denormalize_cnf(input.clauses,input.vars,proj_vars,rev_mapping)
                 self.formula = Formula(vars,clauses)
                 self.projected = proj_vars.intersection(vars)
             else:
