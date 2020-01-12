@@ -115,12 +115,19 @@ class Problem:
         if not input.error:
             self.maybe_sat = input.maybe_sat
             if not input.done:
-                clauses, vars, proj_vars = denormalize_cnf(input.clauses,input.vars,proj_vars,rev_mapping)
+                clauses, vars, proj_vars = denormalize_cnf(input.clauses,range(1,input.num_vars+1),proj_vars,rev_mapping)
                 self.formula = Formula(vars,clauses)
                 self.projected = proj_vars.intersection(vars)
-            elif len(self.projected) == 0 or self.projected.intersection(self.formula.vars) == self.projected:
-                # use result if instance was sat or #sat; result for pmc would be wrong
-                self.models = input.models
+            else:
+                # set models to 1 if instance was sat
+                if len(self.projected) == 0:
+                    self.models = 1
+                # use result if instance was #sat
+                elif self.projected.intersection(self.formula.vars) == self.formula.vars:
+                    self.models = input.models
+                # dont use result if instance was pmc
+                else:
+                    pass
         else:
             logger.debug("Pre-processor failed... ignoring result")
 
