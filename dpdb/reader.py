@@ -90,6 +90,7 @@ class CnfReader(DimacsReader):
         self.projected = set()
         self.maybe_sat = True
         self.models = None
+        self.error = False
 
     def parse(self, string):
         super().parse(string)
@@ -122,6 +123,8 @@ class CnfReader(DimacsReader):
                     self.maybe_sat = False
                 elif self.format == "SATISFIABLE":
                     self.models = 1
+                elif self.format == "inf":
+                    self.error = True
                 else:
                     logger.warning("Unable to parse solution %s", self.string)
             if not self.silent:

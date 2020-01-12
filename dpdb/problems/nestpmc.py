@@ -43,18 +43,6 @@ class NestPmc(Problem):
 
     def filter(self,node):
         return filter(self.var_clause_dict, node)
-        """
-        lit2exprExt = lambda cl: lit2expr((-1 if cl < 0 else 1) * self.mg.normalized_node(abs(cl)))
-        cur_cl = covered_clauses(self.var_clause_dict, [self.mg.orig_node(n) for n in node.vertices])
-        logging.debug("node {} locally subsumes {} clauses".format(node.vertices, len(cur_cl)))
-        if len(cur_cl) > 0:
-            return "WHERE {0}".format(
-                "({0})".format(") AND (".join(
-                    [" OR ".join(map(lit2exprExt,clause)) for clause in cur_cl]
-                )))
-        else:
-            return ""
-        """
 
     def setup_extra(self):
         def create_tables():

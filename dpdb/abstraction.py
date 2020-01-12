@@ -249,13 +249,7 @@ class MinorGraph:
         self._edges = []
 
         for u in self.adj_list:
-            if u not in self._nodes:
-                print("WTF?")
-                sys.exit(1)
             for v in self.adj_list[u]:
-                if v not in self._nodes:
-                    print("WTF?")
-                    sys.exit(1)
                 if u < v:
                     self._edges.append((u,v))
         return self._edges

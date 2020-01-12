@@ -1,6 +1,8 @@
 import math
-def normalize_cnf(clauses, var=None):
+
+def normalize_cnf(clauses, var=None, return_mapping=False):
     var_map={}
+    rev_var_map={}
     num_vars = 0
     mapped_clauses = []
     mapped_vars = None
@@ -10,6 +12,7 @@ def normalize_cnf(clauses, var=None):
             if not abs(v) in var_map:
                 num_vars += 1
                 var_map[abs(v)] = num_vars
+                rev_var_map[num_vars] = abs(v)
             mapped_clause.append(int(math.copysign(var_map[abs(v)],v)))
         mapped_clauses.append(mapped_clause)
     if var is not None:
@@ -18,8 +21,24 @@ def normalize_cnf(clauses, var=None):
             if not v in var_map:
                 num_vars += 1
                 var_map[v] = num_vars
+                rev_var_map[num_vars] = v
             mapped_vars.add(var_map[v])
-    return mapped_clauses, mapped_vars,num_vars
+    if return_mapping == True:
+        return mapped_clauses, mapped_vars,num_vars,var_map,rev_var_map
+    else:
+        return mapped_clauses, mapped_vars,num_vars
+
+def denormalize_cnf(clauses,vars,mapping):
+    mapped_clauses = []
+    mapped_vars = set()
+    for c in clauses:
+        mapped_clause = []
+        for v in c:
+            mapped_clause.append(int(math.copysign(mapping[abs(v)],v)))
+        mapped_clauses.append(mapped_clause)
+    for v in vars:
+        mapped_vars.add(mapping[v])
+    return mapped_clauses, mapped_vars
 
 class Writer(object):
     def write(self, str):

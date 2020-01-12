@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: future_fstrings -*-
+import importlib
 import logging
 import sys
+import tempfile
 
 from collections import defaultdict
 
@@ -11,7 +13,7 @@ from dpdb.db import BlockingThreadedConnectionPool, DEBUG_SQL, setup_debug_sql
 from dpdb.problems.nestpmc import NestPmc
 from dpdb.problems.sat_util import *
 from dpdb.reader import CnfReader
-from dpdb.writer import FileWriter, StreamWriter, normalize_cnf
+from dpdb.writer import FileWriter, StreamWriter, denormalize_cnf, normalize_cnf
 
 logger = logging.getLogger("nestHDB")
 #setup_logging("DEBUG")
@@ -49,11 +51,8 @@ class Graph:
 
     def abstract(self, non_nested):
         proj_out = self.nodes - non_nested
-        #print("nodes:",self.nodes)
-        #print("non-nested:",non_nested)
         mg = MinorGraph(self.nodes, self.adj_list, proj_out)
         mg.abstract()
-        #print("edges:",mg.edges)
         mg.add_cliques()
         self.nodes = mg.nodes
         self.edges = mg.edges
@@ -67,8 +66,6 @@ class Graph:
         self._node_map = {}
         self._node_rev_map = {}
 
-        #print("nodes in norm:",self.nodes)
-        #print("edges in norm:",self.edges)
         last = 0
         for n in self.nodes:
             last += 1
@@ -109,19 +106,26 @@ class Problem:
         if "args" in cfg_prep:
             preprocessor.extend(cfg_prep["args"].split(' '))
         ppmc = subprocess.Popen(preprocessor,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        StreamWriter(ppmc.stdin).write_cnf(self.formula.num_vars,self.formula.clauses)
+        clauses,proj_vars,num_vars,mapping,rev_mapping = normalize_cnf(self.formula.clauses, None, True)
+        StreamWriter(ppmc.stdin).write_cnf(num_vars,clauses,normalize=False)
         ppmc.stdin.close()
         input = CnfReader.from_stream(ppmc.stdout,silent=True)
         ppmc.wait()
         ppmc.stdout.close()
-        self.formula = Formula(input.vars,input.clauses)
-        self.maybe_sat = input.maybe_sat
-        self.models = input.models	#TODO: 1) sometimes preprocessor returns "s inf", 2) for pmc this is, sadly, wrong most of the time :(
-        self.projected = self.projected.intersection(input.vars)
+        if not input.error:
+            self.maybe_sat = input.maybe_sat
+            if not input.done:
+                clauses, vars = denormalize_cnf(input.clauses,input.vars,rev_mapping)
+                self.formula = Formula(vars,clauses)
+                self.projected = self.projected.intersection(input.vars)
+            elif len(self.projected) == 0 or self.projected.intersection(self.formula.vars) == self.projected:
+                # use result if instance was sat or #sat; result for pmc would be wrong
+                self.models = input.models
+        else:
+            logger.debug("Pre-processor failed... ignoring result")
 
     def decompose_nested_primal(self):
         num_vars, edges, adj = cnf2primal(self.formula.num_vars, self.formula.clauses, self.formula.var_clause_dict, True)
-        #print("vars:",self.formula.vars)
         self.graph = Graph(set(self.formula.vars), edges, adj)
         logger.info(f"Primal graph #vertices: {num_vars}, #edges: {len(edges)}")
         #nodes, normalized_adj, normalized_edges, mg = abstract(vars, adj, self.projected)
@@ -138,7 +142,6 @@ class Problem:
             logger.debug("Running clingo %s for size %d and timeout %d", enc["file"],size,timeout)
             c = ClingoControl(self.graph.edges,self.non_nested)
             res = c.choose_subset(min(size,len(self.non_nested)),enc["file"],timeout)[2]
-            print(res)
             if len(res) == 0:
                 logger.warning("Clingo did not produce an answer set, fallback to previous result {}".format(projected))
             else:
@@ -146,31 +149,58 @@ class Problem:
             logger.debug("Clingo done%s", " (timeout)" if c.timeout else "")
 
     def call_solver(self,type):
-        assert(type == "sat")
+        global cfg
+
         logger.info(f"Call solver: {type} with #vars {self.formula.num_vars}, #clauses {len(self.formula.clauses)}, #projected {len(self.projected)}")
-        sat_solver = ['/home/hecher/decodyn/src/benchmark-tool/programs/picosat-965']
-        import tempfile
+
+        cfg_str = f"{type}_solver"
+        assert(cfg_str in cfg["nesthdb"])
+        assert("path" in cfg["nesthdb"][cfg_str])
+        local_cfg = cfg["nesthdb"][cfg_str]
+        solver = [local_cfg["path"]]
+
+        if "seed_arg" in local_cfg:
+            solver.append(local_cfg["seed_arg"])
+            # TODO: enable once we use real arguments and have a real seed... 
+            #solver.append(str(kwargs["runid"]))
+            solver.append("42")
+        if "args" in local_cfg:
+            solver.extend(local_cfg["args"].split(' '))
+        if "output_parser" in local_cfg:
+            solver_parser = local_cfg["output_parser"]
+            reader_module = importlib.import_module("dpdb.reader")
+            solver_parser_cls = getattr(reader_module, solver_parser["class"])
+        else:
+            solver_parser = {"class":"CnfReader","args":{"silent":True},"result":"models"}
+            solver_parser_cls = CnfReader
+
         tmp = tempfile.NamedTemporaryFile().name
         with FileWriter(tmp) as fw:
             fw.write_cnf(self.formula.num_vars,self.formula.clauses,normalize=True, proj_vars=self.projected)
             for i in range(0,128,1):
-                psat = subprocess.Popen(sat_solver + [tmp], stdout=subprocess.PIPE)
-                output = CnfReader.from_stream(psat.stdout,silent=True)
+                psat = subprocess.Popen(solver + [tmp], stdout=subprocess.PIPE)
+                output = solver_parser_cls.from_stream(psat.stdout,**solver_parser["args"])
                 psat.wait()
                 psat.stdout.close()
-                result = output.models
+                result = getattr(output,solver_parser["result"])
                 if psat.returncode == 245 or psat.returncode == 250:
                     logger.debug("Retrying call to external solver, returncode {}, index {}".format(psat.returncode, i))
                 else:
                     logger.debug("No Retry, returncode {}, result {}, index {}".format(psat.returncode, result, i))
                     break
 
+        logger.info(f"Solver {type} result: {result}")
         return result
     
+    def solve_classic(self):
+        if self.formula.vars == self.projected:
+            return self.call_solver("sharpsat")
+        else:
+            return self.call_solver("pmc")
+
     def nestedpmc(self):
         global cfg
 
-        #nestedpmc_sim(cfg,mg,td,projected,var_clause_dict,depth)
         pool = BlockingThreadedConnectionPool(1,cfg["db"]["max_connections"],**cfg["db"]["dsn"])
         #problem_cfg = {}
         #if "problem_specific" in cfg and cls.__name__.lower() in cfg["problem_specific"]:
@@ -182,17 +212,10 @@ class Problem:
         problem.set_input(self.graph.num_nodes,-1,self.projected,self.non_nested_orig,self.formula.var_clause_dict,self.graph.mg)
         problem.setup()
         problem.solve()
-        """
-        print("result: ",problem.model_count)
-        print("power: ", int(2**(len(orig_projected)-len(projected))))
-        print("orig: ",len(orig_projected)," now: ",len(projected))
-        print("power result: ",problem.model_count * int(2**(len(orig_projected)-len(projected))))
-        return problem.model_count * int(2**(len(orig_projected)-len(projected)))
-        """
         return problem.model_count
 
     def solve(self):
-        logger.info(f"Original #vars: {self.formula.num_vars}, #clauses: {self.formula.num_clauses}, #projected: {len(self.projected_orig)}")
+        logger.info(f"Original #vars: {self.formula.num_vars}, #clauses: {self.formula.num_clauses}, #projected: {len(self.projected_orig)}, depth: {self.depth}")
         self.preprocess()
         if self.maybe_sat == False:
             logger.info("Preprocessor UNSAT")
@@ -210,43 +233,24 @@ class Problem:
 
         self.decompose_nested_primal()
 
-        if self.depth >= 3 or self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
+        if self.depth > cfg["nesthdb"]["max_recursion_depth"] or self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
             logger.info("Tree width >= hybrid threshold ({})".format(cfg["nesthdb"]["threshold_hybrid"]))
-            if self.formula.vars == self.projected:
-                pass #TODO
-                #return call_solver("sharpsat",num_vars,clauses,projected)
-            else:
-                pass #TODO
-                #return call_solver("pmc",num_vars,clauses,projected)
+            return self.solve_classic()
 
         if self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_abstract"]:
             logger.info("Tree width >= abstract threshold ({})".format(cfg["nesthdb"]["threshold_abstract"]))
             self.choose_subset()
             logger.info(f"Subset #non-nested: {len(self.non_nested)}")
             self.decompose_nested_primal()
-            # TODO: treewidth check, if above abstract treshold -> fallback to IF above? -> classical solver
+            if self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_abstract"]:
+                logger.info("Tree width after abstraction >= abstract threshold ({})".format(cfg["nesthdb"]["threshold_abstract"]))
+                return self.solve_classic()
 
         result = self.nestedpmc()
-        print("result: ",result)
-        print("power: ", int(2**(len(self.projected_orig)-len(self.projected))))
-        print("orig: ",len(self.projected_orig)," now: ",len(self.projected))
-        print("power result: ",result * int(2**(len(self.projected_orig)-len(self.projected))))
         return result * int(2**(len(self.projected_orig)-len(self.projected)))
 
     def solve_rec(self, vars, clauses, non_nested, projected, depth=0):
-        """
-        self.projected = projected
-        self.projected_orig = projected
-        self.non_nested = non_nested
-        self.non_nested_orig = non_nested
-        self.formula = Formula(vars,clauses,projected)
-        
-        return self.solve()
-        """
-        #print("rec vars:",vars)
         return Problem(Formula(vars,clauses,projected),non_nested,depth).solve()
-        
-        #(num_vars,covered_vars,len(clauses),clauses,projected,42,node.id)
 
 def read_input(fname):
     input = CnfReader.from_file(fname)
