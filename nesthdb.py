@@ -245,7 +245,7 @@ class Problem:
 
         self.decompose_nested_primal()
 
-        if self.depth > cfg["nesthdb"]["max_recursion_depth"] or self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
+        if (self.depth >= cfg["nesthdb"]["max_recursion_depth"] and self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_abstract"]) or self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
             logger.info("Tree width >= hybrid threshold ({})".format(cfg["nesthdb"]["threshold_hybrid"]))
             return self.final_result(self.solve_classic())
 
