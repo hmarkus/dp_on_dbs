@@ -158,7 +158,7 @@ class ClingoControl:
             logger.debug("better answer set found: %s %s %s", model, model.cost, model.optimality_proven)
             
             aset[1] |= model.optimality_proven
-            opt = abs(model.cost[0] if len(model.cost) > 0 else 0)
+            opt = model.cost[0] if len(model.cost) > 0 else 0
             if opt <= aset[0]:
                 if opt < aset[0]:
                     aset[2] = []
@@ -191,9 +191,9 @@ class ClingoControl:
                 prog += "p({0}).\n".format(p)
 
             # subset (buckets) of proj to select upon 
-            for b in range(1, select_subset + 1, 1):
-                prog += "b({0}).\n".format(b)
-
+            #for b in range(1, select_subset + 1, 1):
+            prog += "b({0}).\n".format(select_subset)
+            #print(prog)
         aset[3] = c
 
         c.add("prog{0}".format(select_subset), [], str(prog))
