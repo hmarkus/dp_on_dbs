@@ -28,9 +28,10 @@ def normalize_cnf(clauses, var=None, return_mapping=False):
     else:
         return mapped_clauses, mapped_vars,num_vars
 
-def denormalize_cnf(clauses,vars,mapping):
+def denormalize_cnf(clauses,vars,proj_vars,mapping):
     mapped_clauses = []
     mapped_vars = set()
+    mapped_proj_vars = set()
     for c in clauses:
         mapped_clause = []
         for v in c:
@@ -38,7 +39,9 @@ def denormalize_cnf(clauses,vars,mapping):
         mapped_clauses.append(mapped_clause)
     for v in vars:
         mapped_vars.add(mapping[v])
-    return mapped_clauses, mapped_vars
+    for v in proj_vars:
+        mapped_proj_vars.add(mapping[v])
+    return mapped_clauses, mapped_vars, mapped_proj_vars
 
 class Writer(object):
     def write(self, str):

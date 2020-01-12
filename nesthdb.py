@@ -106,8 +106,8 @@ class Problem:
         if "args" in cfg_prep:
             preprocessor.extend(cfg_prep["args"].split(' '))
         ppmc = subprocess.Popen(preprocessor,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        clauses,proj_vars,num_vars,mapping,rev_mapping = normalize_cnf(self.formula.clauses, None, True)
-        StreamWriter(ppmc.stdin).write_cnf(num_vars,clauses,normalize=False)
+        clauses,proj_vars,num_vars,mapping,rev_mapping = normalize_cnf(self.formula.clauses, self.projected, True)
+        StreamWriter(ppmc.stdin).write_cnf(self.formula.num_vars,clauses,normalize=False)
         ppmc.stdin.close()
         input = CnfReader.from_stream(ppmc.stdout,silent=True)
         ppmc.wait()
@@ -115,9 +115,9 @@ class Problem:
         if not input.error:
             self.maybe_sat = input.maybe_sat
             if not input.done:
-                clauses, vars = denormalize_cnf(input.clauses,input.vars,rev_mapping)
+                clauses, vars, proj_vars = denormalize_cnf(input.clauses,input.vars,proj_vars,rev_mapping)
                 self.formula = Formula(vars,clauses)
-                self.projected = self.projected.intersection(input.vars)
+                self.projected = proj_vars.intersection(vars)
             elif len(self.projected) == 0 or self.projected.intersection(self.formula.vars) == self.projected:
                 # use result if instance was sat or #sat; result for pmc would be wrong
                 self.models = input.models
@@ -198,6 +198,9 @@ class Problem:
         else:
             return self.call_solver("pmc")
 
+    def final_result(self,result):
+        return result * int(2**(len(self.projected_orig)-len(self.projected)))
+
     def nestedpmc(self):
         global cfg
 
@@ -222,20 +225,20 @@ class Problem:
             return 0
         if self.models != None:
             logger.info(f"Solved by preprocessor: {self.models} models")
-            return self.models
+            return self.final_result(self.models)
 
         self.non_nested = self.non_nested.intersection(self.projected)
         logger.info(f"Preprocessing #vars: {self.formula.num_vars}, #clauses: {self.formula.num_clauses}, #projected: {len(self.projected)}")
 
         if len(self.projected.intersection(self.formula.vars)) == 0:
             logger.info("Intersection of vars and projected is empty")
-            return self.call_solver("sat")
+            return self.final_result(self.call_solver("sat"))
 
         self.decompose_nested_primal()
 
         if self.depth > cfg["nesthdb"]["max_recursion_depth"] or self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
             logger.info("Tree width >= hybrid threshold ({})".format(cfg["nesthdb"]["threshold_hybrid"]))
-            return self.solve_classic()
+            return self.final_result(self.solve_classic())
 
         if self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_abstract"]:
             logger.info("Tree width >= abstract threshold ({})".format(cfg["nesthdb"]["threshold_abstract"]))
@@ -244,10 +247,10 @@ class Problem:
             self.decompose_nested_primal()
             if self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_abstract"]:
                 logger.info("Tree width after abstraction >= abstract threshold ({})".format(cfg["nesthdb"]["threshold_abstract"]))
-                return self.solve_classic()
+                return self.final_result(self.solve_classic())
 
-        result = self.nestedpmc()
-        return result * int(2**(len(self.projected_orig)-len(self.projected)))
+        return self.final_result(self.nestedpmc())
+        #return result * int(2**(len(self.projected_orig)-len(self.projected)))
 
     def solve_rec(self, vars, clauses, non_nested, projected, depth=0):
         return Problem(Formula(vars,clauses,projected),non_nested,depth).solve()

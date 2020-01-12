@@ -132,9 +132,9 @@ class NestPmc(Problem):
                     else:
                         clauses.append([n*(-1)])
                         extra_clauses.append(n*(-1))
-            projected = self.projected - set(orig_vars)
-            non_nested = self.non_nested - set(orig_vars)
-            logger.info(f"calling recursive for bag {node.id}: {num_vars} {len(clauses)} {len(projected)}")
+            projected = self.projected.intersection(covered_vars) - set(orig_vars)
+            non_nested = self.non_nested.intersection(covered_vars) - set(orig_vars)
+            logger.info(f"Problem {self.id}: Calling recursive for bag {node.id}: {num_vars} {len(clauses)} {len(projected)}")
             sat = self.rec_func(covered_vars,clauses,non_nested,projected,self.depth+1)
             #sat = 1
             if not self.interrupted:
