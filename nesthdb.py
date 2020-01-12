@@ -8,7 +8,7 @@ from collections import defaultdict
 from common import *
 from dpdb.abstraction import MinorGraph, ClingoControl
 from dpdb.db import BlockingThreadedConnectionPool, DEBUG_SQL, setup_debug_sql
-from dpdb.problems import NestPmc
+from dpdb.problems.nestpmc import NestPmc
 from dpdb.problems.sat_util import *
 from dpdb.reader import CnfReader
 from dpdb.writer import FileWriter, StreamWriter, normalize_cnf
@@ -90,7 +90,7 @@ class Graph:
         self.tree_decomp = decompose(self.num_nodes,self.edges_normalized,cfg["htd"],gr_file="test.gr",td_file="test.td",node_map=self._node_rev_map)
 
 class Problem:
-    def __init__(self, formula, non_nested):
+    def __init__(self, formula, non_nested, depth=0):
         self.formula = formula
         self.projected = formula.projected
         self.projected_orig = formula.projected
@@ -98,6 +98,7 @@ class Problem:
         self.non_nested_orig = non_nested
         self.maybe_sat = True
         self.models = None
+        self.depth = depth
 
     def preprocess(self):
         global cfg
@@ -115,7 +116,7 @@ class Problem:
         ppmc.stdout.close()
         self.formula = Formula(input.vars,input.clauses)
         self.maybe_sat = input.maybe_sat
-        self.models = input.models
+        self.models = input.models	#TODO: 1) sometimes preprocessor returns "s inf", 2) for pmc this is, sadly, wrong most of the time :(
         self.projected = self.projected.intersection(input.vars)
 
     def decompose_nested_primal(self):
@@ -137,6 +138,7 @@ class Problem:
             logger.debug("Running clingo %s for size %d and timeout %d", enc["file"],size,timeout)
             c = ClingoControl(self.graph.edges,self.non_nested)
             res = c.choose_subset(min(size,len(self.non_nested)),enc["file"],timeout)[2]
+            print(res)
             if len(res) == 0:
                 logger.warning("Clingo did not produce an answer set, fallback to previous result {}".format(projected))
             else:
@@ -146,7 +148,7 @@ class Problem:
     def call_solver(self,type):
         assert(type == "sat")
         logger.info(f"Call solver: {type} with #vars {self.formula.num_vars}, #clauses {len(self.formula.clauses)}, #projected {len(self.projected)}")
-        sat_solver = ['../picosat-965/picosat']
+        sat_solver = ['/home/hecher/decodyn/src/benchmark-tool/programs/picosat-965']
         import tempfile
         tmp = tempfile.NamedTemporaryFile().name
         with FileWriter(tmp) as fw:
@@ -176,7 +178,7 @@ class Problem:
         #problem = NestPmc(file,pool, **cfg["dpdb"], **flatten_cfg(problem_cfg, [], '_',cls.keep_cfg()), **kwargs)
         problem = NestPmc("test",pool, **cfg["dpdb"])
         problem.set_td(self.graph.tree_decomp)
-        problem.set_recursive(self.solve_rec)
+        problem.set_recursive(self.solve_rec,self.depth)
         problem.set_input(self.graph.num_nodes,-1,self.projected,self.non_nested_orig,self.formula.var_clause_dict,self.graph.mg)
         problem.setup()
         problem.solve()
@@ -208,13 +210,13 @@ class Problem:
 
         self.decompose_nested_primal()
 
-        if self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]:
+        if self.depth >= 3 or self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
             logger.info("Tree width >= hybrid threshold ({})".format(cfg["nesthdb"]["threshold_hybrid"]))
             if self.formula.vars == self.projected:
-                pass
+                pass #TODO
                 #return call_solver("sharpsat",num_vars,clauses,projected)
             else:
-                pass
+                pass #TODO
                 #return call_solver("pmc",num_vars,clauses,projected)
 
         if self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_abstract"]:
@@ -222,6 +224,7 @@ class Problem:
             self.choose_subset()
             logger.info(f"Subset #non-nested: {len(self.non_nested)}")
             self.decompose_nested_primal()
+            # TODO: treewidth check, if above abstract treshold -> fallback to IF above? -> classical solver
 
         result = self.nestedpmc()
         print("result: ",result)
@@ -230,7 +233,7 @@ class Problem:
         print("power result: ",result * int(2**(len(self.projected_orig)-len(self.projected))))
         return result * int(2**(len(self.projected_orig)-len(self.projected)))
 
-    def solve_rec(self, vars, clauses, non_nested, projected):
+    def solve_rec(self, vars, clauses, non_nested, projected, depth=0):
         """
         self.projected = projected
         self.projected_orig = projected
@@ -241,7 +244,7 @@ class Problem:
         return self.solve()
         """
         #print("rec vars:",vars)
-        return Problem(Formula(vars,clauses,projected),non_nested).solve()
+        return Problem(Formula(vars,clauses,projected),non_nested,depth).solve()
         
         #(num_vars,covered_vars,len(clauses),clauses,projected,42,node.id)
 

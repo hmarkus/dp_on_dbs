@@ -98,8 +98,9 @@ class NestPmc(Problem):
         num_vars, edges, adj = cnf2primal(input.num_vars, input.clauses, self.var_clause_dict, True)
         return self.abstr.abstract(num_vars,edges,adj,self.projected)
 
-    def set_recursive(self,func):
+    def set_recursive(self,func, depth):
         self.rec_func = func
+        self.depth = depth
 
     def set_input(self,num_vars,num_clauses,projected,non_nested,var_clause_dict,mg):
         self.num_vars = num_vars
@@ -146,7 +147,7 @@ class NestPmc(Problem):
             projected = self.projected - set(orig_vars)
             non_nested = self.non_nested - set(orig_vars)
             logger.info(f"calling recursive for bag {node.id}: {num_vars} {len(clauses)} {len(projected)}")
-            sat = self.rec_func(covered_vars,clauses,non_nested,projected)
+            sat = self.rec_func(covered_vars,clauses,non_nested,projected,self.depth+1)
             #sat = 1
             if not self.interrupted:
                 db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)

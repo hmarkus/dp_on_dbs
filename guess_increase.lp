@@ -5,7 +5,7 @@
 
 
 
-B { abs(X) : p(X)} B :- b(B).
+M { abs(X) : p(X)} B :- M = #min{ 8; B}, b(B).
 
 % abs is in its own bucket
 bucket(X,X) :- abs(X).
@@ -26,6 +26,7 @@ bucket(B,Z) :- bucket(B,Y), not abs(Y), edge(Z,Y).
 % direct edges
 :~ abs(X), abs(Y), edge(X,Y). [1,X,Y]
 
+:~ abs(X), #count{ Y: abs(Y), bucket(X,Y); Y: abs(Y), edge(X,Y); Y: abs(Y), edge(Y,X)  } <= 6. [-1,X]
 
 
 
