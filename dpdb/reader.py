@@ -193,7 +193,7 @@ class CnfReader(DimacsReader):
                 else:
                     singles = self.single_clauses_only.intersection(clause + [-l for l in clause])
                     if len(singles) > 0:
-                        logger.error("Single clauses strangely REMOVED for {}, simplifications possible!".format(singles))
+                        logger.warning("Single clauses strangely REMOVED for {}, simplifications possible!".format(singles))
                         self.single_claues_only = self.single_clauses_only.difference(singles)
                         self.clauses.append([l] for l in singles)
                     self.clauses.append(clause)
