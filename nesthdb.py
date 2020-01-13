@@ -32,6 +32,8 @@ class Formula:
     @classmethod
     def from_file(cls, fname):
         input = CnfReader.from_file(fname)
+        # uncomment the following line for sharpsat solving
+        #input.projected = list(input.vars)		#sharpsat!
         return cls(input.vars, input.clauses, input.projected)
 
 class Graph:
@@ -191,7 +193,7 @@ class Problem:
                 output = solver_parser_cls.from_stream(psat.stdout,**solver_parser["args"])
                 psat.wait()
                 psat.stdout.close()
-                result = getattr(output,solver_parser["result"])
+                result = int(getattr(output,solver_parser["result"]))
                 if psat.returncode == 245 or psat.returncode == 250:
                     logger.debug("Retrying call to external solver, returncode {}, index {}".format(psat.returncode, i))
                 else:
@@ -208,7 +210,12 @@ class Problem:
             return self.call_solver("pmc")
 
     def final_result(self,result):
-        return result * int(2**(len(self.projected_orig)-len(self.projected)))
+        len_old = len(self.projected_orig)
+        len_new = len(self.projected)
+        len_diff = len_old - len_new
+        exp = 2**len_diff
+        final = result * exp
+        return final
 
     def nestedpmc(self):
         global cfg

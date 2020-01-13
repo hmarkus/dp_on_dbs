@@ -139,7 +139,7 @@ class NestPmc(Problem):
             sat = self.rec_func(covered_vars,clauses,non_nested,projected,self.depth+1)
             #sat = 1
             if not self.interrupted:
-                db.update(f"td_node_{node.id}",["model_count"],["model_count * {}".format(sat)],where)
+                db.update(f"td_node_{node.id}",["model_count"],["model_count * {}::numeric".format(sat)],where)
         except Exception as e:
             raise e
 
