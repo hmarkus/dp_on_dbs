@@ -105,13 +105,16 @@ class NestPmc(Problem):
         executor = ThreadPoolExecutor(1)
         futures = []
         for r in db.select_all(f"td_node_{node.id}",cols):
-            futures.append(executor.submit(self.solve_sat, node, db, cols, r))
+            if not self.interrupted:
+                futures.append(executor.submit(self.solve_sat, node, db, cols, r))
         for future in as_completed(futures):
             if future.exception():
                 raise future.exception()
         executor.shutdown(wait=True)
 
     def solve_sat(self, node, db, cols, vals):
+        if self.interrupted:
+            return
         try:
             where = []
             orig_vars = node.vertices
@@ -142,6 +145,8 @@ class NestPmc(Problem):
             raise e
 
     def after_solve(self):
+        if self.interrupted:
+            return
         root_tab = f"td_node_{self.td.root.id}"
         sum_count = self.db.replace_dynamic_tabs(f"(select coalesce(sum(model_count),0) from {root_tab})")
         self.db.ignore_next_praefix()

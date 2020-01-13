@@ -244,6 +244,8 @@ class Problem:
         self.nested_problem.set_input(self.graph.num_nodes,-1,self.projected,self.non_nested_orig,self.formula.var_clause_dict,self.graph.mg)
         self.nested_problem.setup()
         self.nested_problem.solve()
+        if self.interrupted:
+            return -1
         return self.nested_problem.model_count
 
     def solve(self):
@@ -292,14 +294,13 @@ class Problem:
     def interrupt(self):
         logger.warning("Problem interrupted")
         self.interrupted = True
-        if self.sub_problem != None:
-            self.sub_problem.interrupt()
         if self.nested_problem != None:
             self.nested_problem.interrupt()
+        if self.sub_problem != None:
+            self.sub_problem.interrupt()
         if self.active_process != None:
             if self.active_process.poll() is None:
                 self.active_process.send_signal(signal.SIGTERM)
-        sys.exit(0)
 
 def read_input(fname):
     input = CnfReader.from_file(fname)
@@ -326,7 +327,8 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGUSR1, signal_handler)
 
-    print("result: ",prob.solve())
+    result = prob.solve()
+    logger.info(f"PMC: {result}")
 
 if __name__ == "__main__":
     main()
