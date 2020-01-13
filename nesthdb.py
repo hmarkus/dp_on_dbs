@@ -194,12 +194,14 @@ class Problem:
             fw.write_cnf(self.formula.num_vars,self.formula.clauses,normalize=True, proj_vars=self.projected)
             for i in range(0,128,1):
                 if self.interrupted:
-                    break
+                    return -1
                 self.active_process = psat = subprocess.Popen(solver + [tmp], stdout=subprocess.PIPE)
                 output = solver_parser_cls.from_stream(psat.stdout,**solver_parser["args"])
                 psat.wait()
                 psat.stdout.close()
                 self.active_process = None
+                if self.interrupted:
+                    return -1
                 result = int(getattr(output,solver_parser["result"]))
                 if psat.returncode == 245 or psat.returncode == 250:
                     logger.debug("Retrying call to external solver, returncode {}, index {}".format(psat.returncode, i))
@@ -307,7 +309,6 @@ def main():
     global cfg
     arg_parser = setup_arg_parser("%(prog)s [general options] -f input-file")
     args = parse_args(arg_parser)
-    print(args)
     cfg = read_cfg(args.config)
     fname = args.file
 
