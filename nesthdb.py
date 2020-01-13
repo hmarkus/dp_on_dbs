@@ -33,7 +33,7 @@ class Formula:
     def from_file(cls, fname):
         input = CnfReader.from_file(fname)
         # uncomment the following line for sharpsat solving
-        #input.projected = list(input.vars)		#sharpsat!
+        # input.projected = set(range(1,input.num_vars+1)) - input.single_vars		#sharpsat!
         return cls(input.vars, input.clauses, input.projected)
 
 class Graph:
@@ -217,9 +217,9 @@ class Problem:
         return result
     
     def solve_classic(self):
-        # uncomment the following line for sharpsat solving
         if self.interrupted:
             return -1
+        # uncomment the following line for sharpsat solving
         if self.formula.vars == self.projected:
             return self.call_solver("sharpsat")
         else:

@@ -201,7 +201,7 @@ class CnfReader(DimacsReader):
                     [self.vars.add(a) for a in atoms]
                     maxvar = max(maxvar,max(atoms))
 
-        self.single_vars = [abs(l) for l in self.single_clauses_only]
+        self.single_vars = set((abs(l) for l in self.single_clauses_only))
         self.projected = self.projected.difference(self.single_vars)
 
         #maxvar = max(maxvar,max(self.projected))
