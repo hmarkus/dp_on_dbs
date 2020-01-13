@@ -105,13 +105,16 @@ class NestPmc(Problem):
         executor = ThreadPoolExecutor(1)
         futures = []
         for r in db.select_all(f"td_node_{node.id}",cols):
-            futures.append(executor.submit(self.solve_sat, node, db, cols, r))
+            if not self.interrupted:
+                futures.append(executor.submit(self.solve_sat, node, db, cols, r))
         for future in as_completed(futures):
             if future.exception():
                 raise future.exception()
         executor.shutdown(wait=True)
 
     def solve_sat(self, node, db, cols, vals):
+        if self.interrupted:
+            return
         try:
             where = []
             orig_vars = node.vertices
@@ -136,14 +139,15 @@ class NestPmc(Problem):
             projected = self.projected.intersection(covered_vars) - set(orig_vars)	
             non_nested = self.non_nested.intersection(covered_vars) - set(orig_vars)
             logger.info(f"Problem {self.id}: Calling recursive for bag {node.id}: {num_vars} {len(clauses)} {len(projected)}")
-            sat = self.rec_func(covered_vars,clauses,non_nested,projected,self.depth+1)
-            #sat = 1
+            sat = self.rec_func(covered_vars,clauses,non_nested,projected,self.depth+1,**self.kwargs)
             if not self.interrupted:
                 db.update(f"td_node_{node.id}",["model_count"],["model_count * {}::numeric".format(sat)],where)
         except Exception as e:
             raise e
 
     def after_solve(self):
+        if self.interrupted:
+            return
         root_tab = f"td_node_{self.td.root.id}"
         sum_count = self.db.replace_dynamic_tabs(f"(select coalesce(sum(model_count),0) from {root_tab})")
         self.db.ignore_next_praefix()

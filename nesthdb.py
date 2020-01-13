@@ -17,7 +17,7 @@ from dpdb.writer import FileWriter, StreamWriter, denormalize_cnf, normalize_cnf
 
 logger = logging.getLogger("nestHDB")
 #setup_logging("DEBUG")
-setup_logging()
+#setup_logging()
 setup_debug_sql()
 
 class Formula:
@@ -83,13 +83,13 @@ class Graph:
             else:
                 self.edges_normalized.add((v,u))
 
-    def decompose(self, seed=42):
+    def decompose(self, **kwargs):
         global cfg
         self.normalize()
-        self.tree_decomp = decompose(self.num_nodes,self.edges_normalized,cfg["htd"],gr_file="test.gr",td_file="test.td",node_map=self._node_rev_map)
+        self.tree_decomp = decompose(self.num_nodes,self.edges_normalized,cfg["htd"],node_map=self._node_rev_map,**kwargs)
 
 class Problem:
-    def __init__(self, formula, non_nested, depth=0):
+    def __init__(self, formula, non_nested, depth=0, **kwargs):
         self.formula = formula
         self.projected = formula.projected
         self.projected_orig = formula.projected
@@ -98,6 +98,11 @@ class Problem:
         self.maybe_sat = True
         self.models = None
         self.depth = depth
+        self.kwargs = kwargs
+        self.sub_problem = None
+        self.nested_problem = None
+        self.interrupted = False
+        self.active_process = None
 
     def preprocess(self):
         global cfg
@@ -107,18 +112,18 @@ class Problem:
         preprocessor = [cfg_prep["path"]]
         if "args" in cfg_prep:
             preprocessor.extend(cfg_prep["args"].split(' '))
-        ppmc = subprocess.Popen(preprocessor,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        self.active_process = ppmc = subprocess.Popen(preprocessor,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         clauses,proj_vars,num_vars,mapping,rev_mapping = normalize_cnf(self.formula.clauses, self.projected, True)
         StreamWriter(ppmc.stdin).write_cnf(self.formula.num_vars,clauses,normalize=False)
         ppmc.stdin.close()
         input = CnfReader.from_stream(ppmc.stdout,silent=True)
         ppmc.wait()
         ppmc.stdout.close()
+        self.active_process = None
         if not input.error:
             self.maybe_sat = input.maybe_sat
             if not input.done:
                 # fix corner case, where input.vars contains not all of range(1,input.max_vars+1)
-
                 clauses, vars, proj_vars = denormalize_cnf(input.clauses,input.vars,proj_vars,rev_mapping)
                 self.formula = Formula(vars,clauses)
                 self.projected = proj_vars.intersection(vars)
@@ -143,15 +148,16 @@ class Problem:
         num_vars, edges, adj = cnf2primal(self.formula.num_vars, self.formula.clauses, self.formula.var_clause_dict, True)
         self.graph = Graph(set(self.formula.vars), edges, adj)
         logger.info(f"Primal graph #vertices: {num_vars}, #edges: {len(edges)}")
-        #nodes, normalized_adj, normalized_edges, mg = abstract(vars, adj, self.projected)
         self.graph.abstract(self.non_nested)
         logger.info(f"Nested primal graph #vertices: {self.graph.num_nodes}, #edges: {self.graph.num_edges}")
-        self.graph.decompose()
+        self.graph.decompose(**self.kwargs)
 
     def choose_subset(self):
         global cfg
         cfg_asp = cfg["nesthdb"]["asp"]
         for enc in cfg_asp["encodings"]:
+            if self.interrupted:
+                return
             size = enc["size"]
             timeout = 30 if "timeout" not in enc else enc["timeout"]
             logger.debug("Running clingo %s for size %d and timeout %d", enc["file"],size,timeout)
@@ -176,9 +182,7 @@ class Problem:
 
         if "seed_arg" in local_cfg:
             solver.append(local_cfg["seed_arg"])
-            # TODO: enable once we use real arguments and have a real seed... 
-            #solver.append(str(kwargs["runid"]))
-            solver.append("42")
+            solver.append(str(self.kwargs["runid"]))
         if "args" in local_cfg:
             solver.extend(local_cfg["args"].split(' '))
         if "output_parser" in local_cfg:
@@ -193,10 +197,15 @@ class Problem:
         with FileWriter(tmp) as fw:
             fw.write_cnf(self.formula.num_vars,self.formula.clauses,normalize=True, proj_vars=self.projected)
             for i in range(0,128,1):
-                psat = subprocess.Popen(solver + [tmp], stdout=subprocess.PIPE)
+                if self.interrupted:
+                    return -1
+                self.active_process = psat = subprocess.Popen(solver + [tmp], stdout=subprocess.PIPE)
                 output = solver_parser_cls.from_stream(psat.stdout,**solver_parser["args"])
                 psat.wait()
                 psat.stdout.close()
+                self.active_process = None
+                if self.interrupted:
+                    return -1
                 result = int(getattr(output,solver_parser["result"]))
                 if psat.returncode == 245 or psat.returncode == 250:
                     logger.debug("Retrying call to external solver, returncode {}, index {}".format(psat.returncode, i))
@@ -209,6 +218,8 @@ class Problem:
     
     def solve_classic(self):
         # uncomment the following line for sharpsat solving
+        if self.interrupted:
+            return -1
         if self.formula.vars == self.projected:
             return self.call_solver("sharpsat")
         else:
@@ -230,13 +241,17 @@ class Problem:
         #if "problem_specific" in cfg and cls.__name__.lower() in cfg["problem_specific"]:
         #    problem_cfg = cfg["problem_specific"][cls.__name__.lower()]
         #problem = NestPmc(file,pool, **cfg["dpdb"], **flatten_cfg(problem_cfg, [], '_',cls.keep_cfg()), **kwargs)
-        problem = NestPmc("test",pool, **cfg["dpdb"])
-        problem.set_td(self.graph.tree_decomp)
-        problem.set_recursive(self.solve_rec,self.depth)
-        problem.set_input(self.graph.num_nodes,-1,self.projected,self.non_nested_orig,self.formula.var_clause_dict,self.graph.mg)
-        problem.setup()
-        problem.solve()
-        return problem.model_count
+        if self.interrupted:
+            return -1
+        self.nested_problem = NestPmc("test",pool, **cfg["dpdb"], **self.kwargs)
+        self.nested_problem.set_td(self.graph.tree_decomp)
+        self.nested_problem.set_recursive(self.solve_rec,self.depth)
+        self.nested_problem.set_input(self.graph.num_nodes,-1,self.projected,self.non_nested_orig,self.formula.var_clause_dict,self.graph.mg)
+        self.nested_problem.setup()
+        self.nested_problem.solve()
+        if self.interrupted:
+            return -1
+        return self.nested_problem.model_count
 
     def solve(self):
         logger.info(f"Original #vars: {self.formula.num_vars}, #clauses: {self.formula.num_clauses}, #projected: {len(self.projected_orig)}, depth: {self.depth}")
@@ -257,6 +272,9 @@ class Problem:
 
         self.decompose_nested_primal()
 
+        if self.interrupted:
+            return -1
+
         if (self.depth >= cfg["nesthdb"]["max_recursion_depth"] and self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_abstract"]) or self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
             logger.info("Tree width >= hybrid threshold ({})".format(cfg["nesthdb"]["threshold_hybrid"]))
             return self.final_result(self.solve_classic())
@@ -271,10 +289,23 @@ class Problem:
                 return self.final_result(self.solve_classic())
 
         return self.final_result(self.nestedpmc())
-        #return result * int(2**(len(self.projected_orig)-len(self.projected)))
 
-    def solve_rec(self, vars, clauses, non_nested, projected, depth=0):
-        return Problem(Formula(vars,clauses,projected),non_nested,depth).solve()
+    def solve_rec(self, vars, clauses, non_nested, projected, depth=0, **kwargs):
+        if self.interrupted:
+            return -1
+        self.sub_problem = Problem(Formula(vars,clauses,projected),non_nested,depth, **kwargs)
+        return self.sub_problem.solve()
+
+    def interrupt(self):
+        logger.warning("Problem interrupted")
+        self.interrupted = True
+        if self.nested_problem != None:
+            self.nested_problem.interrupt()
+        if self.sub_problem != None:
+            self.sub_problem.interrupt()
+        if self.active_process != None:
+            if self.active_process.poll() is None:
+                self.active_process.send_signal(signal.SIGTERM)
 
 def read_input(fname):
     input = CnfReader.from_file(fname)
@@ -282,12 +313,27 @@ def read_input(fname):
 
 def main():
     global cfg
-    cfg = read_cfg("config.json")
-    fname = sys.argv[1]
+    arg_parser = setup_arg_parser("%(prog)s [general options] -f input-file")
+    args = parse_args(arg_parser)
+    cfg = read_cfg(args.config)
+    fname = args.file
 
     formula = Formula.from_file(fname)
-    prob = Problem(formula,formula.vars)
-    print("result: ",prob.solve())
+    prob = Problem(formula,formula.vars,**vars(args))
+
+    def signal_handler(sig, frame):
+        if sig == signal.SIGUSR1:
+            logger.warning("Terminating because of error in worker thread")
+        else:
+            logger.warning("Killing all connections")
+        prob.interrupt()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGUSR1, signal_handler)
+
+    result = prob.solve()
+    logger.info(f"PMC: {result}")
 
 if __name__ == "__main__":
     main()
