@@ -133,7 +133,7 @@ class NestPmc(Problem):
                         clauses.append([n*(-1)])
                         extra_clauses.append(n*(-1))
             #actually, it is probably better to leave it like that such that one could use maybe #sat instead of pmc?
-            projected = self.projected.intersection(covered_vars) #- set(orig_vars)	
+            projected = self.projected.intersection(covered_vars) - set(orig_vars)	
             non_nested = self.non_nested.intersection(covered_vars) - set(orig_vars)
             logger.info(f"Problem {self.id}: Calling recursive for bag {node.id}: {num_vars} {len(clauses)} {len(projected)}")
             sat = self.rec_func(covered_vars,clauses,non_nested,projected,self.depth+1)

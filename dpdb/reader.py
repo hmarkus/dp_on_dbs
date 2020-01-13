@@ -92,6 +92,7 @@ class CnfReader(DimacsReader):
         self.models = None
         self.error = False
         self.single_clauses_only = set()
+        self.single_vars = set()
 
     def parse(self, string):
         super().parse(string)
@@ -199,6 +200,9 @@ class CnfReader(DimacsReader):
                     atoms = [abs(lit) for lit in clause]
                     [self.vars.add(a) for a in atoms]
                     maxvar = max(maxvar,max(atoms))
+
+        self.single_vars = [abs(l) for l in self.single_clauses_only]
+        self.projected = self.projected.difference(self.single_vars)
 
         #maxvar = max(maxvar,max(self.projected))
         #self.projected = projected_vars

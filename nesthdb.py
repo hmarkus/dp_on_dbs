@@ -122,6 +122,10 @@ class Problem:
                 clauses, vars, proj_vars = denormalize_cnf(input.clauses,input.vars,proj_vars,rev_mapping)
                 self.formula = Formula(vars,clauses)
                 self.projected = proj_vars.intersection(vars)
+                # remove single_clause_proj_vars, they are not needed/relevant and only waste resources!
+                # consequently, these variables are treated as if they were never there, no 2 ** correction!
+                _, singles, _ = denormalize_cnf((),input.single_vars,(),rev_mapping)
+                self.projected_orig = self.projected_orig.difference(singles)
             else:
                 # set models to 1 if instance was sat
                 if len(self.projected) == 0:
@@ -204,6 +208,7 @@ class Problem:
         return result
     
     def solve_classic(self):
+        # uncomment the following line for sharpsat solving
         if self.formula.vars == self.projected:
             return self.call_solver("sharpsat")
         else:
