@@ -190,15 +190,15 @@ class CnfReader(DimacsReader):
                         break
                     self.single_clauses_only.add(clause[0])
                 else:
-                    self.single_clauses_only = self.single_clauses_only.difference(clause + [-l for l in clause])
+                    singles = self.single_clauses_only.intersection(clause + [-l for l in clause])
+                    if len(singles) > 0:
+                        logger.error("Single clauses strangely REMOVED for {}, simplifications possible!".format(singles))
+                        self.single_claues_only = self.single_clauses_only.difference(singles)
+                        self.clauses.append([l] for l in singles)
                     self.clauses.append(clause)
                     atoms = [abs(lit) for lit in clause]
                     [self.vars.add(a) for a in atoms]
                     maxvar = max(maxvar,max(atoms))
-
-        if len(self.single_clauses_only) > 0:
-            logger.warning("Single clauses strangely NOT REMOVED, simplifications possible!")
-            self.clauses.append([[l] for l in self.single_clauses_only])
 
         #maxvar = max(maxvar,max(self.projected))
         #self.projected = projected_vars
