@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: future_fstrings -*-
+import argparse
 import logging
 import subprocess
 
@@ -46,13 +47,13 @@ def flatten_cfg(dd, filter=[], separator='.', keep=[],prefix='',fullprefix=''):
     else:
         return { prefix : dd }
 
-def decompose(num_vertices, edges, htd, seed=42, gr_file=None, td_file=None, node_map=None):
-    logger.debug(f"Using tree decomposition seed: {seed}")
+def decompose(num_vertices, edges, htd, node_map=None, **kwargs):
+    logger.debug(f"Using tree decomposition seed: {kwargs['runid']}")
     # Run htd
-    p = subprocess.Popen([htd["path"], "--seed", str(seed), *htd["parameters"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    if gr_file:
+    p = subprocess.Popen([htd["path"], "--seed", str(kwargs["runid"]), *htd["parameters"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    if "gr_file" in kwargs and kwargs["gr_file"]:
         logger.debug("Writing graph file")
-        with FileWriter(gr_file) as fw:
+        with FileWriter(kwargs["gr_file"]) as fw:
             fw.write_gr(num_vertices,edges)
     logger.debug("Running htd")
     StreamWriter(p.stdin).write_gr(num_vertices,edges)
@@ -68,11 +69,47 @@ def decompose(num_vertices, edges, htd, seed=42, gr_file=None, td_file=None, nod
     #td = TreeDecomp(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, problem.get_root(tdr.bags, tdr.adjacency_list, tdr.root), tdr.bags, tdr.adjacency_list)
     td = TreeDecomp(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, tdr.adjacency_list)
     logger.info(f"Tree decomposition #bags: {td.num_bags} tree_width: {td.tree_width} #vertices: {td.num_orig_vertices} #leafs: {len(td.leafs)} #edges: {len(td.edges)}")
-    if td_file:
-        with FileWriter(td_file) as fw:
+    if "td_file" in kwargs and kwargs["td_file"]:
+        with FileWriter(kwargs["td_file"]) as fw:
             fw.write_td(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, td.edges)
     return td
 
+class MyFormatter(argparse.ArgumentDefaultsHelpFormatter,argparse.RawDescriptionHelpFormatter):
+    pass
+
+_LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+
+def setup_arg_parser(usage):
+    parser = argparse.ArgumentParser(usage="%(prog)s [general options] -f input-file problem-type [problem specific-options]", formatter_class=MyFormatter)
+
+    parser.add_argument("-f", "--file", dest="file", help="Input file for the problem to solve", required=True)
+    
+    # general options
+    gen_opts = parser.add_argument_group("general options", "General options")
+    gen_opts.add_argument("-t", dest="type", help="type of the cluster run", default="")
+    gen_opts.add_argument("--runid", dest="runid", help="runid of the cluster run", default=0, type=int)
+    gen_opts.add_argument("--config", help="Config file", default="config.json")
+    gen_opts.add_argument("--log-level", dest="log_level", help="Log level", choices=_LOG_LEVEL_STRINGS, default="INFO")
+    gen_opts.add_argument("--td-file", dest="td_file", help="Store TreeDecomposition file (htd Output)")
+    gen_opts.add_argument("--gr-file", dest="gr_file", help="Store Graph file (htd Input)")
+    gen_opts.add_argument("--faster", dest="faster", help="Store less information in database", action="store_true")
+    gen_opts.add_argument("--parallel-setup", dest="parallel_setup", help="Perform setup in parallel", action="store_true")
+
+    return parser
+
+def parse_args(parser):
+    args = parser.parse_args()
+
+    if args.log_level:
+        if args.log_level == "DEBUG_SQL":
+            log_level = DEBUG_SQL
+        else:
+            log_level = getattr(logging,args.log_level)
+
+    logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', level=log_level)
+
+    return args
+    
 """
 _LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
