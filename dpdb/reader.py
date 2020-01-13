@@ -91,6 +91,7 @@ class CnfReader(DimacsReader):
         self.maybe_sat = True
         self.models = None
         self.error = False
+        self.single_clauses_only = set()
 
     def parse(self, string):
         super().parse(string)
@@ -182,11 +183,24 @@ class CnfReader(DimacsReader):
                 continue
             else:
                 clause, lines = self.read_terminated(lines, line, lineno)
-                self.clauses.append(clause)
-                atoms = [abs(lit) for lit in clause]
-                [self.vars.add(a) for a in atoms]
-                maxvar = max(maxvar,max(atoms))
+                if len(clause) == 1:
+                    if -clause[0] in self.single_clauses_only:  #UNSAT
+                        self.maybe_sat = False
+                        self.models = 0
+                        break
+                    self.single_clauses_only.add(clause[0])
+                else:
+                    self.single_clauses_only = self.single_clauses_only.difference(clause + [-l for l in clause])
+                    self.clauses.append(clause)
+                    atoms = [abs(lit) for lit in clause]
+                    [self.vars.add(a) for a in atoms]
+                    maxvar = max(maxvar,max(atoms))
 
+        if len(self.single_clauses_only) > 0:
+            logger.warning("Single clauses strangely NOT REMOVED, simplifications possible!")
+            self.clauses.append([[l] for l in self.single_clauses_only])
+
+        #maxvar = max(maxvar,max(self.projected))
         #self.projected = projected_vars
         if maxvar != self.num_vars:
             logger.warning("Effective number of variables mismatch preamble (%d vs %d)", maxvar, self.num_vars)
