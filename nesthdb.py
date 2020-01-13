@@ -92,7 +92,7 @@ class Problem:
     def __init__(self, formula, non_nested, depth=0, **kwargs):
         self.formula = formula
         self.projected = formula.projected
-        self.projected_orig = formula.projected
+        self.projected_orig = set(formula.projected)
         self.non_nested = non_nested
         self.non_nested_orig = non_nested
         self.maybe_sat = True
