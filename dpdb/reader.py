@@ -195,7 +195,8 @@ class CnfReader(DimacsReader):
                     if len(singles) > 0:
                         logger.warning("Single clauses strangely REMOVED for {}, simplifications possible!".format(singles))
                         self.single_claues_only = self.single_clauses_only.difference(singles)
-                        self.clauses.append([l] for l in singles)
+                        self.clauses.extend(([l] for l in singles))
+                        #print(self.clauses)
                     self.clauses.append(clause)
                     atoms = [abs(lit) for lit in clause]
                     [self.vars.add(a) for a in atoms]
