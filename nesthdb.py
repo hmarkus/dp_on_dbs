@@ -220,6 +220,7 @@ class Problem:
         if self.interrupted:
             return -1
         # uncomment the following line for sharpsat solving
+        # return self.call_solver("sharpsat")
         if self.formula.vars == self.projected:
             return self.call_solver("sharpsat")
         else:
