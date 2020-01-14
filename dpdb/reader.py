@@ -205,22 +205,9 @@ class CnfReader(DimacsReader):
                         self.models = 0
                         break
                     self.single_clauses.add(clause[0])
-                    #if abs(clause[0]) in self.vars:
-                        #self.single_clauses_only.add(clause[0])
-                    #else: # not single anymore
-                    #    self.clauses = [c.]
                 else:
-                    #singles = self.single_clauses.intersection(clause + [-l for l in clause])
-                    #if len(singles) > 0:
-                    #    logger.warning("Single-only clauses REMOVED for {}, simplifications possible {} {}!".format(singles, self.single_clauses_only, clause))
-                    #    self.single_clauses_only = self.single_clauses_only.difference(singles)
-                    #    #self.clauses.extend(([l] for l in singles))
-                    #    #print(self.clauses)
                     self.clauses.append(clause)
-                    atoms = [abs(lit) for lit in clause]
-                    [self.vars.add(a) for a in atoms]
-                    maxvar = max(maxvar,max(atoms))
-
+                    
         # simplify with single clauses, avoid copies, do it at most 10 times in a row
         iterate = 0
         removed_singles = True
@@ -243,10 +230,18 @@ class CnfReader(DimacsReader):
                            self.single_clauses.add(cl[j])
                            del self.clauses[i] #remove clause
                            i = i - 1
+                           if -cl[j] in self.single_clauses:  #UNSAT
+                               self.maybe_sat = False
+                               self.models = 0
+                               i = len(self.clauses)
                            break
                    j = j + 1
                i = i + 1
         iterate = iterate + 1
+
+        for clause in self.clauses:
+            self.vars.update([abs(lit) for lit in clause])
+        maxvar = max(maxvar,max(self.vars))
 
         self.single_vars = set((abs(l) for l in self.single_clauses))
         self.projected = self.projected.difference(self.single_vars)
