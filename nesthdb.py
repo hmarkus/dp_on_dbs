@@ -170,6 +170,7 @@ class Problem:
             else:
                 self.non_nested = set(res[0])
             logger.debug("Clingo done%s", " (timeout)" if c.timeout else "")
+        assert(len(self.non_nested) > 0)
 
     def call_solver(self,type):
         global cfg
@@ -222,7 +223,7 @@ class Problem:
         if interrupted:
             return -1
         # uncomment the following line for sharpsat solving
-        # return self.call_solver("sharpsat")
+        #return self.call_solver("sharpsat")
         if self.formula.vars == self.projected:
             return self.call_solver("sharpsat")
         else:
