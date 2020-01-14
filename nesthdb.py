@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from common import *
 from dpdb.abstraction import MinorGraph, ClingoControl
-from dpdb.db import BlockingThreadedConnectionPool, DEBUG_SQL, setup_debug_sql
+from dpdb.db import BlockingThreadedConnectionPool, DBAdmin, DEBUG_SQL, setup_debug_sql
 from dpdb.problems.nestpmc import NestPmc
 from dpdb.problems.sat_util import *
 from dpdb.reader import CnfReader
@@ -33,7 +33,7 @@ class Formula:
     def from_file(cls, fname):
         input = CnfReader.from_file(fname)
         # uncomment the following line for sharpsat solving
-        # input.projected = set(range(1,input.num_vars+1)) - input.single_vars		#sharpsat!
+        #input.projected = set(range(1,input.num_vars+1)) - input.single_vars		#sharpsat!
         return cls(input.vars, input.clauses, input.projected)
 
 class Graph:
@@ -88,6 +88,9 @@ class Graph:
         self.normalize()
         self.tree_decomp = decompose(self.num_nodes,self.edges_normalized,cfg["htd"],node_map=self._node_rev_map,**kwargs)
 
+interrupted = False
+cache = {}
+
 class Problem:
     def __init__(self, formula, non_nested, depth=0, **kwargs):
         self.formula = formula
@@ -101,7 +104,6 @@ class Problem:
         self.kwargs = kwargs
         self.sub_problem = None
         self.nested_problem = None
-        self.interrupted = False
         self.active_process = None
 
     def preprocess(self):
@@ -156,7 +158,7 @@ class Problem:
         global cfg
         cfg_asp = cfg["nesthdb"]["asp"]
         for enc in cfg_asp["encodings"]:
-            if self.interrupted:
+            if interrupted:
                 return
             size = enc["size"]
             timeout = 30 if "timeout" not in enc else enc["timeout"]
@@ -164,7 +166,7 @@ class Problem:
             c = ClingoControl(self.graph.edges,self.non_nested)
             res = c.choose_subset(min(size,len(self.non_nested)),enc["file"],timeout)[2]
             if len(res) == 0:
-                logger.warning("Clingo did not produce an answer set, fallback to previous result {}".format(projected))
+                logger.warning("Clingo did not produce an answer set, fallback to previous result {}".format(self.non_nested))
             else:
                 self.non_nested = set(res[0])
             logger.debug("Clingo done%s", " (timeout)" if c.timeout else "")
@@ -197,14 +199,14 @@ class Problem:
         with FileWriter(tmp) as fw:
             fw.write_cnf(self.formula.num_vars,self.formula.clauses,normalize=True, proj_vars=self.projected)
             for i in range(0,128,1):
-                if self.interrupted:
+                if interrupted:
                     return -1
                 self.active_process = psat = subprocess.Popen(solver + [tmp], stdout=subprocess.PIPE)
                 output = solver_parser_cls.from_stream(psat.stdout,**solver_parser["args"])
                 psat.wait()
                 psat.stdout.close()
                 self.active_process = None
-                if self.interrupted:
+                if interrupted:
                     return -1
                 result = int(getattr(output,solver_parser["result"]))
                 if psat.returncode == 245 or psat.returncode == 250:
@@ -217,7 +219,7 @@ class Problem:
         return result
     
     def solve_classic(self):
-        if self.interrupted:
+        if interrupted:
             return -1
         # uncomment the following line for sharpsat solving
         # return self.call_solver("sharpsat")
@@ -232,8 +234,17 @@ class Problem:
         len_diff = len_old - len_new
         exp = 2**len_diff
         final = result * exp
+        if not self.kwargs["no_cache"]:
+            frozen_clauses = frozenset([frozenset(c) for c in self.formula.clauses])
+            cache[frozen_clauses] = final
         return final
 
+    def get_cached(self):
+        frozen_clauses = frozenset([frozenset(c) for c in self.formula.clauses])
+        if frozen_clauses in cache:
+            return cache[frozen_clauses]
+        else:
+            return None
     def nestedpmc(self):
         global cfg
 
@@ -242,7 +253,7 @@ class Problem:
         #if "problem_specific" in cfg and cls.__name__.lower() in cfg["problem_specific"]:
         #    problem_cfg = cfg["problem_specific"][cls.__name__.lower()]
         #problem = NestPmc(file,pool, **cfg["dpdb"], **flatten_cfg(problem_cfg, [], '_',cls.keep_cfg()), **kwargs)
-        if self.interrupted:
+        if interrupted:
             return -1
         self.nested_problem = NestPmc("test",pool, **cfg["dpdb"], **self.kwargs)
         self.nested_problem.set_td(self.graph.tree_decomp)
@@ -250,7 +261,7 @@ class Problem:
         self.nested_problem.set_input(self.graph.num_nodes,-1,self.projected,self.non_nested_orig,self.formula.var_clause_dict,self.graph.mg)
         self.nested_problem.setup()
         self.nested_problem.solve()
-        if self.interrupted:
+        if interrupted:
             return -1
         return self.nested_problem.model_count
 
@@ -267,13 +278,19 @@ class Problem:
         self.non_nested = self.non_nested.intersection(self.projected)
         logger.info(f"Preprocessing #vars: {self.formula.num_vars}, #clauses: {self.formula.num_clauses}, #projected: {len(self.projected)}")
 
+        if not self.kwargs["no_cache"]:
+            cached = self.get_cached()
+            if cached != None:
+                logger.info(f"Cache hit: {cached}")
+                return cached
+
         if len(self.projected.intersection(self.formula.vars)) == 0:
             logger.info("Intersection of vars and projected is empty")
             return self.final_result(self.call_solver("sat"))
 
         self.decompose_nested_primal()
 
-        if self.interrupted:
+        if interrupted:
             return -1
 
         if (self.depth >= cfg["nesthdb"]["max_recursion_depth"] and self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_abstract"]) or self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
@@ -292,14 +309,14 @@ class Problem:
         return self.final_result(self.nestedpmc())
 
     def solve_rec(self, vars, clauses, non_nested, projected, depth=0, **kwargs):
-        if self.interrupted:
+        if interrupted:
             return -1
         self.sub_problem = Problem(Formula(vars,clauses,projected),non_nested,depth, **kwargs)
         return self.sub_problem.solve()
 
     def interrupt(self):
         logger.warning("Problem interrupted")
-        self.interrupted = True
+        interrupted = True
         if self.nested_problem != None:
             self.nested_problem.interrupt()
         if self.sub_problem != None:
@@ -307,6 +324,7 @@ class Problem:
         if self.active_process != None:
             if self.active_process.poll() is None:
                 self.active_process.send_signal(signal.SIGTERM)
+        sys.exit(0)
 
 def read_input(fname):
     input = CnfReader.from_file(fname)
@@ -315,6 +333,7 @@ def read_input(fname):
 def main():
     global cfg
     arg_parser = setup_arg_parser("%(prog)s [general options] -f input-file")
+    arg_parser.add_argument("--no-cache", dest="no_cache", help="Disable cache", action="store_true")
     args = parse_args(arg_parser)
     cfg = read_cfg(args.config)
     fname = args.file
@@ -328,7 +347,12 @@ def main():
         else:
             logger.warning("Killing all connections")
         prob.interrupt()
+        app_name = None
+        if "application_name" in cfg["db"]["dsn"]:
+            app_name = cfg["db"]["dsn"]["application_name"]
+        admin_db.killall(app_name)
 
+    admin_db = DBAdmin.from_cfg(cfg["db_admin"])
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGUSR1, signal_handler)

@@ -4,6 +4,7 @@ import argparse
 import logging
 import subprocess
 
+from dpdb.db import DEBUG_SQL
 from dpdb.reader import TdReader
 from dpdb.writer import StreamWriter, FileWriter
 from dpdb.treedecomp import TreeDecomp
