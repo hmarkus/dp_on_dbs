@@ -39,6 +39,20 @@ class RegExReader(Reader):
         else:
             logger.error("Unable to parse input {0}".format(string))
 
+class SciNumberRegExReader(RegExReader):
+    def __init__(self,pattern,silent=False):
+        super().__init__(pattern,silent)
+
+    def parse(self, string):
+        super().parse(string)
+        if self.result is None:
+            return
+        dot = self.result.find(".")
+        exp = self.result.find("e+")
+        if dot >= 0 and exp >= 0:
+            sdec = self.result[dot+1:exp]
+            self.result = int(self.result[0:dot] + sdec) * (10 ** (int(self.result[exp+2:]) - len(sdec)))
+
 class DimacsReader(Reader):
     def parse(self, string):
         self.string = string
