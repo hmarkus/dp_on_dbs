@@ -101,8 +101,7 @@ class NestPmc(Problem):
 
     def after_solve_node(self, node, db):
         cols = [var2col(c) for c in node.vertices]
-        #executor = ThreadPoolExecutor(self.max_solver_threads)
-        executor = ThreadPoolExecutor(1)
+        executor = ThreadPoolExecutor(self.max_solver_threads)
         futures = []
         for r in db.select_all(f"td_node_{node.id}",cols):
             if not self.interrupted:
@@ -141,7 +140,14 @@ class NestPmc(Problem):
             logger.info(f"Problem {self.id}: Calling recursive for bag {node.id}: {num_vars} {len(clauses)} {len(projected)}")
             sat = self.rec_func(covered_vars,clauses,non_nested,projected,self.depth+1,**self.kwargs)
             if not self.interrupted:
-                db.update(f"td_node_{node.id}",["model_count"],["model_count * {}::numeric".format(sat)],where)
+                # for some unknown reason sometimes an exception is raised here that is not reproducible and should not happen
+                try:
+                    db.update(f"td_node_{node.id}",["model_count"],["model_count * {}::numeric".format(sat)],where)
+                except Exception as e:
+                    old_model_cnt = db.select(f"td_node_{node.id}",["model_count"],where)
+                    logger.warning(f"Strange update behavior encountered: p_{self.id}_td_node_{node.id} where {where} with model_cnt {sat} (old: {old_model_cnt})")
+                    db.update(f"td_node_{node.id}",["model_count"],["1"],where)
+                db.commit()
         except Exception as e:
             raise e
 
