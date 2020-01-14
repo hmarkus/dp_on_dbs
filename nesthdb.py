@@ -102,7 +102,7 @@ class Problem:
         self.models = None
         self.depth = depth
         self.kwargs = kwargs
-        self.sub_problem = None
+        self.sub_problems = set()
         self.nested_problem = None
         self.active_process = None
 
@@ -256,10 +256,20 @@ class Problem:
         if interrupted:
             return -1
         self.nested_problem = NestPmc("test",pool, **cfg["dpdb"], **self.kwargs)
+        if interrupted:
+            return -1
         self.nested_problem.set_td(self.graph.tree_decomp)
+        if interrupted:
+            return -1
         self.nested_problem.set_recursive(self.solve_rec,self.depth)
+        if interrupted:
+            return -1
         self.nested_problem.set_input(self.graph.num_nodes,-1,self.projected,self.non_nested_orig,self.formula.var_clause_dict,self.graph.mg)
+        if interrupted:
+            return -1
         self.nested_problem.setup()
+        if interrupted:
+            return -1
         self.nested_problem.solve()
         if interrupted:
             return -1
@@ -311,20 +321,23 @@ class Problem:
     def solve_rec(self, vars, clauses, non_nested, projected, depth=0, **kwargs):
         if interrupted:
             return -1
-        self.sub_problem = Problem(Formula(vars,clauses,projected),non_nested,depth, **kwargs)
-        return self.sub_problem.solve()
+
+        p = Problem(Formula(vars,clauses,projected),non_nested,depth, **kwargs)
+        self.sub_problems.add(p)
+        result = p.solve()
+        self.sub_problems.remove(p)
+        return result
 
     def interrupt(self):
         logger.warning("Problem interrupted")
         interrupted = True
         if self.nested_problem != None:
             self.nested_problem.interrupt()
-        if self.sub_problem != None:
-            self.sub_problem.interrupt()
+        for p in self.sub_problems:
+            p.interrupt()
         if self.active_process != None:
             if self.active_process.poll() is None:
                 self.active_process.send_signal(signal.SIGTERM)
-        sys.exit(0)
 
 def read_input(fname):
     input = CnfReader.from_file(fname)

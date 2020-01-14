@@ -143,11 +143,10 @@ class NestPmc(Problem):
                 # for some unknown reason sometimes an exception is raised here that is not reproducible and should not happen
                 try:
                     db.update(f"td_node_{node.id}",["model_count"],["model_count * {}::numeric".format(sat)],where)
+                    db.commit()
                 except Exception as e:
-                    old_model_cnt = db.select(f"td_node_{node.id}",["model_count"],where)
-                    logger.warning(f"Strange update behavior encountered: p_{self.id}_td_node_{node.id} where {where} with model_cnt {sat} (old: {old_model_cnt})")
-                    db.update(f"td_node_{node.id}",["model_count"],["1"],where)
-                db.commit()
+                    logger.warning(f"Strange update behavior encountered: p_{self.id}_td_node_{node.id} where {where} with model_cnt {sat}")
+                    db.rollback()
         except Exception as e:
             raise e
 
