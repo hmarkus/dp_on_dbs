@@ -33,13 +33,13 @@ class NestPmc(Problem):
         return [("model_count","NUMERIC")]
 
     def candidate_extra_cols(self,node):
-        return ["{} AS model_count".format(
+        return ["{}::numeric AS model_count".format(
                 " * ".join(set([var2cnt(node,v) for v in node.vertices] +
                                [node2cnt(n) for n in node.children])) if node.vertices or node.children else "1"
                 )]
 
     def assignment_extra_cols(self,node):
-        return ["sum(model_count) AS model_count"]
+        return ["sum(model_count)::numeric AS model_count"]
 
     def filter(self,node):
         return filter(self.var_clause_dict, node)
@@ -140,13 +140,8 @@ class NestPmc(Problem):
             logger.info(f"Problem {self.id}: Calling recursive for bag {node.id}: {num_vars} {len(clauses)} {len(projected)}")
             sat = self.rec_func(covered_vars,clauses,non_nested,projected,self.depth+1,**self.kwargs)
             if not self.interrupted:
-                # for some unknown reason sometimes an exception is raised here that is not reproducible and should not happen
-                try:
-                    db.update(f"td_node_{node.id}",["model_count"],["model_count * {}::numeric".format(sat)],where)
-                    db.commit()
-                except Exception as e:
-                    logger.warning(f"Strange update behavior encountered: p_{self.id}_td_node_{node.id} where {where} with model_cnt {sat}")
-                    db.rollback()
+                db.update(f"td_node_{node.id}",["model_count"],["model_count * {}::numeric".format(sat)],where)
+                db.commit()
         except Exception as e:
             raise e
 

@@ -334,7 +334,7 @@ class Problem:
         interrupted = True
         if self.nested_problem != None:
             self.nested_problem.interrupt()
-        for p in self.sub_problems:
+        for p in list(self.sub_problems):
             p.interrupt()
         if self.active_process != None:
             if self.active_process.poll() is None:
