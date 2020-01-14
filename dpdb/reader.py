@@ -105,7 +105,8 @@ class CnfReader(DimacsReader):
         self.maybe_sat = True
         self.models = None
         self.error = False
-        self.single_clauses_only = set()
+        #self.single_clauses_only = set()
+        self.single_clauses = set()
         self.single_vars = set()
 
     def parse(self, string):
@@ -198,25 +199,56 @@ class CnfReader(DimacsReader):
                 continue
             else:
                 clause, lines = self.read_terminated(lines, line, lineno)
-                if len(clause) == 1 and abs(clause[0]) not in self.vars:
-                    if -clause[0] in self.single_clauses_only:  #UNSAT
+                if len(clause) == 1:
+                    if -clause[0] in self.single_clauses:  #UNSAT
                         self.maybe_sat = False
                         self.models = 0
                         break
-                    self.single_clauses_only.add(clause[0])
+                    self.single_clauses.add(clause[0])
+                    #if abs(clause[0]) in self.vars:
+                        #self.single_clauses_only.add(clause[0])
+                    #else: # not single anymore
+                    #    self.clauses = [c.]
                 else:
-                    singles = self.single_clauses_only.intersection(clause + [-l for l in clause])
-                    if len(singles) > 0:
-                        logger.warning("Single clauses strangely REMOVED for {}, simplifications possible {} {}!".format(singles, self.single_clauses_only, clause))
-                        self.single_clauses_only = self.single_clauses_only.difference(singles)
-                        self.clauses.extend(([l] for l in singles))
-                        #print(self.clauses)
+                    #singles = self.single_clauses.intersection(clause + [-l for l in clause])
+                    #if len(singles) > 0:
+                    #    logger.warning("Single-only clauses REMOVED for {}, simplifications possible {} {}!".format(singles, self.single_clauses_only, clause))
+                    #    self.single_clauses_only = self.single_clauses_only.difference(singles)
+                    #    #self.clauses.extend(([l] for l in singles))
+                    #    #print(self.clauses)
                     self.clauses.append(clause)
                     atoms = [abs(lit) for lit in clause]
                     [self.vars.add(a) for a in atoms]
                     maxvar = max(maxvar,max(atoms))
 
-        self.single_vars = set((abs(l) for l in self.single_clauses_only))
+        # simplify with single clauses, avoid copies, do it at most 10 times in a row
+        iterate = 0
+        removed_singles = True
+        while iterate < 10 and removed_singles:
+           removed_singles = False
+           i = 0
+           while i < len(self.clauses):
+               j = 0
+               cl = self.clauses[i]
+               while j < len(cl):
+                   if cl[j] in self.single_clauses: #clause sat, not needed anymore
+                       del self.clauses[i] #remove clause
+                       i = i - 1
+                       break
+                   elif -cl[j] in self.single_clauses: #remove false literal
+                       del cl[j]
+                       j = j - 1
+                       if len(cl) == 1: #newly turned single!
+                           removed_singles = True
+                           self.single_clauses.add(cl[j])
+                           del self.clauses[i] #remove clause
+                           i = i - 1
+                           break
+                   j = j + 1
+               i = i + 1
+        iterate = iterate + 1
+
+        self.single_vars = set((abs(l) for l in self.single_clauses))
         self.projected = self.projected.difference(self.single_vars)
 
         #maxvar = max(maxvar,max(self.projected))

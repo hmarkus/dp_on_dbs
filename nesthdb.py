@@ -299,12 +299,19 @@ class Problem:
             logger.info("Intersection of vars and projected is empty")
             return self.final_result(self.call_solver("sat"))
 
+        #sharpsat limit
+        #if len(self.formula.clauses) <= 3000:
+        if self.depth > 0 and len(self.projected) <= 64 and len(self.formula.clauses) <= 1500:
+            return self.final_result(self.solve_classic())
+        if self.depth >= cfg["nesthdb"]["max_recursion_depth"]:
+            return self.final_result(self.solve_classic())
+
         self.decompose_nested_primal()
 
         if interrupted:
             return -1
 
-        if (self.depth >= cfg["nesthdb"]["max_recursion_depth"] and self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_abstract"]) or self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
+        if self.depth > 0 and self.graph.tree_decomp.tree_width >= cfg["nesthdb"]["threshold_hybrid"]: #TODO OR PROJECTION SIZE BELOW TRESHOLD OR CLAUSE SIZE BELOW TRESHOLD
             logger.info("Tree width >= hybrid threshold ({})".format(cfg["nesthdb"]["threshold_hybrid"]))
             return self.final_result(self.solve_classic())
 
