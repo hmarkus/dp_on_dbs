@@ -229,7 +229,6 @@ class MinorGraph:
         self._node_rev_map = {}
         self._returned = {}
         self._nodes = set(nodes)
-        self.lock = threading.Lock()
 
     def quantified(self):
         return self._quantified
@@ -334,18 +333,17 @@ class MinorGraph:
 
     def projectionVariablesOf(self, nodes):
         tn = tuple(nodes)
-        with self.lock:
-            if tn in self._returned:
-                return self._returned[tn]
-            result = set()
-            nodes = set(nodes)
-            for k, v in self._clique_uses_project.items():
-                if nodes.issuperset(k):
-                    result.update(v)
+        if tn in self._returned:
+            return self._returned[tn]
+        result = set()
+        nodes = set(nodes)
+        for k, v in self._clique_uses_project.items():
+            if nodes.issuperset(k):
+                result.update(v)
 
-            for k, v in self._returned.items():
-                result -= v
-            self._returned[tn] = result
+        for k, v in self._returned.items():
+            result -= v
+        self._returned[tn] = result
         return result
 
     def abstract(self, initial_rem=False):

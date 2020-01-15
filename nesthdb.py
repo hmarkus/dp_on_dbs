@@ -86,7 +86,7 @@ class Graph:
     def decompose(self, **kwargs):
         global cfg
         self.normalize()
-        self.tree_decomp = decompose(self.num_nodes,self.edges_normalized,cfg["htd"],node_map=self._node_rev_map,**kwargs)
+        self.tree_decomp = decompose(self.num_nodes,self.edges_normalized,cfg["htd"],node_map=self._node_rev_map,minor_graph=self.mg,**kwargs)
 
 interrupted = False
 cache = {}
@@ -250,13 +250,12 @@ class Problem:
         global cfg
 
         pool = BlockingThreadedConnectionPool(1,cfg["db"]["max_connections"],**cfg["db"]["dsn"])
-        #problem_cfg = {}
-        #if "problem_specific" in cfg and cls.__name__.lower() in cfg["problem_specific"]:
-        #    problem_cfg = cfg["problem_specific"][cls.__name__.lower()]
-        #problem = NestPmc(file,pool, **cfg["dpdb"], **flatten_cfg(problem_cfg, [], '_',cls.keep_cfg()), **kwargs)
+        problem_cfg = {}
+        if "problem_specific" in cfg and "nestpmc" in cfg["problem_specific"]:
+            problem_cfg = cfg["problem_specific"]["nestpmc"]
         if interrupted:
             return -1
-        self.nested_problem = NestPmc("test",pool, **cfg["dpdb"], **self.kwargs)
+        self.nested_problem = NestPmc("test",pool, **cfg["dpdb"], **flatten_cfg(problem_cfg, [], '_',NestPmc.keep_cfg()),**self.kwargs)
         if interrupted:
             return -1
         self.nested_problem.set_td(self.graph.tree_decomp)
@@ -265,7 +264,7 @@ class Problem:
         self.nested_problem.set_recursive(self.solve_rec,self.depth)
         if interrupted:
             return -1
-        self.nested_problem.set_input(self.graph.num_nodes,-1,self.projected,self.non_nested_orig,self.formula.var_clause_dict,self.graph.mg)
+        self.nested_problem.set_input(self.graph.num_nodes,-1,self.projected,self.non_nested_orig,self.formula.var_clause_dict)
         if interrupted:
             return -1
         self.nested_problem.setup()

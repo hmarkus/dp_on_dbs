@@ -3,11 +3,12 @@ class TreeDecomp(object):
     edges = []
     leafs = []
 
-    def __init__(self, num_bags, tree_width, num_orig_vertices, root, bags, adj):
+    def __init__(self, num_bags, tree_width, num_orig_vertices, root, bags, adj, minor_graph):
         self.num_bags = num_bags
         self.tree_width = tree_width
         self.num_orig_vertices = num_orig_vertices
         self.root = None
+        self.mg = minor_graph
         self.edges = []
         self.leafs = []
 
@@ -17,7 +18,7 @@ class TreeDecomp(object):
             for n in worklist:
                 node = n[0]
                 parent = n[1]
-                new_node = Node(node,bags[node])
+                new_node = Node(node,bags[node], self.mg.projectionVariablesOf(bags[node]))
                 if parent:
                     parent.add_child(new_node)
                 else:
@@ -51,9 +52,12 @@ class TreeDecomp(object):
         return r
 
 class Node(object):
-    def __init__(self, id, vertices):
+    def __init__(self, id, vertices, minor_vertices=None):
         self.id = id
         self.vertices = vertices
+        self.minor_vertices = minor_vertices
+        self.all_vertices = set(minor_vertices)
+        self.all_vertices.update(vertices)
         self.parent = None
         self.children = []
         self._vertex_child_map = {v: [] for v in vertices}
@@ -72,8 +76,11 @@ class Node(object):
     def edges(self):
         return self.children + [self.parent]
 
+    def is_minor(self, vertex):
+        return vertex in self.minor_vertices
+
     def needs_introduce(self, vertex):
-        return self._vertex_child_map[vertex] == []
+        return not vertex in self._vertex_child_map or self._vertex_child_map[vertex] == []
 
     def vertex_children(self,vertex):
         return self._vertex_child_map[vertex]

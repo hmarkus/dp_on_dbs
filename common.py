@@ -48,7 +48,7 @@ def flatten_cfg(dd, filter=[], separator='.', keep=[],prefix='',fullprefix=''):
     else:
         return { prefix : dd }
 
-def decompose(num_vertices, edges, htd, node_map=None, **kwargs):
+def decompose(num_vertices, edges, htd, node_map=None, minor_graph=None, **kwargs):
     logger.debug(f"Using tree decomposition seed: {kwargs['runid']}")
     # Run htd
     p = subprocess.Popen([htd["path"], "--seed", str(kwargs["runid"]), *htd["parameters"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -68,7 +68,7 @@ def decompose(num_vertices, edges, htd, node_map=None, **kwargs):
 
     logger.debug("Parsing tree decomposition")
     #td = TreeDecomp(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, problem.get_root(tdr.bags, tdr.adjacency_list, tdr.root), tdr.bags, tdr.adjacency_list)
-    td = TreeDecomp(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, tdr.adjacency_list)
+    td = TreeDecomp(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, tdr.adjacency_list, minor_graph)
     logger.info(f"Tree decomposition #bags: {td.num_bags} tree_width: {td.tree_width} #vertices: {td.num_orig_vertices} #leafs: {len(td.leafs)} #edges: {len(td.edges)}")
     if "td_file" in kwargs and kwargs["td_file"]:
         with FileWriter(kwargs["td_file"]) as fw:
