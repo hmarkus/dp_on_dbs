@@ -13,20 +13,21 @@ from .sat_util import *
 
 logger = logging.getLogger(__name__)
 
-def var2col2(node,var):
-    if node.is_minor(var):
+def var2col2(node,var,minors):
+    #if node.is_minor(var):
+    if var in minors:
         return "{}.val".format(var2tab_alias(node, var))
     else:
         return f"v{var}"
 
-def lit2var2 (node,lit):
-    return var2col2(node,abs(lit))
+def lit2var2 (node,lit,minors):
+    return var2col2(node,abs(lit),minors)
 
-def lit2expr2 (node,lit):
+def lit2expr2 (node,lit,minors):
     if lit > 0:
-        return lit2var2(node,lit)
+        return lit2var2(node,lit,minors)
     else:
-        return "NOT {}".format(lit2var2(node,lit))
+        return "NOT {}".format(lit2var2(node,lit,minors))
 
 class NestPmc(Problem):
     @classmethod
@@ -57,18 +58,51 @@ class NestPmc(Problem):
     def assignment_extra_cols(self,node):
         return ["sum(model_count)::numeric AS model_count"]
 
+    def candidates_select(self,node):
+        if len(node.minor_vertices) > 0 and len(node.all_vertices) - len(node.vertices) <= self.inner_vars_threshold:
+            extra_proj = list(self.projected.intersection(node.minor_vertices))
+        else:
+            extra_proj = []
+        q = ""
+
+        if any(node.needs_introduce(v) for v in node.vertices):
+            q += "WITH introduce AS ({}) ".format(self.introduce(node))
+
+        q += "SELECT {}".format(
+                ",".join([var2tab_col(node, v) for v in node.vertices + extra_proj]),
+                )
+
+        extra_cols = self.candidate_extra_cols(node)
+        if extra_cols:
+            q += "{}{}".format(", " if node.vertices else "", ",".join(extra_cols))
+
+        if node.vertices or node.children:
+            q += " FROM {}".format(
+                    ",".join(set(["{} {}".format(var2tab(node, v), var2tab_alias(node, v)) for v in node.vertices + extra_proj] +
+                                 ["{} {}".format(node2tab(n), node2tab_alias(n)) for n in node.children]))
+                    )
+
+        if len(node.children) > 1:
+            q += " {} ".format(self.join(node))
+
+        return q
+
     def filter(self,node):
         f = filter(self.var_clause_dict, node)
         if len(node.minor_vertices) > 0 and len(node.all_vertices) - len(node.vertices) <= self.inner_vars_threshold:
+            minor_vertices = node.minor_vertices - self.projected
             if f == "":
                 f = "WHERE "
             else:
                 f += " AND "
-            candidate_tabs = ",".join(["{} {}".format(var2tab(node, v), var2tab_alias(node, v)) for v in node.minor_vertices])
-            f += f"EXISTS (WITH introduce AS ({self.introduce(node)}) SELECT 1 FROM {candidate_tabs} WHERE "
+            f += f"EXISTS (WITH introduce AS ({self.introduce(node)}) SELECT 1 "
+            candidate_tabs = ",".join(["{} {}".format(var2tab(node, v), var2tab_alias(node, v)) for v in minor_vertices])
+            if len(candidate_tabs) > 0:
+                f += f"FROM {candidate_tabs} "
+            f += "WHERE "
             cur_cl = covered_clauses(self.var_clause_dict,node.all_vertices)
             f += "({0})".format(") AND (".join(
-                [" OR ".join([lit2expr2(node,c) for c in clause]) for clause in cur_cl]
+                [" OR ".join([lit2expr2(node,c,minor_vertices) for c in clause]) for clause in cur_cl]
             ))
             f += ")"
         return f
