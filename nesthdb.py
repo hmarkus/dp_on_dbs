@@ -301,8 +301,8 @@ class Problem:
 
         #sharpsat limit
         #if len(self.formula.clauses) <= 3000:
-        if self.depth > 0 and len(self.projected) <= 64 and len(self.formula.clauses) <= 1500:
-            return self.final_result(self.solve_classic())
+        #if self.depth > 0 and ((len(self.projected) <= 64 and len(self.formula.clauses) <= 1500) or (len(self.projected) <= 32)):
+        #    return self.final_result(self.solve_classic())
         if self.depth >= cfg["nesthdb"]["max_recursion_depth"]:
             return self.final_result(self.solve_classic())
 
