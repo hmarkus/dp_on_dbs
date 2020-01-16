@@ -1,0 +1,32 @@
+\documentclass[]{standalone}
+
+\usepackage{timeline}
+\usepackage{xltxtra,fontspec,xunicode}
+\setmainfont{OpenSans-Light}
+
+\begin{document}
+\begin{timeline}
+  \timebar{|}{0}{1995}{1995}{.5}{}
+  \zigzag{.5}
+  \timebar{}{.9}{1999}{2018}{.5}{stealth'}
+  \entry{1995}{Dung}{Acceptability of Arguments...}
+  \entryshift{2002}{Dunne\\Bench-Capon}{Coherence in Finite\\ Argument Systems}{-3mm}
+  \renewcommand{\timelineEntryMinHeight}{.8cm}
+  \entryshift{2005}{Dunne\\Bench-Capon}{Argumentation\\in AI and Law}{-4mm}
+  \renewcommand{\timelineEntryMinHeight}{.4cm}
+  \entryshift{2007}{Rahwan}{Argumentation in AI}{-4mm}
+  \renewcommand{\timelineEntryMinHeight}{.8cm}
+  \entryshift{2009}{Amgoud\\Prade}{Arguments for Making\\ and Explaining Decisions}{-4mm}
+  \entryshift{2010}{Dvo{\v r}{\'a}k\\Woltran}{Complexity of semi-stable\\ and stage semantics}{1mm}
+  \entryshift{2012}{Dvo{\v r}{\'a}k, Pichler\\Woltran}{Towards FPT\\Algorithms for AA.}{3mm}
+  \entry{2016}{Maher\\}{Resistance to Corruption\\ of Strategic Argumentation}
+  \entryshift{2018}{Cocarascu\\Rago, Toni}{Argumentation-based\\recommendations}{3mm}
+  
+\end{timeline}
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-engine: xetex
+%%% TeX-master: t
+%%% End:
