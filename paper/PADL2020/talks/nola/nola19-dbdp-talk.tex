@@ -390,6 +390,12 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
 \newcommand{\pvar}[1]{\ensuremath{{\text{#1}}}}
 \newcommand{\FSkept}{F_{\text{Caut}}}
 \newcommand{\FBrave}{F_{\text{Brave}}}
+
+\newcommand{\eqdef}{\ensuremath{\,\mathrel{\mathop:}=}}
+\newcommand{\cid}[1]{\ensuremath{[\![#1]\!]}}
+\DeclareMathOperator{\attr}{att}
+
+
 %===================================================================
 %		Algorithms
 %===================================================================
@@ -1539,34 +1545,63 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
 \begin{frame}[label=current]{}
 \begin{algorithm}[H]
 %\centering
-  \KwData{Node~$t$, bag $\chi(t)$, clauses~$\varphi_t$,
-    sequence $\langle \tab{1},\ldots \tab{\ell}\rangle$ of child tables.{~\bf Out:} Table $\tab{t}.\hspace{-5em}$} \lIf(\hspace{-1em})
+  \KwData{Variables~$V_t$ at $t$, previously computed
+    tables~$T_{\downarrow{l}}$ and $T_{\downarrow{r}}$\\
+    {~\bf Out:} New Table}
+  %
+  \uIf(\hspace{-1em})
    %
-  {$\type(t) = \leaf$}{%
-    $\tab{t} \eqdef \tuplecolor{\inputPredColor}{\{ \{{(\text{cnt}, 1)}\} \}}$ \label{line:leaf}%
+  {$\leaf$}{%
+    \Return
+    $ \left(\begin{matrix} cnt \\ \hline 1 \end{matrix}\right)$ 
+    %
   }%
-  \uElseIf{$\type(t) = \intr$, and
-    $a\hspace{-0.1em}\in\hspace{-0.1em}\chi(t)$ is introduced}{ %
-    $\tab{t}\eqdef \tab{1} \bowtie_{\tuplecolor{\inputPredColor}{\varphi_t}} \tuplecolor{\inputPredColor}{\{\{(\cid{a},0)\},\{(\cid{a},1)\}\}}$\label{line:intr}
-    \hspace{-5em}\vspace{-0.05em}
-       % 
-  }\vspace{-0.05em}%
-  % \alpha \setminus \{e \mapsto 0, e \mapsto 1\}
-  \uElseIf{$\type(t) = \rem$, and $a \not\in \chi(t)$ is removed}{%
-    $\tab{t} \eqdef {_{\chi(t)}G}_{\tuplecolor{\inputPredColor}{\text{cnt$\leftarrow$\ttfamily SUM}(\text{cnt})}}(\Pi_{{\attr(\tab{1})\setminus\{\cid{a}}\}}\tab{1})$\label{line:rem} \hspace{-5em} \vspace{-0.1em}
+  \uElseIf{$\intr$ and $a\in V_t$ new}{ %
+    \Return $\sigma_{row \models F_t} \left(T_\downarrow \bowtie
+      \left(\begin{matrix} a \\\hline 0 \\ 1 \end{matrix}\right)\right)
+    $\\
+    % 
+  } %
+  \uElseIf{$\rem$, and $a \not\in V_t$ removed}{%
+    \Return 
+    $\left( \begin{matrix}x_1 &  x_2 & a  & cnt &\\\hline 
+        %\vspace{-0.5em}
+        0 & 0 & 0 & \cancel{c^0_{00}} &
+        \hspace{-0.5em}\Rightarrow \sum_{c^0_{00}+c^1_{00}}\\
+        \rlap{\rule[0.6ex]{7em}{0.4pt}}0 & 0 & 1 & c^1_{00}\\
+        0 & 1 & 0 \makebox(-6,0){\rule[6ex]{0.4pt}{6\normalbaselineskip}}&c^1_{2}
+        \hspace{-0.5em}\Rightarrow \sum_{c^0_{00}+c^1_{00}}\\
+        \rlap{\rule[0.6ex]{7em}{0.4pt}}0 & 1 & 1 & c^1_{2}\\
+        \ldots
+        \end{matrix}
+      \right)$\\
+       % \makebox[-6,0]{\rule[1ex]{0.4pt}{3\normalbaselineskip}} 
+    $\tab{t} \eqdef
+    {_{V_t}G}_{\tuplecolor{\inputPredColor}{\text{cnt$\leftarrow$\ttfamily
+          SUM}(\text{cnt})}}(\Pi_{{\attr(\tab{1})\setminus\{\cid{a}}\}}\tab{1})$\label{line:rem}
+    \hspace{-5em} \vspace{-0.1em}
      %
   } %
-  \uElseIf{$\type(t) = \join$}{%
-    \makebox[3.3cm][l]{$\tab{t} \eqdef \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\{\text{cnt} \leftarrow \text{cnt} \cdot \text{cnt}'\}}}(\tab{1} \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'} \rho_{\hspace{-1.2em}\bigcup\limits_{a\in \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto \cid{a}'\}}\tab{2})$} \label{line:join}
-    \hspace{-5em}%$
-    % 
-    \vspace{-0.1em}
+  \uElseIf{$\join$}{%
+    \makebox[3.3cm][l]{%
+      \Return 
+      $\tab{t} \eqdef$
+      % \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\{\text{cnt}
+      %     \leftarrow \text{cnt} \cdot \text{cnt}'\}}}(\tab{1}
+      % \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'}$
+      % \rho_{\hspace{-1.2em}\bigcup\limits_{a\in
+      %     \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto
+      %   \cid{a}'\}}\tab{2})$
+      %
+    }
     % 
   } %
-  %\Return $\tab{t}$ \vspace{-0.25em}
-  \caption{Alternative table algorithm~$\algo{S_{RAlg}}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT.}
-  \label{alg:primdb}
+  % %\Return $\tab{t}$ \vspace{-0.25em}
+  % % \caption{Alternative table algorithm~$\algo{S_{RAlg}}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT.}
+  % % \label{alg:primdb}
 \end{algorithm}%
+
+unique column (attribute)~$\cid{x}$ for each~$x\in V_t$
 \end{frame}
 
 \end{document}
