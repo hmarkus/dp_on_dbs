@@ -1386,7 +1386,162 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
 \end{frame}
 
 
-\begin{frame}<3>[label=solving]{Solving \#SAT \textcolor{blue}{[SamerSzeider'10]}}
+% \begin{frame}<3>[label=current]{Solving \#SAT \textcolor{blue}{[SamerSzeider'10]}}
+%   \vspace{-0.5em}
+%   \begin{exampleblock}{$F=$\textcolor<4>{red}{$(\neg a \vee b
+%         \vee x)$} $\wedge$ \textcolor<4>{red}{$(a \vee b)$} $\wedge$
+%       \textcolor<5>{red}{$(c \vee \neg x)$} $\wedge$
+%       \textcolor<5-9>{red}{$(b \vee \neg c)$} $\wedge$
+%       \textcolor<7>{red}{$(\neg b \vee \neg c \vee \neg y)$}}
+%     \only<1>{
+%       \vspace{-1.5em}
+%       \begin{align*}
+%         \mathit{Mod}(F) & =\{ &
+%                                       \{b\},
+%                                       \{a,b\},
+%                                       \{b,c\}, 
+%                                       \{a,b,c\}, \\
+%                               &&
+%                                  \{b,c,x\},
+%                                  \{a,b,c,x\},\\
+%                               &&
+%                                  \{b,y\},
+%                                  \{a,b,y\}
+%                                  \}
+%       \end{align*}
+%       \vspace{-4em}
+%     }%
+%     %\uncover<3->{\include{0-figs/graphplus/graph_m_simple}}
+%     \begin{columns}[T]
+%       \begin{column}{.5\textwidth}
+%         %\vspace{-1em}
+%         \begin{enumerate}
+%         \item<2-> Create graph representation
+%         \item<3-> Decompose graph
+%         \item<4-> Solve subproblems
+%         \item<11-> Combine rows
+%       \end{enumerate}
+%       \uncover<3->{%
+%         \vspace{-1em}
+%         \begin{tikzpicture}[font=\small,baseline={(current bounding box.south)}]%
+%           \tikzset{ every node/.style={anchor=north} }%
+%           \node[] at (5.5,3.65) (nid) {};%
+%           \node[tdnode, label=right:{$ $}] at (5.5,2.9) (n8)
+%           {$b,\; c$};%
+%           \node <9> [color=red,tdnode,
+%           label=right:\textcolor{red}{$ $}] at (5.5,2.9) (n8)
+%           {$b,\; c$};%
+%           \node[tdnode, label=left:{$ $}] at (4.7,2.2) (n4)
+%           {$b,\; c$};%
+%           \node <6> [color=red,tdnode,
+%           label=left:\textcolor{red}{$ $}] at (4.7,2.2) (n4)
+%           {$b,\; \textcolor{red}{c}\textcolor{red}{}$};%
+%           \node [tdnode, label=left:{$ $}] at (4.7,1.5) (n10)
+%           {$b,\;x,\;c$};%
+%           \node <5> [color=red, tdnode,
+%           label=left:\textcolor{red}{$ $}] at (4.7,1.5) (n10)
+%           {$b,\;x,\;c$};%
+%           \node [tdnode, label={[xshift=0.4cm]left:{$\qquad\quad $}}]
+%           at (4.7,0.8) (n1) {$b,\; x,\; a$};%
+%           \node <4> [color=red, tdnode,
+%           label={[xshift=0.4cm]left:\textcolor{red}{$\qquad\quad $}}]
+%           at (4.7,0.8) (n1)
+%           {$\textcolor{red}{b,\; x,\; a}\textcolor{red}{}$};%
+ 
+%           \node[tdnode, label=above right:{$ $}] at (6.5,2.2) (n7)
+%           {$b,\; c$};%
+%           \node <8> [color=red,tdnode, label=above
+%           right:\textcolor{red}{$ $}] at (6.5,2.2) (n7) {$b,\; c$};%
+%           \node <8> [color=red,tdnode, label=above
+%           right:\textcolor{red}{$ $}] at (6.5,2.2) (n7)
+%           {$\textcolor{red}{b,\; c}$};%
+%           \node[tdnode, label=left:{$ $}] at (6.5,1.5) (n6)
+%           {$b,\;c,\;y$};%
+%           \node <7> [color=red,tdnode,
+%           label=left:\textcolor{red}{$ $}] at (6.5,1.5) (n6)
+%           {$b,\;c,\;y$};%
+%           \draw[tdedge] (n8) -- (n4) -- (n10) -- (n1);%
+%           \draw[tdedge] (n8) -- (n7) -- (n6);%
+%         \end{tikzpicture}%
+%       }%
+%       \\
+%       \vspace{1em}%
+%       \hspace{1em} \only<2->{%
+%         ``Local formula''~$F_t$ clauses whose\\ \hspace{1.2em} variables are
+%         contained in the bag\\ \hspace{1.5em}\uncover<3->{(colored in red above)}
+%         % 
+%       }
+%     \end{column}
+%     \begin{column}{.5\textwidth}
+%       \medskip
+%       \only<2>{%
+%         \vspace{2em}
+%         \resizebox{0.5\columnwidth}{!}{%
+%           {\color{blue}
+%         \begin{tikzpicture}[font=\small,baseline={(current bounding box.center)}]%
+%           \tikzset{ every node/.style={anchor=north} }%
+%           \node[](a){a};
+%           \node[left of=a](b){b};
+%           \node[below of=a](x){x};
+
+%           \node[left of=x](c){c};
+%           \node[left of=c](y){y};
+
+%           \draw[] (a) -- (b) -- (x) -- (a);%
+%           \draw[] (c) -- (x); %
+%           \draw[] (b) -- (c) -- (y) -- (b);%
+%         \end{tikzpicture}%        
+%         }%
+%         %
+%         }%
+%       }%
+%       \only<3>{%
+%         {~ %Determine origin row, copy values for current-bag and handle
+%           Nice Tree Decompositions\\
+%           (note example left is not nice)
+%           \begin{itemize}
+%           \item[LEAF.:] Put empty set and counter 1
+%           \item[INTR.:]
+%             Guess truth value and check satisfiability 
+%           %\begin{itemize} 
+% % ($a \mapsto 0$ or $a \mapsto 1$)
+% %           \item Consider $\tau_a = \tau \cup \{a \mapsto 1\}$ and
+% %             $\tau_{\neg a} = \tau \cup \{a \mapsto 0\}$\\
+% %             (old assignment with(out) a)
+% %           \item Check satisfiability\\
+% %             ($\tau_a \models F_t$? $\tau_{\neg a} \models F_t$?)
+%           %\end{itemize}
+%           % \item[INTR. clause:] Mark if satisfied
+%         \item[REMOVE:] Remove $a$ from each assignment (row) in the
+%           table and sum up the counters if we get multiple assignments
+%           with the same data
+%         %\item[REM. clause:] Check satisfiability
+%         \item[JOIN:] Match rows with the same assignment and multiply
+%           the counters
+%         %\item[JOIN clause:] Mark if satisfied in some origin row
+%         \end{itemize} 
+%         % \begin{itemize}
+%         % \item[INTR. atom:] Guess truth-value, mark sat. clauses
+%         % \item[INTR. clause:] Mark if satisfied
+%         % \item[REMOVE atom:] Nothing to do
+%         % \item[REM. clause:] Check satisfiability
+%         % \item[JOIN atom:] Check truth-value agreement
+%         % \item[JOIN clause:] Mark if satisfied in some origin row
+%         % \end{itemize} 
+%         }
+%         % 
+%       }
+%       \only<4-11>{\def\highlightthings{\rowcolor<11> {HighlightColor}}
+%         \input{0-figs/graph0/ids-tables/tables_sat}}%
+%       \only<12->{\def\highlightthings{ }
+%         \input{0-figs/graph0/ids-tables/tables_ssat}}
+%       \vspace{1ex}
+%     \end{column}
+%   \end{columns}
+%   \end{exampleblock}
+% \end{frame}
+
+\begin{frame}<3>[label=current]{Solving \#SAT \textcolor{blue}{[SamerSzeider'10]}}
   \vspace{-0.5em}
   \begin{exampleblock}{$F=$\textcolor<4>{red}{$(\neg a \vee b
         \vee x)$} $\wedge$ \textcolor<4>{red}{$(a \vee b)$} $\wedge$
@@ -1496,40 +1651,57 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
         }%
       }%
       \only<3>{%
-        {~ %Determine origin row, copy values for current-bag and handle
-          Nice Tree Decompositions\\
-          (note example left is not nice)
-          \begin{itemize}
-          \item[LEAF.:] Put empty set and counter 1
-          \item[INTR.:]
-            Guess truth value and check satisfiability 
-          %\begin{itemize} 
-% ($a \mapsto 0$ or $a \mapsto 1$)
-%           \item Consider $\tau_a = \tau \cup \{a \mapsto 1\}$ and
-%             $\tau_{\neg a} = \tau \cup \{a \mapsto 0\}$\\
-%             (old assignment with(out) a)
-%           \item Check satisfiability\\
-%             ($\tau_a \models F_t$? $\tau_{\neg a} \models F_t$?)
-          %\end{itemize}
-          % \item[INTR. clause:] Mark if satisfied
-        \item[REMOVE:] Remove $a$ from each assignment (row) in the
-          table and sum up the counters if we get multiple assignments
-          with the same data
-        %\item[REM. clause:] Check satisfiability
-        \item[JOIN:] Match rows with the same assignment and multiply
-          the counters
-        %\item[JOIN clause:] Mark if satisfied in some origin row
-        \end{itemize} 
-        % \begin{itemize}
-        % \item[INTR. atom:] Guess truth-value, mark sat. clauses
-        % \item[INTR. clause:] Mark if satisfied
-        % \item[REMOVE atom:] Nothing to do
-        % \item[REM. clause:] Check satisfiability
-        % \item[JOIN atom:] Check truth-value agreement
-        % \item[JOIN clause:] Mark if satisfied in some origin row
-        % \end{itemize} 
-        }
-        % 
+        \resizebox{.6\linewidth}{!}{%
+          \begin{algorithm}[H]
+            % \centering
+            \KwData{Variables~$V_t$ at $t$, previously computed
+              tables~$T_{\downarrow{l}}$ and $T_{\downarrow{r}}$\\
+              {~\bf Out:} New Table}
+            % 
+            \lIf(\hspace{-1em})
+            % 
+            {$\leaf$}{%
+              \Return
+              $ \left(\begin{matrix} cnt \\ \hline 1 \end{matrix}\right)$ 
+              % 
+            }%
+            \uElseIf{$\intr$ and $a\in V_t$ new}{ %
+              \Return $\sigma_{row \models F_t}\left(
+                \overset{T_\downarrow}{\left(
+                    \begin{matrix}
+                      x_1 & x_2 & \ldots & cnt\\\hline
+                      \ldots & \ldots & \ldots \\
+                      \ldots & \ldots & \ldots \\
+                    \end{matrix}
+                  \right)} \bowtie \left(\begin{matrix} a \\\hline 0 \\
+                    1 \end{matrix}\right)\right)$
+            } %
+            \uElseIf{$\rem$, and $a \not\in V_t$ removed}{%
+              \Return 
+              $\left( \begin{matrix}x_1 &  x_2 & a  & cnt &\\\hline 
+                  % \vspace{-0.5em}
+                  0 & 0 & 0 & \cancel{c^0_{00}} &
+                  \hspace{-0.5em}\Rightarrow \sum_{c^0_{00}+c^1_{00}}\\
+                  \rlap{\rule[0.6ex]{7em}{0.4pt}}0 & 0 & 1 & \cancel{c^1_{00}}\\
+                  0 & 1 & 0 \makebox(-6,0){\rule[6ex]{0.4pt}{6\normalbaselineskip}}&
+                  \cancel{c^1_{2}} &
+                  \hspace{-0.5em}\Rightarrow \sum_{c^0_{01}+c^1_{01}}\\
+                  \rlap{\rule[0.6ex]{7em}{0.4pt}}0 & 1 & 1 & \cancel{c^1_{2}}\\
+                  \ldots
+                \end{matrix}
+              \right)$\\
+              
+            } %
+            \uElseIf{$\join$}{%
+                \Return $T_{\downarrow{}l} \bowtie
+                T_{\downarrow{}r}$ +\\
+                ``fix cnt (multiply from left and right)''
+              % 
+            } %
+          \end{algorithm}%
+          % 
+        }%
+        %
       }
       \only<4-11>{\def\highlightthings{\rowcolor<11> {HighlightColor}}
         \input{0-figs/graph0/ids-tables/tables_sat}}%
@@ -1540,9 +1712,10 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
   \end{columns}
   \end{exampleblock}
 \end{frame}
-
+\end{document}
 
 \begin{frame}[label=current]{}
+  \resizebox{.8\linewidth}{!}{%
 \begin{algorithm}[H]
 %\centering
   \KwData{Variables~$V_t$ at $t$, previously computed
@@ -1557,51 +1730,46 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
     %
   }%
   \uElseIf{$\intr$ and $a\in V_t$ new}{ %
-    \Return $\sigma_{row \models F_t} \left(T_\downarrow \bowtie
-      \left(\begin{matrix} a \\\hline 0 \\ 1 \end{matrix}\right)\right)
-    $\\
-    % 
+    \Return $\sigma_{row \models F_t}\left(
+      \overset{T_\downarrow}{\left(
+      \begin{matrix}
+        x_1 & x_2 & \ldots & cnt\\\hline
+        \ldots & \ldots & \ldots \\
+        \ldots & \ldots & \ldots \\
+      \end{matrix}
+    \right)} \bowtie \left(\begin{matrix} a \\\hline 0 \\
+        1 \end{matrix}\right)\right)$
   } %
   \uElseIf{$\rem$, and $a \not\in V_t$ removed}{%
     \Return 
-    $\left( \begin{matrix}x_1 &  x_2 & a  & cnt &\\\hline 
+      \left( \begin{matrix}x_1 &  x_2 & a  & cnt &\\\hline 
         %\vspace{-0.5em}
         0 & 0 & 0 & \cancel{c^0_{00}} &
         \hspace{-0.5em}\Rightarrow \sum_{c^0_{00}+c^1_{00}}\\
-        \rlap{\rule[0.6ex]{7em}{0.4pt}}0 & 0 & 1 & c^1_{00}\\
-        0 & 1 & 0 \makebox(-6,0){\rule[6ex]{0.4pt}{6\normalbaselineskip}}&c^1_{2}
-        \hspace{-0.5em}\Rightarrow \sum_{c^0_{00}+c^1_{00}}\\
-        \rlap{\rule[0.6ex]{7em}{0.4pt}}0 & 1 & 1 & c^1_{2}\\
+        \rlap{\rule[0.6ex]{7em}{0.4pt}}0 & 0 & 1 & \cancel{c^1_{00}}\\
+        0 & 1 & 0 \makebox(-6,0){\rule[6ex]{0.4pt}{6\normalbaselineskip}}&
+        \cancel{c^1_{2}} &
+        \hspace{-0.5em}\Rightarrow \sum_{c^0_{01}+c^1_{01}}\\
+        \rlap{\rule[0.6ex]{7em}{0.4pt}}0 & 1 & 1 & \cancel{c^1_{2}}\\
         \ldots
         \end{matrix}
       \right)$\\
        % \makebox[-6,0]{\rule[1ex]{0.4pt}{3\normalbaselineskip}} 
-    $\tab{t} \eqdef
-    {_{V_t}G}_{\tuplecolor{\inputPredColor}{\text{cnt$\leftarrow$\ttfamily
-          SUM}(\text{cnt})}}(\Pi_{{\attr(\tab{1})\setminus\{\cid{a}}\}}\tab{1})$\label{line:rem}
-    \hspace{-5em} \vspace{-0.1em}
      %
-  } %
-  \uElseIf{$\join$}{%
-    \makebox[3.3cm][l]{%
-      \Return 
-      $\tab{t} \eqdef$
-      % \dot\Pi_{\chi(t),\tuplecolor{\inputPredColor}{\{\text{cnt}
-      %     \leftarrow \text{cnt} \cdot \text{cnt}'\}}}(\tab{1}
-      % \bowtie_{\bigwedge_{a\in\chi(t)}\cid{a}\approx \cid{a}'}$
-      % \rho_{\hspace{-1.2em}\bigcup\limits_{a\in
-      %     \attr(\tab{2})}\hspace{-1.2em}\{\cid{a}\mapsto
-      %   \cid{a}'\}}\tab{2})$
-      %
-    }
+    } %
+    \uElseIf{$\join$}{%
+      \makebox[3.3cm][l]{%
+        \Return $T_{\downarrow{}l} \bowtie
+        T_{\downarrow{}r}$ + ``fix cnt (multiply from left and
+        right)'' }
     % 
   } %
   % %\Return $\tab{t}$ \vspace{-0.25em}
   % % \caption{Alternative table algorithm~$\algo{S_{RAlg}}(t,\chi(t),\varphi_t,\langle \tab{1}, \ldots, \tab{\ell}\rangle)$ for \cSAT.}
   % % \label{alg:primdb}
 \end{algorithm}%
-
-unique column (attribute)~$\cid{x}$ for each~$x\in V_t$
+%
+}%
 \end{frame}
 
 \end{document}
