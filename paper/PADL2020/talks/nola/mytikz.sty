@@ -1,0 +1,73 @@
+\usepackage{amsmath,amssymb,amsthm,stmaryrd}
+
+\newcommand{\vt}[1]{{\color{green}#1}}%
+\newcommand{\vf}[1]{{\color{red}#1}} %
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,intersections}
+\usetikzlibrary{fit,petri,topaths,calc}
+\usetikzlibrary{shapes,decorations}
+%\usetikzlibrary{overlay-beamer-styles}
+\usetikzlibrary{patterns}
+
+
+\usepackage{graphicx}
+\graphicspath{{./fig/}{fig/}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+
+\usepackage{adjustbox}
+\usepackage{varwidth}
+
+\tikzset{
+  marked/.style={
+    transparent
+    % color=white,
+    % fill=black,
+  },
+  cred/.style={
+    color=red
+  },
+  cgreen/.style={
+    color=green
+  },
+  covered on/.style={alt=#1{marked}{}},
+  red on/.style={alt=#1{cred}{}},
+  green on/.style={alt=#1{cgreen}{}},
+}
+
+\usepackage{cancel}
+\usepackage{tikz}
+\newcommand{\hcancel}[1]{%
+    \tikz[baseline=(tocancel.base)]{
+        \node[inner sep=0pt,outer sep=0pt] (tocancel) {#1};
+        \draw[red] (tocancel.south west) -- (tocancel.north east);
+    }%
+}%      
+\usetikzlibrary{fit}           
+\usetikzlibrary{arrows,%shapes,snakes,automata,%
+                petri,%
+                topaths}%
+\usetikzlibrary{calc}
+
+\tikzset{
+    old inner xsep/.estore in=\oldinnerxsep,
+    old inner ysep/.estore in=\oldinnerysep,
+    double circle/.style 2 args={
+        circle,
+        old inner xsep=\pgfkeysvalueof{/pgf/inner xsep},
+        old inner ysep=\pgfkeysvalueof{/pgf/inner ysep},
+        /pgf/inner xsep=\oldinnerxsep+#1,
+        /pgf/inner ysep=\oldinnerysep+#1,
+        alias=sourcenode,
+        append after command={
+        let     \p1 = (sourcenode.center),
+                \p2 = (sourcenode.east),
+                \n1 = {\x2-\x1-#1-0.5*\pgflinewidth}
+        in
+            node [inner sep=0pt, draw, circle, minimum width=2*\n1,at=(\p1),#2] {}
+        }
+    },
+    double circle/.default={2pt}{blue}
+}
+
