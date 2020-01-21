@@ -1540,7 +1540,7 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
 %   \end{exampleblock}
 % \end{frame}
 
-\begin{frame}<3>[label=current]{Solving \#SAT \textcolor{blue}{[SamerSzeider'10]}}
+\begin{frame}<3>[label=current]{Relational Algebra}
   \vspace{-0.5em}
   \begin{exampleblock}{$F=$\textcolor<4>{red}{$(\neg a \vee b
         \vee x)$} $\wedge$ \textcolor<4>{red}{$(a \vee b)$} $\wedge$
@@ -1717,8 +1717,7 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
 \end{frame}
 
 
-\begin{frame}<3>[label=current]{Formulate it in SQL
-    \textcolor{blue}{[SamerSzeider'10]}} \vspace{-0.5em}
+\begin{frame}<3>[label=current]{Formulate it in SQL} \vspace{-0.5em}
   \begin{exampleblock}{$F=$\textcolor<4>{red}{$(\neg a \vee b
         \vee x)$} $\wedge$ \textcolor<4>{red}{$(a \vee b)$} $\wedge$
       \textcolor<5>{red}{$(c \vee \neg x)$} $\wedge$
@@ -1739,15 +1738,19 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
             {$\leaf$}{%
               {\ttfamily SELECT 1 AS cnt} }%
             \uElseIf{$\intr$ and $a\in V_t$ new}{ %
-              {\ttfamily SELECT 1 AS a UNION ALL 0\newline
-                WHERE $(l_{1,1}$ OR $\ldots$ OR $l_{1,k_1})$ AND
+              {\ttfamily WITH introduce AS \newline
+                \mbox{~}(SELECT 1 AS a UNION ALL SELECT 0)\newline
+                SELECT *
+                \mbox{~~}FROM $T_\downarrow$, introduce\newline
+                \mbox{~~}WHERE $(l_{1,1}$ OR $\ldots$ OR $l_{1,k_1})$ AND
                 $\ldots$ AND\newline
-                \hspace{2.7em} $(l_{n,1}$ OR $\ldots$ OR $l_{n,k_n})$}\;
+                \mbox{~~~~~~~~}$(l_{n,1}$ OR $\ldots$ OR $l_{n,k_n})$}\;
               %\vspace{3em} 
+              
             } %
             \uElseIf{$\rem$, and $a \not\in V_t$ removed}{%
-              {\ttfamily UPDATE SUM(cnt) AS cnt} \newline
-              \hspace{1em}+ Remove ``a'' column}\vspace{4em}%
+              {\ttfamily SELECT SUM(cnt) AS cnt} \newline
+              \hspace{1em}+ project ``a'' column using GROUP BY}\vspace{1em}%
             \uElseIf{$\join$}{%
               {\ttfamily SELECT * from $T_l$, $T_r$\newline WHERE
                 $a_{1,l}=a_{1,r}$, $a_{2,l}=a_{2,r}$, $\ldots$}
@@ -1781,6 +1784,7 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
               \Return $\sigma_{row \models F_t}\left( T_\downarrow
                 \bowtie \left(\begin{matrix} a \\\hline 0 \\
                     1 \end{matrix}\right)\right)$
+              %
               % \Return $\sigma_{row \models F_t}\left(
               %   \overset{T_\downarrow}{\left(
               %       \begin{matrix}
@@ -1989,7 +1993,9 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
   }
   %\alert{Who is interested in collaborating?}
   
-  Sponsors: FWF Y698 \& P26696
+  Sponsors: FWF Y698 \& P26696\\
+  {\color{red}Btw: We are hiring in Dresden (ASAP):\\
+    PreDoc/PostDoc SAT Solving and Related.}
 \end{frame}
 
 
