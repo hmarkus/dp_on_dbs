@@ -229,6 +229,10 @@ class Problem(object):
         self.db.set_praefix(f"p{self.id}_")
 
     def setup(self):
+        for n in self.td.nodes:
+            self.before_solve_statistics(n)
+
+
         def create_base_tables():
             self.db.create_table("problem", [
                 ("id", "SERIAL NOT NULL PRIMARY KEY"),
@@ -351,6 +355,10 @@ class Problem(object):
             if v:
                 self.db.ignore_next_praefix()
                 self.db.insert("problem_option",("id", "type", "name", "value"),(self.id,"cfg",k,v))
+
+
+    def before_solve_statistics(self,n):
+        pass
 
     def solve(self):
         self.db.ignore_next_praefix()
