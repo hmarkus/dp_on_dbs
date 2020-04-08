@@ -48,14 +48,18 @@ class VertexCover(Problem):
     def assignment_extra_cols(self,node):
         return ["min(size) AS size"]
 
-    def filter(self,node):
-        # at least one of connected nodes has to be in the set
+    def filter(self, node):
+        """Local problem filter:
+            ([[u1]] OR [[v1]]) AND ... ([[uN]] OR [[vN]])
+        """
+        # find (undirected!) edges in the subgraph
         check = []
-        for c in node.vertices:
-            if node.needs_introduce(c):
-                nv = [v for v in self.edges[c] if v in node.vertices] + [c]
-                if len(nv) > 1:
-                    check.append(" OR ".join(map(var2col,nv)))
+        for pos,c in enumerate(node.vertices[:-1]):
+            # if node.needs_introduce(c): Probably an error in one of the other functions as well.
+                nv = [(v, c) for v in self.edges[c] if
+                      v in node.vertices[pos+1:]] # don't connect backwards
+                for edge in nv:
+                    check.append(" OR ".join(map(var2col, edge)))
         if check:
             return "WHERE ({})".format(") AND (".join(check))
         else:
