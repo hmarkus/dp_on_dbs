@@ -19,8 +19,11 @@ class VertexCover(Problem):
         return [("size","INTEGER")]
         
     def candidate_extra_cols(self,node):
+        # new vertices in the bag in form of: case when iX.val then 1 else 0 end
         introduce = [var2size(node,v) for v in node.vertices if node.needs_introduce(v)]
+        # children nodes in form of: tX.size
         join = [node2size(n) for n in node.children]
+
         q = ""
         if introduce:
             # number of vertices in the set
@@ -29,8 +32,11 @@ class VertexCover(Problem):
                 q += " + "
         if join:
             q += "{}".format(" + ".join(join))
+            # if multiple children there could be bags with the same vertices, subtract them
             if len(join) > 1:
+                # all vertices in nodes bag which are also in any children bag
                 children = [vc for c in node.children for vc in c.vertices if vc in node.vertices]
+                # duplicates in form of: case when tX.vID then 1 else 0 end * (in how many bags vID is - 1)
                 duplicates = ["case when {} then 1 else 0 end * {}".format(
                                     var2tab_col(node,var,False),len(node.vertex_children(var))-1) 
                                 for var in set(children) if len(node.vertex_children(var)) > 1]
@@ -48,18 +54,31 @@ class VertexCover(Problem):
     def assignment_extra_cols(self,node):
         return ["min(size) AS size"]
 
-    def filter(self,node):
-        # at least one of connected nodes has to be in the set
+    def filter(self, node):
+        """Local problem filter:
+            ([[u1]] OR [[v1]]) AND ... ([[uN]] OR [[vN]])
+        """
         check = []
+        # for pos,c in enumerate(node.vertices[:-1]):
+        #
+        #     nv = [(v, c) for v in self.edges[c] if
+        #           v in node.vertices[pos+1:]] # don't connect backwards
+        #     for edge in nv:
+        #         check.append(" OR ".join(map(var2col, edge)))
+
+        nv = []
         for c in node.vertices:
-            if node.needs_introduce(c):
-                nv = [v for v in self.edges[c] if v in node.vertices] + [c]
-                if len(nv) > 1:
-                    check.append(" OR ".join(map(var2col,nv)))
+            # every vertice connected to that introduced vertice
+            [nv.append((c,v)) for v in self.edges[c] if v in node.vertices and (v,c) not in nv]
+
+        for edge in nv:
+            check.append(" OR ".join(map(var2col, edge)))
+
         if check:
             return "WHERE ({})".format(") AND (".join(check))
         else:
             return ""
+
 
     def setup_extra(self):
         def create_tables():
