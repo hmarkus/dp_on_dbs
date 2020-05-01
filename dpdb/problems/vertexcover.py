@@ -55,21 +55,16 @@ class VertexCover(Problem):
         return ["min(size) AS size"]
 
     def filter(self, node):
-        """Local problem filter:
-            ([[u1]] OR [[v1]]) AND ... ([[uN]] OR [[vN]])
-        """
+        # """Local problem filter:
+        #     ([[u1]] OR [[v1]]) AND ... ([[uN]] OR [[vN]])
+        # """
         check = []
-        # for pos,c in enumerate(node.vertices[:-1]):
-        #
-        #     nv = [(v, c) for v in self.edges[c] if
-        #           v in node.vertices[pos+1:]] # don't connect backwards
-        #     for edge in nv:
-        #         check.append(" OR ".join(map(var2col, edge)))
 
         nv = []
         for c in node.vertices:
-            # every vertice connected to that introduced vertice
-            [nv.append((c,v)) for v in self.edges[c] if v in node.vertices and (v,c) not in nv]
+            if node.needs_introduce(c):
+                # every vertice connected to that introduced vertice
+                [nv.append((c,v)) for v in self.edges[c] if v in node.vertices and (v,c) not in nv]
 
         for edge in nv:
             check.append(" OR ".join(map(var2col, edge)))
