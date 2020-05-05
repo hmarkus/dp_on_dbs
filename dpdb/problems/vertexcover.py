@@ -19,28 +19,22 @@ class VertexCover(Problem):
         return [("size","INTEGER")]
         
     def candidate_extra_cols(self,node):
-        # new vertices in the bag in form of: case when iX.val then 1 else 0 end
         introduce = [var2size(node,v) for v in node.vertices if node.needs_introduce(v)]
-        # children nodes in form of: tX.size
         join = [node2size(n) for n in node.children]
 
         q = ""
         if introduce:
-            # number of vertices in the set
             q += " + ".join(introduce)
             if join:
                 q += " + "
         if join:
             q += "{}".format(" + ".join(join))
-            # if multiple children there could be bags with the same vertices, subtract them
             if len(join) > 1:
-                # all vertices in nodes bag which are also in any children bag
                 children = [vc for c in node.children for vc in c.vertices if vc in node.vertices]
-                # duplicates in form of: case when tX.vID then 1 else 0 end * (in how many bags vID is - 1)
                 duplicates = ["case when {} then 1 else 0 end * {}".format(
                                     var2tab_col(node,var,False),len(node.vertex_children(var))-1) 
                                 for var in set(children) if len(node.vertex_children(var)) > 1]
-                # subtract vertices counted multiple times
+
                 if duplicates:
                     q += " - ({})".format(" + ".join(duplicates))
 
@@ -55,16 +49,11 @@ class VertexCover(Problem):
         return ["min(size) AS size"]
 
     def filter(self, node):
-        # """Local problem filter:
-        #     ([[u1]] OR [[v1]]) AND ... ([[uN]] OR [[vN]])
-        # """
         check = []
 
         nv = []
         for c in node.vertices:
-            if node.needs_introduce(c):
-                # every vertice connected to that introduced vertice
-                [nv.append((c,v)) for v in self.edges[c] if v in node.vertices and (v,c) not in nv]
+            [nv.append((c,v)) for v in self.edges[c] if v in node.vertices and (v,c) not in nv]
 
         for edge in nv:
             check.append(" OR ".join(map(var2col, edge)))
