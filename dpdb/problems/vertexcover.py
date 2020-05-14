@@ -21,9 +21,9 @@ class VertexCover(Problem):
     def candidate_extra_cols(self,node):
         introduce = [var2size(node,v) for v in node.vertices if node.needs_introduce(v)]
         join = [node2size(n) for n in node.children]
+
         q = ""
         if introduce:
-            # number of vertices in the set
             q += " + ".join(introduce)
             if join:
                 q += " + "
@@ -34,7 +34,7 @@ class VertexCover(Problem):
                 duplicates = ["case when {} then 1 else 0 end * {}".format(
                                     var2tab_col(node,var,False),len(node.vertex_children(var))-1) 
                                 for var in set(children) if len(node.vertex_children(var)) > 1]
-                # subtract vertices counted multiple times
+
                 if duplicates:
                     q += " - ({})".format(" + ".join(duplicates))
 
@@ -49,21 +49,19 @@ class VertexCover(Problem):
         return ["min(size) AS size"]
 
     def filter(self, node):
-        """Local problem filter:
-            ([[u1]] OR [[v1]]) AND ... ([[uN]] OR [[vN]])
-        """
-        # find (undirected!) edges in the subgraph
         check = []
-        for pos,c in enumerate(node.vertices[:-1]):
-            # if node.needs_introduce(c): Probably an error in one of the other functions as well.
-                nv = [(v, c) for v in self.edges[c] if
-                      v in node.vertices[pos+1:]] # don't connect backwards
-                for edge in nv:
-                    check.append(" OR ".join(map(var2col, edge)))
+
+        nv = []
+        for c in node.vertices:
+            [nv.append((c,v)) for v in self.edges[c] if v in node.vertices and (v,c) not in nv]
+
+        for edge in nv:
+            check.append(" OR ".join(map(var2col, edge)))
         if check:
             return "WHERE ({})".format(") AND (".join(check))
         else:
             return ""
+
 
     def setup_extra(self):
         def create_tables():
