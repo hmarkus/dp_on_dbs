@@ -57,7 +57,6 @@ class VertexCover(Problem):
 
         for edge in nv:
             check.append(" OR ".join(map(var2col, edge)))
-
         if check:
             return "WHERE ({})".format(") AND (".join(check))
         else:
