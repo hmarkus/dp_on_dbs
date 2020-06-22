@@ -842,25 +842,25 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
 \end{frame}
 
 
-\begin{frame}{Research Question \uncover<2>{\& Approach}}
+\begin{frame}{Research Question \uncover<6>{\& Approach}}
   \medskip
   \alert{Can we merge the two approaches? (and make it reasonable to use?)}\\[0.5em]
   \begin{itemize}
-  \item[Idea 1:] Provide a programming framework.\\
+  \item[Idea 1:]<2-> Provide a programming framework.\\
     Already done.\\
     $\Rightarrow$ Sharp (C++) \bcite{Morak'11} and Jatatosk (Java) \bcite{Bannach\&Berndt'18}\\
-    \hspace{1em}\xmark~still hard to use \hspace{4.7em} \xmark~performs nice, but far from competitive
+    \uncover<3->{\hspace{1em}\xmark~still hard to use \hspace{4.7em} \xmark~performs nice, but far from competitive}
     \medskip
-  \item[Idea 2:] Use a logic based language to specify the DP\\
+  \item[Idea 2:]<4-> Use a logic based language to specify the DP\\
     Already done.\\
     $\Rightarrow$ D-FLAT (use ASP for spec and take an ASP solver for
-    computation) \bcite{Bliem\&Morak\&Stefan Woltran'12}\\
-    \hspace{1em}\xmark~still fairly hard to use and performs mostly not very well
+    computation) \bcite{Bliem\&Morak\&W'12}\\
+    \uncover<5->{\hspace{1em}\xmark~still fairly hard to use and performs mostly not very well}
     \color{red}
   \end{itemize}
-  \uncover<2->{%
+  \uncover<6->{%
     
-    \color{red}Our idea Use SQL to describe the DP and use a DBMS to
+    \color{red}Our idea use SQL to describe the DP and use a DBMS to
     evaluate the queries
     
   }
@@ -877,7 +877,7 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
 \end{frame}
 
 \subsection{Preliminaries}
-\begin{frame}<1,2,10>[noframenumbering]{Tree Decompositions}\label{lbl:motivation}
+\begin{frame}<1,2,10>[noframenumbering]{Treewidth}\label{lbl:motivation}
   \only<1>{
   \bigskip
   \begin{columns}
@@ -1023,7 +1023,7 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
   \bigskip
   \bigskip
   \begin{center}
-    \alert{\Large How to ``use'' tree decompositions for \#SAT/WMC?}\\
+    \alert{\Large How to ``use'' tree decompositions for \#SAT?}\\
   \end{center}
 \end{frame}
 
@@ -1099,7 +1099,7 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
   \uncover<16->{%
     \begin{block}{Model Counting (\#SAT/Number SAT)}
       \begin{itemize}
-      \item Number of of satisfying truth assignments to~$F$.
+      \item Number of satisfying truth assignments to~$F$.
       \end{itemize}
     \end{block}
     %
@@ -1667,7 +1667,7 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
             }%
             \vspace{-1em} \uElseIf{$\intr$ and $a\in V_t$ new}{ %
               \Return $\sigma_{row \models F_t}\left( T_\downarrow
-                \bowtie \left(\begin{matrix} a \\\hline 0 \\
+                \times \left(\begin{matrix} a \\\hline 0 \\
                     1 \end{matrix}\right)\right)$
               % \Return $\sigma_{row \models F_t}\left(
               %   \overset{T_\downarrow}{\left(
@@ -1949,12 +1949,7 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
     \end{itemize}
   \end{block}
   \begin{block}{Benchmark: Comparing apples and oranges}
-    BUT: you compare parallel and sequential solvers.
-    \begin{enumerate}
-    \item We run on cheap consumer hardware (200\$)
-    \item Cannot measure speedup due to OpenCL/display driver limitations\\
-      $\Rightarrow$ migrate to cuda
-    \end{enumerate}
+    Maybe...
   \end{block}
 \end{frame}
 
@@ -1992,7 +1987,7 @@ left color=green!30!gray!10, right color=green!30!gray!10, middle color=green!30
     %
   }
   %\alert{Who is interested in collaborating?}
-  
+  \centering
   Sponsors: FWF Y698 \& P26696\\
   {\color{red}Btw: We are hiring in Dresden (ASAP):\\
     PreDoc/PostDoc SAT Solving and Related.}
