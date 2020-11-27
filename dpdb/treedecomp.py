@@ -18,7 +18,7 @@ class TreeDecomp(object):
             for n in worklist:
                 node = n[0]
                 parent = n[1]
-                new_node = Node(node,bags[node], self.mg.projectionVariablesOf(bags[node]))
+                new_node = Node(node,bags[node], set() if self.mg is None else self.mg.projectionVariablesOf(bags[node]))
                 if parent:
                     parent.add_child(new_node)
                 else:
