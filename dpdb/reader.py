@@ -159,6 +159,12 @@ class CnfReader(DimacsReader):
         else:
             self.num_vars = int(self._problem_vars[0])
             self.num_clauses = int(self._problem_vars[1])
+            if self.num_vars == 0:
+                self.models = 0
+                self.maybe_sat = False
+                if not self.silent:
+                    logger.info("Problem has 0 models (solved by pre-processing)")
+                self.done = True
 
     def read_terminated(self, lines, line, lineno):
         i = 1
@@ -182,7 +188,6 @@ class CnfReader(DimacsReader):
         
         maxvar = 0
         #projected_vars = set()
-
         for lineno, line in enumerate(lines):
             if not line or self.is_comment(line):
                 continue
@@ -241,7 +246,10 @@ class CnfReader(DimacsReader):
 
         for clause in self.clauses:
             self.vars.update([abs(lit) for lit in clause])
-        maxvar = max(maxvar,max(self.vars))
+        if len(self.vars) == 0:
+            maxvar = 0
+        else:
+            maxvar = max(maxvar,max(self.vars))
 
         self.single_vars = set((abs(l) for l in self.single_clauses))
         self.projected = self.projected.difference(self.single_vars)

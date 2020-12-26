@@ -186,7 +186,6 @@ class Problem(object):
             sel_list += "{}{}".format(", " if sel_list else "", ",".join(extra_cols))
 
         candidates_sel = self.candidates_select(node)
-
         if self.candidate_store == "cte":
             q = f"WITH candidate AS ({candidates_sel}) SELECT {sel_list} FROM candidate"
         elif self.candidate_store == "subquery":
