@@ -65,7 +65,7 @@ class NestPmc(Problem):
             extra_proj = []
         q = ""
 
-        if any(node.needs_introduce(v) for v in node.vertices):
+        if any(node.needs_introduce(v) for v in node.vertices + extra_proj):
             q += "WITH introduce AS ({}) ".format(self.introduce(node))
 
         q += "SELECT {}".format(

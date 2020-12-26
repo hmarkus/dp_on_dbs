@@ -24,7 +24,63 @@
       "--child-limit","5"
     ]
   },
+  "problem_specific": {
+    "nestpmc": {
+      "max_solver_threads": 4,
+      "inner_vars_threshold": 10,
+      "max_worker_threads": 4
+    }
+  },
   "dpdb": {
-    "max_worker_threads": 24
-  }
+  },
+	"nesthdb": {
+		"threshold_hybrid" : 45,
+		"threshold_abstract" : 8,
+		"max_recursion_depth" : 1,
+		"sat_solver": {
+			"path": "/home/rafael/projects/dp_on_dbs/picosat-965/picosat",
+			"seed_arg": "-s"
+		},
+		"sharpsat_solver": {
+			"path": "/home/rafael/projects/miniC2D2/bin/linux/miniC2D",
+			"args": "-C -c",
+			"output_parser": {
+				"class": "RegExReader",
+				"args": {
+					"pattern": "Counting... (\\d+) models"
+				},
+				"result":"result"
+			}
+		},
+        "preprocessor": {
+            "path": "./pmc_linux",
+	        "args": "-vivification -eliminateLit -litImplied -iterate=10"
+        },
+        "alt_preprocessor": {
+            "path": "../Riss/coprocessor",
+            "args": "-enabled_cp3 -up -subsimp -bve -no-bve_gates -no-bve_strength -bve_red_lits=1 -cp3_bve_heap=1 -bve_heap_updates=1 -bve_totalG -bve_cgrow_t=1000 -bve_cgrow=10"
+        },
+		"pmc_solver": {
+			"path": "/home/rafael/projects/g2/build/ganak",
+			"output_parser": {
+				"class": "RegExReader",
+				"args": {
+					"pattern": "s pmc (\\d+)"
+				},
+				"result":"result"
+			}
+		},
+		"asp": {
+			"encodings": [{ 
+				"file": "./guess_min_degree.lp",
+				"size": 95,
+				"timeout": 10
+			},
+			{ 
+				"file": "./guess_increase.lp",
+				"size": 64,
+				"timeout" : 35
+			}]
+		}
+	}
 }

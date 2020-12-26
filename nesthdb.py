@@ -108,6 +108,47 @@ class Problem:
 
     def preprocess(self):
         global cfg
+        if "alt_preprocessor" in cfg["nesthdb"]:
+            cfg_prep = cfg["nesthdb"]["alt_preprocessor"]
+            preprocessor = [cfg_prep["path"]]
+            preprocessor.extend(cfg_prep["args"].split(' '))
+            tmp = tempfile.NamedTemporaryFile().name
+            preprocessor.append(f"-whiteList={tmp}")
+            ret = tempfile.NamedTemporaryFile().name
+            preprocessor.append(f"-dimacs={ret}")
+            clauses,proj_vars,num_vars,mapping,rev_mapping = normalize_cnf(self.formula.clauses, self.projected, True)
+            with FileWriter(tmp) as fw:
+                for p in proj_vars:
+                    fw.writeline(str(p))
+            self.active_process = ppmc = subprocess.Popen(preprocessor,stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            StreamWriter(ppmc.stdin).write_cnf(self.formula.num_vars,clauses,normalize=False)
+            ppmc.stdin.close()
+            ppmc.wait()
+            input = CnfReader.from_file(ret,silent=True)
+            self.active_process = None
+            if not input.error:
+                self.maybe_sat = input.maybe_sat
+                if not input.done:
+                    # fix corner case, where input.vars contains not all of range(1,input.max_vars+1)
+                    clauses, vars, proj_vars = denormalize_cnf(input.clauses,input.vars,proj_vars,rev_mapping)
+                    self.formula = Formula(vars,clauses)
+                    self.projected = proj_vars.intersection(vars)
+                    # remove single_clause_proj_vars, they are not needed/relevant and only waste resources!
+                    # consequently, these variables are treated as if they were never there, no 2 ** correction!
+                    _, singles, _ = denormalize_cnf((),input.single_vars,(),rev_mapping)
+                    self.projected_orig = self.projected_orig.difference(singles)
+                else:
+                    # set models to 1 if instance was sat
+                    if len(self.projected) == 0:
+                        self.models = 1
+                    # use result if instance was #sat
+                    elif self.projected.intersection(self.formula.vars) == self.formula.vars:
+                        self.models = input.models
+                    # dont use result if instance was pmc
+                    else:
+                        pass
+            else:
+                logger.debug("Pre-processor failed... ignoring result")
         if "preprocessor" not in cfg["nesthdb"]:
             return # True, num_vars, vars, len(clauses), clauses, None
         cfg_prep = cfg["nesthdb"]["preprocessor"]
