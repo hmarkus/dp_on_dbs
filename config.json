@@ -3,8 +3,8 @@
     "dsn": {
       "host": "localhost",
       "port": 5432,
-      "database": "logicsem", 
-      "user": "logicsem", 
+      "database": "logicsem",
+      "user": "logicsem",
       "password": "XXX",
       "application_name": "dpdb"
     },
@@ -19,7 +19,7 @@
       "application_name": "dpdb-admin"
   },
   "htd": {
-    "path": "../htd/bin/htd_main",
+    "path": "../htd/build/bin/htd_main",
     "parameters": [
       "--child-limit","5"
     ]
