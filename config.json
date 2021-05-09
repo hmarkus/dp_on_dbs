@@ -39,7 +39,7 @@
     "threshold_abstract" : 8,
     "max_recursion_depth" : 1,
     "sat_solver": {
-      "path": "<PATH_TO>/programs/picosat-965",
+      "path": "../picosat/picosat",
       "seed_arg": "-s"
     },
     "sharpsat_solver": {
@@ -65,7 +65,7 @@
       }
     },
     "preprocessor": {
-      "path": "<PATH_TO>/pmc-1.0",
+      "path": "./bin/pmc",
       "args": "-vivification -eliminateLit -litImplied -iterate=10"
     },
     "asp": {
