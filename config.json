@@ -26,5 +26,61 @@
   },
   "dpdb": {
     "max_worker_threads": 24
+  },
+  "problem_specific": {
+    "nestpmc": {
+      "max_solver_threads": 12,
+      "inner_vars_threshold": 40,
+      "max_worker_threads": 12
+    }
+  },
+  "nesthdb": {
+    "threshold_hybrid" : 1000,
+    "threshold_abstract" : 8,
+    "max_recursion_depth" : 1,
+    "sat_solver": {
+      "path": "<PATH_TO>/programs/picosat-965",
+      "seed_arg": "-s"
+    },
+    "sharpsat_solver": {
+      "path": "<PATH_TO>/miniC2D-1.0.0",
+      "args": "-C -c",
+      "output_parser": {
+        "class": "RegExReader",
+        "args": {
+          "pattern": "Counting... (\\d+) models"
+        },
+        "result":"result"
+      }
+    },
+    "pmc_solver": {
+      "path": "<PATH_TO>/projMC-wrapper-1.0",
+      "seed_arg": "-s",
+      "output_parser": {
+        "class": "RegExReader",
+        "args": {
+          "pattern": "s (\\d+)\\n"
+        },
+        "result":"result"
+      }
+    },
+    "preprocessor": {
+      "path": "<PATH_TO>/pmc-1.0",
+      "args": "-vivification -eliminateLit -litImplied -iterate=10"
+    },
+    "asp": {
+      "encodings": [
+          {
+            "file": "./guess_min_degree.lp",
+            "size": 95,
+            "timeout": 10
+          },
+          {
+            "file": "./guess_increase2.lp",
+            "size": 64,
+            "timeout" : 35
+          }
+      ]
+    }
   }
 }
