@@ -53,7 +53,7 @@
       }
     },
     "pmc_solver": {
-      "path": "<PATH_TO>/projMC-wrapper-1.0",
+      "path": "./projMC-wrapper.py",
       "seed_arg": "-s",
       "output_parser": {
         "class": "RegExReader",
