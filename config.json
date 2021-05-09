@@ -25,7 +25,6 @@
     ]
   },
   "dpdb": {
-    "max_worker_threads": 24
   },
   "problem_specific": {
     "nestpmc": {
