@@ -11,12 +11,12 @@
     "max_connections": 100
   },
   "db_admin": {
-      "host": "localhost",
-      "port": 5432,
-      "database": "logicsem",
-      "user": "postgres",
-      "password": "XXX",
-      "application_name": "dpdb-admin"
+    "host": "localhost",
+    "port": 5432,
+    "database": "logicsem",
+    "user": "postgres",
+    "password": "XXX",
+    "application_name": "dpdb-admin"
   },
   "htd": {
     "path": "../htd/build/bin/htd_main",
