@@ -76,7 +76,7 @@
             "timeout": 10
           },
           {
-            "file": "./guess_increase2.lp",
+            "file": "./guess_increase.lp",
             "size": 64,
             "timeout" : 35
           }
