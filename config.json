@@ -19,7 +19,7 @@
     "application_name": "dpdb-admin"
   },
   "htd": {
-    "path": "../htd/build/bin/htd_main",
+    "path": "./bin/htd_main",
     "parameters": [
       "--child-limit","5"
     ]
@@ -38,7 +38,7 @@
     "threshold_abstract" : 8,
     "max_recursion_depth" : 1,
     "sat_solver": {
-      "path": "../picosat/picosat",
+      "path": "./bin/picosat",
       "seed_arg": "-s"
     },
     "sharpsat_solver": {
