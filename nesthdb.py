@@ -18,6 +18,7 @@ from dpdb.reader import CnfReader
 from dpdb.writer import FileWriter, StreamWriter, denormalize_cnf, normalize_cnf
 
 logger = logging.getLogger("nestHDB")
+logger.addHandler(logging.StreamHandler(sys.stdout))
 #setup_logging("DEBUG")
 #setup_logging()
 setup_debug_sql()
