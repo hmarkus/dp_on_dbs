@@ -7,6 +7,8 @@ import tempfile
 
 from collections import defaultdict
 
+import helper # file ./helper.py
+
 from common import *
 from dpdb.abstraction import MinorGraph, ClingoControl
 from dpdb.db import BlockingThreadedConnectionPool, DBAdmin, DEBUG_SQL, setup_debug_sql
@@ -356,6 +358,7 @@ def main():
     arg_parser.add_argument("--no-cache", dest="no_cache", help="Disable cache", action="store_true")
     args = parse_args(arg_parser)
     cfg = read_cfg(args.config)
+    cfg = helper.absolutizePaths(cfg) # relative paths would fail if executed from different dir
     fname = args.file
 
     formula = Formula.from_file(fname)
