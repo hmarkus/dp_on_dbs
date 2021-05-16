@@ -3,28 +3,83 @@
     "dsn": {
       "host": "localhost",
       "port": 5432,
-      "database": "logicsem", 
-      "user": "logicsem", 
+      "database": "logicsem",
+      "user": "logicsem",
       "password": "XXX",
       "application_name": "dpdb"
     },
     "max_connections": 100
   },
   "db_admin": {
-      "host": "localhost",
-      "port": 5432,
-      "database": "logicsem",
-      "user": "postgres",
-      "password": "XXX",
-      "application_name": "dpdb-admin"
+    "host": "localhost",
+    "port": 5432,
+    "database": "logicsem",
+    "user": "postgres",
+    "password": "XXX",
+    "application_name": "dpdb-admin"
   },
   "htd": {
-    "path": "../htd/bin/htd_main",
+    "path": "./bin/htd_main",
     "parameters": [
       "--child-limit","5"
     ]
   },
   "dpdb": {
-    "max_worker_threads": 24
+  },
+  "problem_specific": {
+    "nestpmc": {
+      "max_solver_threads": 12,
+      "inner_vars_threshold": 40,
+      "max_worker_threads": 12
+    }
+  },
+  "nesthdb": {
+    "threshold_hybrid" : 1000,
+    "threshold_abstract" : 8,
+    "max_recursion_depth" : 1,
+    "sat_solver": {
+      "path": "./bin/picosat",
+      "seed_arg": "-s"
+    },
+    "sharpsat_solver": {
+      "path": "<PATH_TO>/miniC2D-1.0.0",
+      "args": "-C -c",
+      "output_parser": {
+        "class": "RegExReader",
+        "args": {
+          "pattern": "Counting... (\\d+) models"
+        },
+        "result":"result"
+      }
+    },
+    "pmc_solver": {
+      "path": "./projMC-wrapper.py",
+      "seed_arg": "-s",
+      "output_parser": {
+        "class": "RegExReader",
+        "args": {
+          "pattern": "s (\\d+)\\n"
+        },
+        "result":"result"
+      }
+    },
+    "preprocessor": {
+      "path": "./bin/pmc",
+      "args": "-vivification -eliminateLit -litImplied -iterate=10"
+    },
+    "asp": {
+      "encodings": [
+          {
+            "file": "./guess_min_degree.lp",
+            "size": 95,
+            "timeout": 10
+          },
+          {
+            "file": "./guess_increase.lp",
+            "size": 64,
+            "timeout" : 35
+          }
+      ]
+    }
   }
 }
