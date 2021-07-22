@@ -65,8 +65,10 @@ class Writer(object):
         self.writeline("c r {0}".format(root))
         for b, v in bags.items():
             self.writeline("b {0} {1}".format(b, " ".join(map(str,v))))
-        for e in edges:
-            self.writeline("{0} {1}".format(e[0],e[1]))
+        for v in edges:
+            print(v)
+            for s in edges[v]:
+                self.writeline("{0} {1}".format(v,s))
         self.flush()
 
     def write_cnf(self, num_vars, clauses, normalize=False, proj_vars=None):

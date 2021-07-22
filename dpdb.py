@@ -83,11 +83,17 @@ def solve_problem(cfg, cls, file, **kwargs):
         logger.info("Writing graph file")
         with FileWriter(kwargs["gr_file"]) as fw:
             fw.write_gr(*input)
-    logger.info("Running htd")
-    StreamWriter(p.stdin).write_gr(*input)
-    p.stdin.close()
-    tdr = TdReader.from_stream(p.stdout)
-    p.wait()
+
+    tdr = None
+    if "td_inpt" in kwargs and kwargs["td_inpt"]:
+        with file(kwargs["td_inpt"]) as fi:
+            tdr = TdReader.from_stream(fi)
+    else:
+        logger.info("Running htd")
+        StreamWriter(p.stdin).write_gr(*input)
+        p.stdin.close()
+        tdr = TdReader.from_stream(p.stdout)
+        p.wait()
 
     # solve it
     logger.info("Parsing tree decomposition")
@@ -153,6 +159,7 @@ if __name__ == "__main__":
     gen_opts.add_argument("--config", help="Config file", default="config.json")
     gen_opts.add_argument("--log-level", dest="log_level", help="Log level", choices=_LOG_LEVEL_STRINGS, default="INFO")
     gen_opts.add_argument("--td-file", dest="td_file", help="Store TreeDecomposition file (htd Output)")
+    gen_opts.add_argument("--td-inpt", dest="td_inpt", help="Load TreeDecomposition file (htd Output)")
     gen_opts.add_argument("--gr-file", dest="gr_file", help="Store Graph file (htd Input)")
     gen_opts.add_argument("--faster", dest="faster", help="Store less information in database", action="store_true")
     gen_opts.add_argument("--parallel-setup", dest="parallel_setup", help="Perform setup in parallel", action="store_true")
