@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import logging
 import select
 import re
@@ -37,7 +36,7 @@ class DB(object):
         instance = cls()
         instance._pool = pool
         instance._conn = pool.getconn()
-        return instance 
+        return instance
 
     # we need this wrapper because conn object is required
     def __debug_query__ (self, query, params = []):
@@ -86,7 +85,7 @@ class DB(object):
                 return cur.fetchone()
         except pg.errors.AdminShutdown:
             logger.warning("Connection closed by admin")
-        
+
     def exec_and_fetch_all(self,q,p = []):
         try:
             self.__debug_query__(q,p)
