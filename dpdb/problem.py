@@ -66,6 +66,8 @@ def var2tab_col(node, var, alias=True):
 class Problem(object):
     id = None
     td = None
+    # minimum amoun of result that is needed to activate the limit
+    LIMIT_RESULT_ROWS_CAP = 10
 
     def __init__(self, name, pool, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
@@ -202,6 +204,7 @@ class Problem(object):
 
         if not node.stored_vertices and not extra_group:
             q += " LIMIT 1"
+        print(q)
         return q
 
     # the following methods should be considered final
@@ -383,6 +386,8 @@ class Problem(object):
             os.kill(os.getpid(), signal.SIGUSR1)
 
     def solve_node(self, node, db):
+        print(f"ID: {node.id}")
+        print(f"Node: {node}")
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             db.update("td_node_status",["start_time"],["statement_timestamp()"],[f"node = {node.id}"])
             db.commit()
@@ -399,7 +404,17 @@ class Problem(object):
             if self.randomize_rows:
                 select += " ORDER BY RANDOM()"
             if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
-                select += f" LIMIT {self.limit_result_rows}"
+                # get number of result rows in table and check if the limit should be applied or not
+                count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
+                count = count[0]
+                print(f"Count: {count}")
+                if self.LIMIT_RESULT_ROWS_CAP < count:
+                    #select += f" LIMIT {self.limit_result_rows}"
+                    limit = (list({self.limit_result_rows})[0])/100
+                    select += f" LIMIT {count}*{limit}"
+            count_all = db.select(f"td_node_{node.id}_v", ["model_count"])
+            print(f"{node.id}")
+            print(f"Count_all: {count_all}")
             db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
         if self.interrupted:
             return
