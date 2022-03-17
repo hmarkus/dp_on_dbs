@@ -66,8 +66,8 @@ def var2tab_col(node, var, alias=True):
 class Problem(object):
     id = None
     td = None
-    # minimum amoun of result that is needed to activate the limit
-    LIMIT_RESULT_ROWS_CAP = 10
+    # minimum amount of results that is needed to activate the limit
+    LIMIT_RESULT_ROWS_CAP = 1
 
     def __init__(self, name, pool, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
@@ -188,9 +188,8 @@ class Problem(object):
 
         return q
 
-    def assignment_view(self,node):
+    def assignment_view(self,node,checkLimit=False):
         q = "{} {}".format(self.assignment_select(node),self.filter(node))
-
         if node.stored_vertices:
             q += " GROUP BY {}".format(",".join([var2col(v) for v in node.stored_vertices]))
 
@@ -204,6 +203,19 @@ class Problem(object):
 
         if not node.stored_vertices and not extra_group:
             q += " LIMIT 1"
+        else:
+            if self.randomize_rows:
+                q += " ORDER BY RANDOM()"
+            if checkLimit == True:
+                fromIndex = q.find("FROM")
+                groupByIndex = q.find("GROUP BY")
+                if groupByIndex != -1:
+                    substr = q[fromIndex:groupByIndex]
+                else:
+                    substr = q[fromIndex:]
+                limit = (list({self.limit_result_rows})[0])/100
+                q += f" LIMIT ((SELECT Count(*) {substr})*{limit})"
+
         print(q)
         return q
 
@@ -386,8 +398,8 @@ class Problem(object):
             os.kill(os.getpid(), signal.SIGUSR1)
 
     def solve_node(self, node, db):
-        print(f"ID: {node.id}")
-        print(f"Node: {node}")
+        #print(f"ID: {node.id}")
+        #print(f"Node: {node}")
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             db.update("td_node_status",["start_time"],["statement_timestamp()"],[f"node = {node.id}"])
             db.commit()
@@ -396,8 +408,13 @@ class Problem(object):
         if self.candidate_store == "table":
             db.persist_view(f"td_node_{node.id}_candidate")
         if "faster" in self.kwargs and self.kwargs["faster"]:
-            ass_view = self.assignment_view(node)
+            if self.limit_result_rows:
+                ass_view = self.assignment_view(node, True)
+            else:
+                ass_view = self.assignment_view(node)
             ass_view = self.db.replace_dynamic_tabs(ass_view)
+            #print("-----------------------")
+            #print(ass_view)
             db.create_select(f"td_node_{node.id}", ass_view)
         else:
             select = f"SELECT * from td_node_{node.id}_v"
@@ -406,15 +423,17 @@ class Problem(object):
             if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
                 # get number of result rows in table and check if the limit should be applied or not
                 count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
+                #print(count)
                 count = count[0]
-                print(f"Count: {count}")
+                #print(f"Count: {count}")
                 if self.LIMIT_RESULT_ROWS_CAP < count:
                     #select += f" LIMIT {self.limit_result_rows}"
                     limit = (list({self.limit_result_rows})[0])/100
-                    select += f" LIMIT {count}*{limit}"
-            count_all = db.select(f"td_node_{node.id}_v", ["model_count"])
-            print(f"{node.id}")
-            print(f"Count_all: {count_all}")
+                    select += f" LIMIT ({count}*{limit})"
+            #count_all = db.select(f"td_node_{node.id}_v", ["*"])
+            #print(f"{node.id}")
+            #print(f"Count_all: {count_all}")
+            #print(select)
             db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
         if self.interrupted:
             return
