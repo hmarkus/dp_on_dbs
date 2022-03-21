@@ -28,6 +28,11 @@ args.general = {
         help="How to store/use candidate results",
         choices=["cte","subquery","table"],
         default="subquery"
+    ),
+    "--limit-introduce": dict(
+        type=int,
+        dest="limit_introduce",
+        help="Limit number of result rows when introducing a new node"
     )
 }
 
@@ -72,12 +77,13 @@ class Problem(object):
 
     def __init__(self, name, pool, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
-            randomize_rows=False, **kwargs):
+            randomize_rows=False, limit_introduce=None, **kwargs):
         self.name = name
         self.pool = pool
         self.candidate_store = candidate_store
         self.limit_result_rows = limit_result_rows
         self.randomize_rows = randomize_rows
+        self.limit_introduce = limit_introduce
         self.max_worker_threads = max_worker_threads
         self.kwargs = kwargs
         self.type = type(self).__name__
@@ -171,10 +177,11 @@ class Problem(object):
         if len(node.children) > 1:
             q += " {} ".format(self.join(node))
         
-        if introduce:
+        if introduce and self.limit_introduce:
+            limit = self.limit_introduce / 100
             q += " ORDER BY RANDOM() LIMIT (SELECT Count(*) FROM "
             q += "{}".format(",".join(set(["{} {}".format(var2tab(node, v), "limit" + var2tab_alias(node,v)) for v in node.vertices] + ["{} {}".format(node2tab(n), "limit" + node2tab_alias(n)) for n in node.children]))) 
-            q += ") * 0.8"
+            q += f") * {limit}"
         print(q)
         return q
 
