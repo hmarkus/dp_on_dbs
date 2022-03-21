@@ -66,6 +66,7 @@ def var2tab_col(node, var, alias=True):
 class Problem(object):
     id = None
     td = None
+    query = " "
     # minimum amount of results that is needed to activate the limit
     LIMIT_RESULT_ROWS_CAP = 1
 
@@ -143,12 +144,14 @@ class Problem(object):
 
     def after_solve_node(self, node, db):
         pass
-
+    
     # the following methods can be overwritten at your own risk
     def candidates_select(self,node):
+        introduce = False
         q = ""
 
         if any(node.needs_introduce(v) for v in node.vertices):
+            introduce = True
             q += "WITH introduce AS ({}) ".format(self.introduce(node))
 
         q += "SELECT {}".format(
@@ -167,7 +170,12 @@ class Problem(object):
 
         if len(node.children) > 1:
             q += " {} ".format(self.join(node))
-
+        
+        if introduce:
+            q += " ORDER BY RANDOM() LIMIT (SELECT Count(*) FROM "
+            q += "{}".format(",".join(set(["{} {}".format(var2tab(node, v), "limit" + var2tab_alias(node,v)) for v in node.vertices] + ["{} {}".format(node2tab(n), "limit" + node2tab_alias(n)) for n in node.children]))) 
+            q += ") * 0.8"
+        print(q)
         return q
 
     def assignment_select(self,node):
@@ -185,7 +193,7 @@ class Problem(object):
             q = f"SELECT {sel_list} FROM ({candidates_sel}) AS candidate"
         elif self.candidate_store == "table":
             q = f"SELECT {sel_list} FROM td_node_{node.id}_candidate"
-
+        print(q)
         return q
 
     def assignment_view(self,node,checkLimit=False):
@@ -216,7 +224,7 @@ class Problem(object):
                 limit = (list({self.limit_result_rows})[0])/100
                 q += f" LIMIT ((SELECT Count(*) {substr})*{limit})"
 
-        print(q)
+        #print(q)
         return q
 
     # the following methods should be considered final
@@ -304,6 +312,7 @@ class Problem(object):
                 candidate_view = db.replace_dynamic_tabs(candidate_view)
                 db.create_view(f"td_node_{n.id}_candidate_v", candidate_view)
             ass_view = self.assignment_view(n)
+            print(ass_view)
             ass_view = db.replace_dynamic_tabs(ass_view)
             db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:

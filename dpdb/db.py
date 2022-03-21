@@ -206,6 +206,10 @@ class DB(object):
     def ignore_next_praefix(self, count = 1):
         self._ignore_next_praefix = count
 
+    def execute_select(self, q):
+        query = sql.SQL(q)
+        return self.exec_and_fetch(q)
+
 class DBAdmin(DB):
     def killall(self, app_name):
         q = "select pg_kill_all_sessions(%s,%s)"
