@@ -73,7 +73,7 @@ class Problem(object):
     td = None
     query = " "
     # minimum amount of results that is needed to activate the limit
-    LIMIT_RESULT_ROWS_CAP = 1
+    LIMIT_RESULT_ROWS_CAP = 0
 
     def __init__(self, name, pool, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
@@ -181,8 +181,7 @@ class Problem(object):
             limit = self.limit_introduce / 100
             q += " ORDER BY RANDOM() LIMIT (SELECT Count(*) FROM "
             q += "{}".format(",".join(set(["{} {}".format(var2tab(node, v), "limit" + var2tab_alias(node,v)) for v in node.vertices] + ["{} {}".format(node2tab(n), "limit" + node2tab_alias(n)) for n in node.children]))) 
-            q += f") * {limit}"
-        print(q)
+            q += f") * {limit}" 
         return q
 
     def assignment_select(self,node):
@@ -200,7 +199,7 @@ class Problem(object):
             q = f"SELECT {sel_list} FROM ({candidates_sel}) AS candidate"
         elif self.candidate_store == "table":
             q = f"SELECT {sel_list} FROM td_node_{node.id}_candidate"
-        print(q)
+        
         return q
 
     def assignment_view(self,node,checkLimit=False):
@@ -231,7 +230,6 @@ class Problem(object):
                 limit = (list({self.limit_result_rows})[0])/100
                 q += f" LIMIT ((SELECT Count(*) {substr})*{limit})"
 
-        #print(q)
         return q
 
     # the following methods should be considered final
@@ -319,7 +317,6 @@ class Problem(object):
                 candidate_view = db.replace_dynamic_tabs(candidate_view)
                 db.create_view(f"td_node_{n.id}_candidate_v", candidate_view)
             ass_view = self.assignment_view(n)
-            print(ass_view)
             ass_view = db.replace_dynamic_tabs(ass_view)
             db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
@@ -414,8 +411,6 @@ class Problem(object):
             os.kill(os.getpid(), signal.SIGUSR1)
 
     def solve_node(self, node, db):
-        #print(f"ID: {node.id}")
-        #print(f"Node: {node}")
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             db.update("td_node_status",["start_time"],["statement_timestamp()"],[f"node = {node.id}"])
             db.commit()
@@ -429,8 +424,6 @@ class Problem(object):
             else:
                 ass_view = self.assignment_view(node)
             ass_view = self.db.replace_dynamic_tabs(ass_view)
-            #print("-----------------------")
-            #print(ass_view)
             db.create_select(f"td_node_{node.id}", ass_view)
         else:
             select = f"SELECT * from td_node_{node.id}_v"
@@ -439,17 +432,11 @@ class Problem(object):
             if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
                 # get number of result rows in table and check if the limit should be applied or not
                 count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
-                #print(count)
                 count = count[0]
-                #print(f"Count: {count}")
                 if self.LIMIT_RESULT_ROWS_CAP < count:
                     #select += f" LIMIT {self.limit_result_rows}"
                     limit = (list({self.limit_result_rows})[0])/100
                     select += f" LIMIT ({count}*{limit})"
-            #count_all = db.select(f"td_node_{node.id}_v", ["*"])
-            #print(f"{node.id}")
-            #print(f"Count_all: {count_all}")
-            #print(select)
             db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
         if self.interrupted:
             return

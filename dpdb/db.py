@@ -166,7 +166,6 @@ class DB(object):
                     )
         if where:
             q = sql.Composed([q,sql.SQL(" WHERE {}").format(sql.SQL(' AND ').join(map(sql.SQL,where)))])
-
         return self.exec_and_fetch(q)
 
     def create_select(self,table,ass_sql):
