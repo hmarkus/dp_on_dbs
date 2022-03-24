@@ -157,6 +157,7 @@ class Problem(object):
         q = ""
 
         if any(node.needs_introduce(v) for v in node.vertices):
+            # introudce is used to check if new variables are introduced in this call
             introduce = True
             q += "WITH introduce AS ({}) ".format(self.introduce(node))
 
@@ -177,7 +178,10 @@ class Problem(object):
         if len(node.children) > 1:
             q += " {} ".format(self.join(node))
         
+        # limit_introduce is used to be able to set a limit separately for introduce and solve 
         if introduce and self.limit_introduce:
+            # the rows are always randomly order to avoid skipping a variable
+            # in the limit the newly introduced variables are used
             limit = self.limit_introduce / 100
             q += " ORDER BY RANDOM() LIMIT (SELECT Count(*) FROM "
             q += "{}".format(",".join(set(["{} {}".format(var2tab(node, v), "limit" + var2tab_alias(node,v)) for v in node.vertices] + ["{} {}".format(node2tab(n), "limit" + node2tab_alias(n)) for n in node.children]))) 
@@ -218,9 +222,12 @@ class Problem(object):
         if not node.stored_vertices and not extra_group:
             q += " LIMIT 1"
         else:
-            if self.randomize_rows:
-                q += " ORDER BY RANDOM()"
             if checkLimit == True:
+                if self.randomize_rows:
+                    q += " ORDER BY RANDOM()"
+                # to use the limit the amount of rows has to be counted in the limit query
+                # therefore the same FROM and WHERE clause has to be used in the subselect
+                # in the limit but without the GROUP BY
                 fromIndex = q.find("FROM")
                 groupByIndex = q.find("GROUP BY")
                 if groupByIndex != -1:
@@ -229,7 +236,6 @@ class Problem(object):
                     substr = q[fromIndex:]
                 limit = (list({self.limit_result_rows})[0])/100
                 q += f" LIMIT ((SELECT Count(*) {substr})*{limit})"
-
         return q
 
     # the following methods should be considered final
@@ -419,7 +425,9 @@ class Problem(object):
         if self.candidate_store == "table":
             db.persist_view(f"td_node_{node.id}_candidate")
         if "faster" in self.kwargs and self.kwargs["faster"]:
+            # if limit should be used or not
             if self.limit_result_rows:
+                # True tells the assignment_view function that the limit part of the query should be added
                 ass_view = self.assignment_view(node, True)
             else:
                 ass_view = self.assignment_view(node)
