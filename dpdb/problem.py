@@ -73,7 +73,9 @@ class Problem(object):
     td = None
     query = " "
     # minimum amount of results that is needed to activate the limit
-    LIMIT_RESULT_ROWS_CAP = 0
+    LIMIT_RESULT_ROWS_LOWER_CAP = 0
+    # maximum amount of results that are allowed per table
+    LIMIT_RESULT_ROWS_UPPER_CAP = 10
 
     def __init__(self, name, pool, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
@@ -183,9 +185,11 @@ class Problem(object):
             # the rows are always randomly order to avoid skipping a variable
             # in the limit the newly introduced variables are used
             limit = self.limit_introduce / 100
-            q += " ORDER BY RANDOM() LIMIT (SELECT Count(*) FROM "
+            #q += " ORDER BY RANDOM()"
+            q += f" LIMIT (SELECT least(Count(*), {self.LIMIT_RESULT_ROWS_UPPER_CAP}) FROM "
             q += "{}".format(",".join(set(["{} {}".format(var2tab(node, v), "limit" + var2tab_alias(node,v)) for v in node.vertices] + ["{} {}".format(node2tab(n), "limit" + node2tab_alias(n)) for n in node.children]))) 
             q += f") * {limit}" 
+        
         return q
 
     def assignment_select(self,node):
@@ -235,7 +239,7 @@ class Problem(object):
                 else:
                     substr = q[fromIndex:]
                 limit = (list({self.limit_result_rows})[0])/100
-                q += f" LIMIT ((SELECT Count(*) {substr})*{limit})"
+                q += f" LIMIT ((SELECT least(Count(*), {self.LIMIT_RESULT_ROWS_UPPER_CAP}) {substr})*{limit})"
         return q
 
     # the following methods should be considered final
@@ -441,10 +445,17 @@ class Problem(object):
                 # get number of result rows in table and check if the limit should be applied or not
                 count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
                 count = count[0]
-                if self.LIMIT_RESULT_ROWS_CAP < count:
+                if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
                     #select += f" LIMIT {self.limit_result_rows}"
-                    limit = (list({self.limit_result_rows})[0])/100
-                    select += f" LIMIT ({count}*{limit})"
+                    # if amount of rows is higher than the Cap use the Cap as Limit
+                    # to avoid having to much rows to work with
+                    if self.LIMIT_RESULT_ROWS_UPPER_CAP < count:
+                        select += f" LIMIT {self.LIMIT_RESULT_ROWS_UPPER_CAP}"
+                    else:
+                        limit = (list({self.limit_result_rows})[0])/100
+                        select += f" LIMIT ({count}*{limit})"
+            #print(db.select(f"td_node_{node.id}_v", ["Count(*)"]))
+            #print(select)
             db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
         if self.interrupted:
             return
