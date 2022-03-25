@@ -33,6 +33,18 @@ args.general = {
         type=int,
         dest="limit_introduce",
         help="Limit number of result rows when introducing a new node"
+    ),
+    "--lower-cap": dict(
+        type=int,
+        dest="lower_cap",
+        default=1,
+        help="Lower Cap for activating the limit in solve"
+    ),
+    "--upper-cap": dict(
+        type=int,
+        dest="upper_cap",
+        default=10,
+        help="Upper Cap for a maximum of rows per step"
     )
 }
 
@@ -73,13 +85,13 @@ class Problem(object):
     td = None
     query = " "
     # minimum amount of results that is needed to activate the limit
-    LIMIT_RESULT_ROWS_LOWER_CAP = 0
-    # maximum amount of results that are allowed per table
-    LIMIT_RESULT_ROWS_UPPER_CAP = 10
+    LIMIT_RESULT_ROWS_LOWER_CAP = None
+    # maximum amount of results that are allowed per tablei
+    LIMIT_RESULT_ROWS_UPPER_CAP = None
 
-    def __init__(self, name, pool, max_worker_threads=12,
+    def __init__(self, name, pool, lower_cap, upper_cap, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
-            randomize_rows=False, limit_introduce=None, **kwargs):
+            randomize_rows=False, limit_introduce=None,  **kwargs):
         self.name = name
         self.pool = pool
         self.candidate_store = candidate_store
@@ -91,6 +103,10 @@ class Problem(object):
         self.type = type(self).__name__
         self.db = DB.from_pool(pool)
         self.interrupted = False
+        self.LIMIT_RESULT_ROWS_LOWER_CAP = lower_cap
+        self.LIMIT_RESULT_ROWS_UPPER_CAP = upper_cap
+        if self.LIMIT_RESULT_ROWS_LOWER_CAP > self.LIMIT_RESULT_ROWS_UPPER_CAP:
+            print("ERROR")
 
     # overwrite the following methods (if required)
     def td_node_column_def(self, var):
@@ -185,7 +201,7 @@ class Problem(object):
             # the rows are always randomly order to avoid skipping a variable
             # in the limit the newly introduced variables are used
             limit = self.limit_introduce / 100
-            #q += " ORDER BY RANDOM()"
+            q += " ORDER BY RANDOM()"
             q += f" LIMIT (SELECT least(Count(*), {self.LIMIT_RESULT_ROWS_UPPER_CAP}) FROM "
             q += "{}".format(",".join(set(["{} {}".format(var2tab(node, v), "limit" + var2tab_alias(node,v)) for v in node.vertices] + ["{} {}".format(node2tab(n), "limit" + node2tab_alias(n)) for n in node.children]))) 
             q += f") * {limit}" 
