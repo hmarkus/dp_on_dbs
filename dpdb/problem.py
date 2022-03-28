@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from dpdb.reader import TwReader
 from dpdb.db import DB
 
+import argparse
 logger = logging.getLogger(__name__)
 
 args = SimpleNamespace()
@@ -83,7 +84,7 @@ def var2tab_col(node, var, alias=True):
 class Problem(object):
     id = None
     td = None
-    query = " "
+    
     # minimum amount of results that is needed to activate the limit
     LIMIT_RESULT_ROWS_LOWER_CAP = None
     # maximum amount of results that are allowed per tablei
@@ -105,8 +106,10 @@ class Problem(object):
         self.interrupted = False
         self.LIMIT_RESULT_ROWS_LOWER_CAP = lower_cap
         self.LIMIT_RESULT_ROWS_UPPER_CAP = upper_cap
+        print(self.LIMIT_RESULT_ROWS_LOWER_CAP)
+        print(self.LIMIT_RESULT_ROWS_UPPER_CAP)
         if self.LIMIT_RESULT_ROWS_LOWER_CAP > self.LIMIT_RESULT_ROWS_UPPER_CAP:
-            print("ERROR")
+            raise ValueError("Upper Limit must be higher than lower limit")
 
     # overwrite the following methods (if required)
     def td_node_column_def(self, var):
