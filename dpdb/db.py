@@ -109,22 +109,17 @@ class DB(object):
                     self.__table_name__(name),
                     sql.SQL(', ').join(sql.Identifier(c[0]) + sql.SQL(" "+c[1]) for c in columns)
                     )
-        #print(q)
         self.execute_ddl(q)
 
     def create_view(self, name, text):
         q = sql.SQL("CREATE VIEW {} AS ").format(self.__table_name__(name))
         q = sql.Composed([q,sql.SQL(text)])
-        #print(q)
         self.execute_ddl(q)
     
-    def add_unique_constraint(self, table, columns):
-        #q = sql.SQL("ALTER TABLE {} ADD CONSTRAINT {} UNIQUE ({})").format(
-        #           self.__table_name__(table),
-        #            sql.SQL("unique_" + table),
-        #            sql.SQL(', ').join(sql.Identifier(c) for c in columns)
-        #            )
-        
+    # create unique index for all the variable columns
+    # necessary for the iterative approximation because the tables only have a sequence primary key
+    # coalesce is used to make it work with NULL values in the columns (only works if always the same columns are NULL)
+    def add_unique_index(self, table, columns):
         q = sql.SQL("CREATE UNIQUE INDEX {} ON {} ({})").format(
             sql.SQL("unique_" + table),
             self.__table_name__(table),
@@ -170,11 +165,11 @@ class DB(object):
         if columns and not checkConflict:
             q = sql.Composed([q,sql.SQL(', ').join(map(sql.Identifier, columns))])
         if checkConflict:
+            # if conflicts should be handeld (iterative approximation) set the model count, if a conflict appears
+            # to the greater one of the newly inserted or the current one in the table
             q = sql.Composed([q, sql.SQL(' ON CONFLICT ({}) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(
                 sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns),
                 self.__table_name__(table))])
-            #q = sql.Composed([q, sql.SQL(' ON CONFLICT ON CONSTRAINT {}  DO NOTHING').format(sql.SQL("unique_" + table))])
-            #q = sql.Composed([q, sql.SQL(' ON CONFLICT DO NOTHING')])
         if returning:
             q = sql.Composed([q,sql.SQL(" RETURNING {}").format(sql.Identifier(returning))])
             return self.exec_and_fetch(q)

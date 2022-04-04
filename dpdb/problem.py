@@ -106,8 +106,6 @@ class Problem(object):
         self.interrupted = False
         self.LIMIT_RESULT_ROWS_LOWER_CAP = lower_cap
         self.LIMIT_RESULT_ROWS_UPPER_CAP = upper_cap
-        print(self.LIMIT_RESULT_ROWS_LOWER_CAP)
-        print(self.LIMIT_RESULT_ROWS_UPPER_CAP)
         if self.LIMIT_RESULT_ROWS_LOWER_CAP > self.LIMIT_RESULT_ROWS_UPPER_CAP:
             raise ValueError("Upper Limit must be higher than lower limit")
 
@@ -199,17 +197,16 @@ class Problem(object):
         if len(node.children) > 1:
             q += " {} ".format(self.join(node))
         
+        # the rows are always randomly ordered to avoid skipping a variable
         q += " ORDER BY RANDOM()"
         # limit_introduce is used to be able to set a limit separately for introduce and solve 
         if introduce and self.limit_introduce:
-            # the rows are always randomly order to avoid skipping a variable
             # in the limit the newly introduced variables are used
             limit = self.limit_introduce / 100
             q += f" LIMIT (SELECT least(Count(*), {self.LIMIT_RESULT_ROWS_UPPER_CAP}) FROM "
             q += "{}".format(",".join(set(["{} {}".format(var2tab(node, v), "limit" + var2tab_alias(node,v)) for v in node.vertices] + ["{} {}".format(node2tab(n), "limit" + node2tab_alias(n)) for n in node.children]))) 
             q += f") * {limit}" 
         
-        #print(q)
         return q
 
     def assignment_select(self,node):
@@ -248,8 +245,6 @@ class Problem(object):
         else:
             q += " ORDER BY RANDOM()"
             if checkLimit == True:
-                #if self.randomize_rows:
-                    #q += " ORDER BY RANDOM()"
                 # to use the limit the amount of rows has to be counted in the limit query
                 # therefore the same FROM and WHERE clause has to be used in the subselect
                 # in the limit but without the GROUP BY
@@ -261,7 +256,6 @@ class Problem(object):
                     substr = q[fromIndex:]
                 limit = (list({self.limit_result_rows})[0])/100
                 q += f" LIMIT ((SELECT least(Count(*), {self.LIMIT_RESULT_ROWS_UPPER_CAP}) {substr})*{limit})"
-        
         return q
 
     # the following methods should be considered final
@@ -343,7 +337,8 @@ class Problem(object):
             # create all columns and insert null if values are not used in parent
             # this only works in the current version of manual inserts without procedure calls in worker
             db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
-            db.add_unique_constraint(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.vertices]) 
+            # add unique index for the iterative approxiamtion
+            db.add_unique_index(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.vertices]) 
             if self.candidate_store == "table":
                 db.create_table(f"td_node_{n.id}_candidate", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
                 candidate_view = self.candidates_select(n)
@@ -399,7 +394,6 @@ class Problem(object):
         
         self.before_solve()
         
-        #for i in range(10):
         workers = {}
         with ThreadPoolExecutor(self.max_worker_threads) as executor:
             for n in self.td.nodes:
@@ -407,25 +401,15 @@ class Problem(object):
                 workers[n.id] = e
         self.after_solve()
         
-        res = 0
-        for n in self.td.nodes:
-            count = self.db.select(f"td_node_{n.id}_v", ["Count(*)"])
-            count2 = self.db.select(f"td_node_{n.id}", ["Count(*)"])
-            if count != count2:
-               res = res + 1 
-            #if count[0] > 50:
-                #print(n.id)
-                #print(count)
-                #print(self.db.select(f"td_node_{n.id}", ["Count(*)"]))
-                #print(self.db.select(f"td_node_{n.id}_v", ["*"]))
-            self.db.drop_view(f"td_node_{n.id}_v")
-            ass_view = self.assignment_view(n)
-            ass_view = self.db.replace_dynamic_tabs(ass_view)
-            self.db.create_view(f"td_node_{n.id}_v", ass_view)
-            #print(n.id)
-            #print(self.db.select(f"td_node_{n.id}_v", ["*"]))
-            #print(self.db.select(f"td_node_{n.id}_v", ["Count(*)"]))
-        print(res)
+        # create the views new after every iteration to apply the limit again and get new rows for the nex iteration
+        if "faster" not in self.kwargs or not self.kwargs["faster"]:
+            res = 0
+            for n in self.td.nodes:
+                self.db.drop_view(f"td_node_{n.id}_v")
+                ass_view = self.assignment_view(n)
+                ass_view = self.db.replace_dynamic_tabs(ass_view)
+                self.db.create_view(f"td_node_{n.id}_v", ass_view)
+
         self.db.ignore_next_praefix()
         self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
         self.db.commit()
@@ -433,7 +417,6 @@ class Problem(object):
             self.db.ignore_next_praefix()
             elapsed = self.db.select("problem",["end_time-calc_start_time","calc_start_time-setup_start_time"],[f"ID = {self.id}"])
             logger.info("Setup time: %s; Calc time: %s", elapsed[1], elapsed[0])
-        #self.db.close()
 
     def interrupt(self):
         self.interrupted = True
@@ -486,12 +469,7 @@ class Problem(object):
                 # get number of result rows in table and check if the limit should be applied or not
                 count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
                 count = count[0]
-                count2 = db.select(f"td_node_{node.id}", ["Count(*)"])
-                #print(node.id)
-                #print(count)
-                #print(count2[0])
                 if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
-                    #select += f"  LIMIT 1"
                     # if amount of rows is higher than the Cap use the Cap as Limit
                     # to avoid having to much rows to work with
                     if self.LIMIT_RESULT_ROWS_UPPER_CAP < count:
@@ -499,13 +477,7 @@ class Problem(object):
                     else:
                         limit = (list({self.limit_result_rows})[0])/100
                         select += f" LIMIT ({count}*{limit})"
-            #print(db.select(f"td_node_{node.id}_v", ["Count(*)"]))
-            #print(select)
-            #print(db.select(f"td_node_{node.id}_v", ["*"]))
-            #print(select)
             db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
-            #print(db.select("td_node_2_v", ["*"]))
-            #print(db.select("td_node_2_v", ["Count(*)"]))
         if self.interrupted:
             return
         self.after_solve_node(node, db)

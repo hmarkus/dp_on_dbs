@@ -85,7 +85,9 @@ def solve_problem(cfg, cls, file, **kwargs):
     problem.setup()
     if "faster" not in kwargs or not kwargs["faster"]:
         problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
-    for i in range(60):
+        for i in range(60):
+            problem.solve()
+    else:
         problem.solve()
     problem.db.close()
 
