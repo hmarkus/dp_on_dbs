@@ -69,6 +69,7 @@ class SharpSat(Problem):
         sum_count = self.db.replace_dynamic_tabs(f"(select coalesce(sum(model_count),0) from {root_tab})")
         self.db.ignore_next_praefix()
         model_count = self.db.update("problem_sharpsat",["model_count"],[sum_count],[f"ID = {self.id}"],"model_count")[0]
+        print(self.db.select("td_node_2_v", ["*"]))
         logger.info("Problem has %d models", model_count)
 
 def var2cnt(node,var):
