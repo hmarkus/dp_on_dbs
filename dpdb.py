@@ -83,9 +83,11 @@ def solve_problem(cfg, cls, file, **kwargs):
             fw.write_td(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, td.edges)
     problem.set_td(td)
     problem.setup()
+    if "iterations" in kwargs and kwargs["iterations"]:
+        print(kwargs["iterations"])
     if "faster" not in kwargs or not kwargs["faster"]:
         problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
-        for i in range(60):
+        for i in range(kwargs["iterations"]):
             problem.solve()
     else:
         problem.solve()
@@ -141,7 +143,8 @@ if __name__ == "__main__":
     prob_opts = parser.add_argument_group("problem options", "Options that apply to all problem types")
     for arg, kwargs in args.general.items():
         prob_opts.add_argument(arg,**kwargs)
-
+    
+    prob_opts.add_argument("--iterations", dest="iterations", help="number of iterations to be run (doesn't work with --faster)", default=1, type=int)
     args = parser.parse_args()
 
     if args.log_level:
