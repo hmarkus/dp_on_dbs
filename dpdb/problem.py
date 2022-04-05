@@ -17,7 +17,8 @@ args.general = {
     "--limit-result-rows": dict(
         type=int,
         dest="limit_result_rows",
-        help="Limit number of result rows per table"
+        help="Limit number of result rows per table. Can be a list (useful with --iterations) then every item of the list is used roughly the same amount of times.",
+        nargs="*"
     ),
     "--randomize-rows": dict(
         action="store_true",
@@ -96,7 +97,10 @@ class Problem(object):
         self.name = name
         self.pool = pool
         self.candidate_store = candidate_store
-        self.limit_result_rows = limit_result_rows
+        if limit_result_rows is not None:
+            self.limit_result_rows = limit_result_rows[0]
+        else:
+            self.limit_result_rows = limit_result_rows
         self.randomize_rows = randomize_rows
         self.limit_introduce = limit_introduce
         self.max_worker_threads = max_worker_threads

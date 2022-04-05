@@ -83,11 +83,18 @@ def solve_problem(cfg, cls, file, **kwargs):
             fw.write_td(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, td.edges)
     problem.set_td(td)
     problem.setup()
-    if "iterations" in kwargs and kwargs["iterations"]:
-        print(kwargs["iterations"])
+
+    stepAmount = 0
+    if "limit_result_rows" in kwargs and kwargs["limit_result_rows"]:
+        stepAmount = round(kwargs["iterations"] / len(kwargs["limit_result_rows"]))
     if "faster" not in kwargs or not kwargs["faster"]:
         problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
+        j = 1
         for i in range(kwargs["iterations"]):
+            if "limit_result_rows" in kwargs and kwargs["limit_result_rows"] and stepAmount > 0:
+                if (i % stepAmount) == 0 and i != 0 and j != len(kwargs["limit_result_rows"]):
+                    problem.limit_result_rows = kwargs["limit_result_rows"][j]
+                    j = j + 1
             problem.solve()
     else:
         problem.solve()
