@@ -481,7 +481,16 @@ class Problem(object):
                     else:
                         limit = (list({self.limit_result_rows})[0])/100
                         select += f" LIMIT ({count}*{limit})"
-            db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
+            countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
+            countTable = countTable[0]
+
+            if countTable < 50:
+                db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
+            else:
+                print(node.id)
+                db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices])
+                print(db.select(f"td_node_{node.id}", ["Count(*)"]))
+                print(db.select(f"td_node_{node.id}", ["sum(model_count)"]))
         if self.interrupted:
             return
         self.after_solve_node(node, db)

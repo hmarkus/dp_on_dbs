@@ -216,6 +216,19 @@ class DB(object):
         else:
             self.execute(q)
 
+    def update_select_model_count(self, table, select, columns):
+        q = sql.SQL("UPDATE {} SET model_count = subquery.model_count FROM ({}) AS subquery WHERE {}").format(
+                    self.__table_name__(table),
+                    sql.SQL(select),
+                    sql.SQL(" AND ").join([sql.SQL("({}.{} IS NULL OR {}.{} = subquery.{})").format(
+                        self.__table_name__(table),
+                        sql.Identifier(c),
+                        self.__table_name__(table),
+                        sql.Identifier(c), sql.Identifier(c)
+                        ) for c in columns])
+                    )
+        self.execute(q)
+
     def call(self, procedure, params = []):
         q = sql.SQL("CALL {} ({})").format(
                     sql.Identifier(procedure),
