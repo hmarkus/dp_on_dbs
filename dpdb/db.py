@@ -87,6 +87,16 @@ class DB(object):
         except pg.errors.AdminShutdown:
             logger.warning("Connection closed by admin")
         
+    def exec_and_fetch_all(self,q,p = []):
+        try:
+            self.__debug_query__(q,p)
+            with self._conn.cursor() as cur:
+                cur.execute(q,p)
+                self.last_rowcount = cur.rowcount
+                return cur.fetchall()
+        except pg.errors.AdminShutdown:
+            logger.warning("Connection closed by admin")
+    
     def execute_ddl(self,q):
         try:
             self.__debug_query__(q)
@@ -183,14 +193,23 @@ class DB(object):
         select = self.replace_dynamic_tabs(select)
         self.insert_select(table, select)
 
-    def select(self, table, columns, where = None):
+    def select_query(self, query):
+        q = sql.SQL(self.replace_dynamic_tabs(query))
+        print(q)
+        return self.exec_and_fetch_all(q)
+
+    def select(self, table, columns, where = None, all = False):
         q = sql.SQL("SELECT {} FROM {}").format(
                     sql.SQL(', ').join(sql.SQL(c) for c in columns),
                     self.__table_name__(table)
                     )
         if where:
             q = sql.Composed([q,sql.SQL(" WHERE {}").format(sql.SQL(' AND ').join(map(sql.SQL,where)))])
-        return self.exec_and_fetch(q)
+        
+        if all:
+            return self.exec_and_fetch_all(q)
+        else:
+            return self.exec_and_fetch(q)
 
     def create_select(self,table,ass_sql):
         q = sql.SQL("CREATE TABLE {} AS {}").format(

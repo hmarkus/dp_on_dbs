@@ -91,6 +91,7 @@ def solve_problem(cfg, cls, file, **kwargs):
         problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
         j = 1
         for i in range(kwargs["iterations"]):
+            print(i)
             if "limit_result_rows" in kwargs and kwargs["limit_result_rows"] and stepAmount > 0:
                 if (i % stepAmount) == 0 and i != 0 and j != len(kwargs["limit_result_rows"]):
                     problem.limit_result_rows = kwargs["limit_result_rows"][j]

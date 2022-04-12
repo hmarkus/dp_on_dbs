@@ -47,6 +47,12 @@ args.general = {
         dest="upper_cap",
         default=1000,
         help="Upper Cap for a maximum of rows per step"
+    ),
+    "--table-row-limit": dict(
+        type=int,
+        dest="table_row_limit",
+        default=1000,
+        help="Max Amount of Rows in table - after this limit is reached the model_count still gets updated but no new rows are inserted"
     )
 }
 
@@ -91,7 +97,9 @@ class Problem(object):
     # maximum amount of results that are allowed per tablei
     LIMIT_RESULT_ROWS_UPPER_CAP = None
 
-    def __init__(self, name, pool, lower_cap, upper_cap, max_worker_threads=12,
+    TABLE_ROW_LIMIT = None
+
+    def __init__(self, name, pool, lower_cap, upper_cap, table_row_limit, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
             randomize_rows=False, limit_introduce=None,  **kwargs):
         self.name = name
@@ -108,6 +116,8 @@ class Problem(object):
         self.type = type(self).__name__
         self.db = DB.from_pool(pool)
         self.interrupted = False
+        self.TABLE_ROW_LIMIT = table_row_limit
+        print(table_row_limit)
         self.LIMIT_RESULT_ROWS_LOWER_CAP = lower_cap
         self.LIMIT_RESULT_ROWS_UPPER_CAP = upper_cap
         if self.LIMIT_RESULT_ROWS_LOWER_CAP > self.LIMIT_RESULT_ROWS_UPPER_CAP:
@@ -483,14 +493,18 @@ class Problem(object):
                         select += f" LIMIT ({count}*{limit})"
             countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
             countTable = countTable[0]
-
-            if countTable < 50:
+            
+            if countTable < self.TABLE_ROW_LIMIT:
                 db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
             else:
-                print(node.id)
+                #print(countTable)
                 db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices])
-                print(db.select(f"td_node_{node.id}", ["Count(*)"]))
-                print(db.select(f"td_node_{node.id}", ["sum(model_count)"]))
+                #print(db.select(f"td_node_{node.id}", ["Count(*)"]))
+                #print(db.select(f"td_node_{node.id}", ["sum(model_count)"]))
+            
+                #rows = db.select_query(select)
+                #for r in rows:
+                    #db.update(f"td_node_{node.id}", [self.td_node_column_def(c)[0] for c in node.vertices], r
         if self.interrupted:
             return
         self.after_solve_node(node, db)
