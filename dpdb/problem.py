@@ -94,9 +94,10 @@ class Problem(object):
     
     # minimum amount of results that is needed to activate the limit
     LIMIT_RESULT_ROWS_LOWER_CAP = None
-    # maximum amount of results that are allowed per tablei
+    # maximum amount of results that are selected from the view
     LIMIT_RESULT_ROWS_UPPER_CAP = None
-
+    # max amount of results allowed in a table - after this limit is hit the model_count only gets updated
+    # but no new rows are inserted in this table
     TABLE_ROW_LIMIT = None
 
     def __init__(self, name, pool, lower_cap, upper_cap, table_row_limit, max_worker_threads=12,
@@ -109,11 +110,13 @@ class Problem(object):
             self.limit_result_rows = limit_result_rows[0]
         else:
             self.limit_result_rows = limit_result_rows
+
+        # check if --randomize-rows parameter is set if yes then in solve
+        # the rows shouldn't be randomized 
         if "randomize_rows" in kwargs and kwargs["randomize_rows"]:
             self.randomize_rows = False
         else:
             self.randomize_rows = True
-        print(self.randomize_rows)
         self.limit_introduce = limit_introduce
         self.max_worker_threads = max_worker_threads
         self.kwargs = kwargs
@@ -494,21 +497,15 @@ class Problem(object):
                     else:
                         limit = (list({self.limit_result_rows})[0])/100
                         select += f" LIMIT ({count}*{limit})"
+            # cont the rows in the table
             countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
             countTable = countTable[0]
             
+            # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
             if countTable < self.TABLE_ROW_LIMIT:
-                print(select)
                 db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
             else:
-                #print(countTable)
                 db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices])
-                #print(db.select(f"td_node_{node.id}", ["Count(*)"]))
-                #print(db.select(f"td_node_{node.id}", ["sum(model_count)"]))
-            
-                #rows = db.select_query(select)
-                #for r in rows:
-                    #db.update(f"td_node_{node.id}", [self.td_node_column_def(c)[0] for c in node.vertices], r
         if self.interrupted:
             return
         self.after_solve_node(node, db)

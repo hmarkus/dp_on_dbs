@@ -86,7 +86,8 @@ class DB(object):
                 return cur.fetchone()
         except pg.errors.AdminShutdown:
             logger.warning("Connection closed by admin")
-        
+    
+    # returns all rows not only the first one
     def exec_and_fetch_all(self,q,p = []):
         try:
             self.__debug_query__(q,p)
@@ -135,7 +136,6 @@ class DB(object):
             self.__table_name__(table),
             sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns)
             )
-        
         self.execute_ddl(q)
 
     def drop_view(self, name, if_exists = True): 
@@ -192,12 +192,14 @@ class DB(object):
         select = f"SELECT * FROM {view}"
         select = self.replace_dynamic_tabs(select)
         self.insert_select(table, select)
-
+    
+    # parse whole query and returns all result rows
     def select_query(self, query):
         q = sql.SQL(self.replace_dynamic_tabs(query))
         print(q)
         return self.exec_and_fetch_all(q)
-
+    
+    # when all is set then all result rows (not only the first one) get returned
     def select(self, table, columns, where = None, all = False):
         q = sql.SQL("SELECT {} FROM {}").format(
                     sql.SQL(', ').join(sql.SQL(c) for c in columns),
@@ -234,7 +236,9 @@ class DB(object):
             return self.exec_and_fetch(q)
         else:
             self.execute(q)
-
+    
+    # the model count is updated if the row already exists in the table - the rows get returned from the select
+    # also every column has to be checked against NULL because NULL is not a distinct value
     def update_select_model_count(self, table, select, columns):
         q = sql.SQL("UPDATE {} SET model_count = subquery.model_count FROM ({}) AS subquery WHERE {}").format(
                     self.__table_name__(table),

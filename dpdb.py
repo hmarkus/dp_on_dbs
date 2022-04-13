@@ -83,7 +83,12 @@ def solve_problem(cfg, cls, file, **kwargs):
             fw.write_td(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, td.edges)
     problem.set_td(td)
     problem.setup()
-
+    
+    # The number of iterations per item in the limit list get calculated
+    # and then the limit_result_rows variable in the problem class
+    # gets set accordingly (so when the current iteration divided by the stepAmount is zero
+    # and it is not the first one and there are still new arguments in the list left)
+    # if faster is set all the iterations and limit restrictions have no influence
     stepAmount = 0
     if "limit_result_rows" in kwargs and kwargs["limit_result_rows"]:
         stepAmount = round(kwargs["iterations"] / len(kwargs["limit_result_rows"]))
@@ -91,7 +96,6 @@ def solve_problem(cfg, cls, file, **kwargs):
         problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
         j = 1
         for i in range(kwargs["iterations"]):
-            print(i)
             if "limit_result_rows" in kwargs and kwargs["limit_result_rows"] and stepAmount > 0:
                 if (i % stepAmount) == 0 and i != 0 and j != len(kwargs["limit_result_rows"]):
                     problem.limit_result_rows = kwargs["limit_result_rows"][j]
@@ -151,7 +155,7 @@ if __name__ == "__main__":
     prob_opts = parser.add_argument_group("problem options", "Options that apply to all problem types")
     for arg, kwargs in args.general.items():
         prob_opts.add_argument(arg,**kwargs)
-    
+   
     prob_opts.add_argument("--iterations", dest="iterations", help="number of iterations to be run (doesn't work with --faster)", default=1, type=int)
     args = parser.parse_args()
 
