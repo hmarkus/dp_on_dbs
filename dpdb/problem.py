@@ -23,7 +23,7 @@ args.general = {
     "--randomize-rows": dict(
         action="store_true",
         dest="randomize_rows",
-        help="Randomize rows (useful with --limit-result-rows)"
+        help="If set the rows in the solve methode do not get randomized anymore"
     ),
     "--candidate-store": dict(
         dest="candidate_store",
@@ -101,7 +101,7 @@ class Problem(object):
 
     def __init__(self, name, pool, lower_cap, upper_cap, table_row_limit, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
-            randomize_rows=False, limit_introduce=None,  **kwargs):
+            limit_introduce=None,  **kwargs):
         self.name = name
         self.pool = pool
         self.candidate_store = candidate_store
@@ -109,7 +109,11 @@ class Problem(object):
             self.limit_result_rows = limit_result_rows[0]
         else:
             self.limit_result_rows = limit_result_rows
-        self.randomize_rows = randomize_rows
+        if "randomize_rows" in kwargs and kwargs["randomize_rows"]:
+            self.randomize_rows = False
+        else:
+            self.randomize_rows = True
+        print(self.randomize_rows)
         self.limit_introduce = limit_introduce
         self.max_worker_threads = max_worker_threads
         self.kwargs = kwargs
@@ -117,7 +121,6 @@ class Problem(object):
         self.db = DB.from_pool(pool)
         self.interrupted = False
         self.TABLE_ROW_LIMIT = table_row_limit
-        print(table_row_limit)
         self.LIMIT_RESULT_ROWS_LOWER_CAP = lower_cap
         self.LIMIT_RESULT_ROWS_UPPER_CAP = upper_cap
         if self.LIMIT_RESULT_ROWS_LOWER_CAP > self.LIMIT_RESULT_ROWS_UPPER_CAP:
@@ -495,6 +498,7 @@ class Problem(object):
             countTable = countTable[0]
             
             if countTable < self.TABLE_ROW_LIMIT:
+                print(select)
                 db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
             else:
                 #print(countTable)
