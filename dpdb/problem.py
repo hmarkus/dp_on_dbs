@@ -505,7 +505,16 @@ class Problem(object):
             if countTable < self.TABLE_ROW_LIMIT:
                 db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
             else:
-                db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices])
+                print("update")
+                print(node.id)
+                print(db.select(f"td_node_{node.id}", ["Count(*)"]))
+                db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
+                print(db.select(f"td_node_{node.id}", ["Count(*)"]))
+                print(db.select(f"td_node_{node.id}", ["sum(model_count)"]))
+            if node.id == 11 or node.id == 66 or node.id == 10 or node.id == 5 or node.id == 2 or node.id == 1:
+                print(node.id) 
+                print(db.select(f"td_node_{node.id}", ["Count(*)"]))
+                print(db.select(f"td_node_{node.id}", ["sum(model_count)"]))
         if self.interrupted:
             return
         self.after_solve_node(node, db)

@@ -131,10 +131,11 @@ class DB(object):
     # necessary for the iterative approximation because the tables only have a sequence primary key
     # coalesce is used to make it work with NULL values in the columns (only works if always the same columns are NULL)
     def add_unique_index(self, table, columns):
-        q = sql.SQL("CREATE UNIQUE INDEX {} ON {} ({})").format(
+        q = sql.SQL("CREATE UNIQUE INDEX {} ON {} ((ARRAY[{}]))").format(
             sql.SQL("unique_" + table),
             self.__table_name__(table),
-            sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns)
+            #sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns)
+            sql.SQL(', ').join(sql.Identifier(c) for c in columns)
             )
         self.execute_ddl(q)
 
@@ -177,8 +178,9 @@ class DB(object):
         if checkConflict:
             # if conflicts should be handeld (iterative approximation) set the model count, if a conflict appears
             # to the greater one of the newly inserted or the current one in the table
-            q = sql.Composed([q, sql.SQL(' ON CONFLICT ({}) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(
-                sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns),
+            q = sql.Composed([q, sql.SQL(' ON CONFLICT ((ARRAY[{}])) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(
+                #sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns),
+                sql.SQL(', ').join(sql.Identifier(c) for c in columns),
                 self.__table_name__(table))])
         if returning:
             q = sql.Composed([q,sql.SQL(" RETURNING {}").format(sql.Identifier(returning))])
