@@ -52,7 +52,7 @@ args.general = {
         type=int,
         dest="table_row_limit",
         default=1000,
-        help="Max Amount of Rows in table - after this limit is reached the model_count still gets updated but no new rows are inserted"
+        help="Max Amount of Rows in table - after this limit is reached the model_count still gets updated but no new rows are inserted. If limit = 0 the limit will be ignored."
     )
 }
 
@@ -502,19 +502,12 @@ class Problem(object):
             countTable = countTable[0]
             
             # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
-            if countTable < self.TABLE_ROW_LIMIT:
+            if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
                 db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
             else:
-                print("update")
                 print(node.id)
-                print(db.select(f"td_node_{node.id}", ["Count(*)"]))
+                print("update")
                 db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
-                print(db.select(f"td_node_{node.id}", ["Count(*)"]))
-                print(db.select(f"td_node_{node.id}", ["sum(model_count)"]))
-            if node.id == 11 or node.id == 66 or node.id == 10 or node.id == 5 or node.id == 2 or node.id == 1:
-                print(node.id) 
-                print(db.select(f"td_node_{node.id}", ["Count(*)"]))
-                print(db.select(f"td_node_{node.id}", ["sum(model_count)"]))
         if self.interrupted:
             return
         self.after_solve_node(node, db)
