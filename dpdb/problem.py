@@ -505,8 +505,6 @@ class Problem(object):
             if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
                 db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
             else:
-                print(node.id)
-                print("update")
                 db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
         if self.interrupted:
             return
