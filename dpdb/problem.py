@@ -40,13 +40,13 @@ args.general = {
         type=int,
         dest="lower_cap",
         default=1,
-        help="Lower Cap for activating the limit in solve"
+        help="Lower Cap for activating the limit in solve. If lowerCap == 0 it will be ignored."
     ),
     "--upper-cap": dict(
         type=int,
         dest="upper_cap",
         default=1000,
-        help="Upper Cap for a maximum of rows per step"
+        help="Upper Cap for a maximum of rows per step. If upperCap == 0 it will be ignored."
     ),
     "--table-row-limit": dict(
         type=int,
@@ -126,7 +126,7 @@ class Problem(object):
         self.TABLE_ROW_LIMIT = table_row_limit
         self.LIMIT_RESULT_ROWS_LOWER_CAP = lower_cap
         self.LIMIT_RESULT_ROWS_UPPER_CAP = upper_cap
-        if self.LIMIT_RESULT_ROWS_LOWER_CAP > self.LIMIT_RESULT_ROWS_UPPER_CAP:
+        if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_LOWER_CAP > self.LIMIT_RESULT_ROWS_UPPER_CAP:
             raise ValueError("Upper Limit must be higher than lower limit")
 
     # overwrite the following methods (if required)
@@ -492,7 +492,7 @@ class Problem(object):
                 if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
                     # if amount of rows is higher than the Cap use the Cap as Limit
                     # to avoid having to much rows to work with
-                    if self.LIMIT_RESULT_ROWS_UPPER_CAP < count:
+                    if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_UPPER_CAP < count:
                         select += f" LIMIT {self.LIMIT_RESULT_ROWS_UPPER_CAP}"
                     else:
                         limit = (list({self.limit_result_rows})[0])/100
