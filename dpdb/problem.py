@@ -422,13 +422,13 @@ class Problem(object):
         self.after_solve()
         
         # create the views new after every iteration to apply the limit again and get new rows for the nex iteration
-        if "faster" not in self.kwargs or not self.kwargs["faster"]:
-            res = 0
-            for n in self.td.nodes:
-                self.db.drop_view(f"td_node_{n.id}_v")
-                ass_view = self.assignment_view(n)
-                ass_view = self.db.replace_dynamic_tabs(ass_view)
-                self.db.create_view(f"td_node_{n.id}_v", ass_view)
+        #if "faster" not in self.kwargs or not self.kwargs["faster"]:
+            #res = 0
+            #for n in self.td.nodes:
+                #self.db.drop_view(f"td_node_{n.id}_v")
+                #ass_view = self.assignment_view(n)
+                #ass_view = self.db.replace_dynamic_tabs(ass_view)
+                #self.db.create_view(f"td_node_{n.id}_v", ass_view)
 
         self.db.ignore_next_praefix()
         self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
@@ -501,6 +501,8 @@ class Problem(object):
             countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
             countTable = countTable[0]
             
+            print(select)
+            print(db.select_query(select))
             # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
             if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
                 db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
