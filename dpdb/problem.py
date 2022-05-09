@@ -88,6 +88,11 @@ def var2tab_col(node, var, alias=True):
     else:
         return "{}.{}".format(var2tab_alias(node, var),var2col(var))
 
+def bitmap_index_values(node, v):
+    if node.needs_introduce(v):
+        return "{}.val::int::bit".format(var2tab_alias(node, v))
+    return "{}.{}::int::bit".format(var2tab_alias(node,v), var2col(v))
+
 class Problem(object):
     id = None
     td = None
@@ -200,9 +205,14 @@ class Problem(object):
             introduce = True
             q += "WITH introduce AS ({}) ".format(self.introduce(node))
 
-        q += "SELECT {}".format(
-                ",".join([var2tab_col(node, v) for v in node.vertices]),
-                )
+        #q += "SELECT ROW_NUMBER() OVER () as row_number, {}".format(
+        #        ",".join([var2tab_col(node, v) for v in node.vertices]),
+        #        )
+        
+        q += "SELECT {} as row_number, {}".format(
+                "||".join([bitmap_index_values(node,v) for v in node.vertices]),
+            ",".join([var2tab_col(node,v) for v in node.vertices])
+            )
 
         extra_cols = self.candidate_extra_cols(node)
         if extra_cols:
@@ -241,7 +251,7 @@ class Problem(object):
         if self.candidate_store == "cte":
             q = f"WITH candidate AS ({candidates_sel}) SELECT {sel_list} FROM candidate"
         elif self.candidate_store == "subquery":
-            q = f"SELECT {sel_list} FROM ({candidates_sel}) AS candidate"
+            q = f"SELECT row_number, {sel_list} FROM ({candidates_sel}) AS candidate"
         elif self.candidate_store == "table":
             q = f"SELECT {sel_list} FROM td_node_{node.id}_candidate"
         
@@ -251,6 +261,9 @@ class Problem(object):
         q = "{} {}".format(self.assignment_select(node),self.filter(node))
         if node.stored_vertices:
             q += " GROUP BY {}".format(",".join([var2col(v) for v in node.stored_vertices]))
+            q += ", row_number"
+        else:
+            q += " GROUP BY row_number"
 
         extra_group = self.group_extra_cols(node)
         if extra_group:
@@ -356,9 +369,9 @@ class Problem(object):
 
             # create all columns and insert null if values are not used in parent
             # this only works in the current version of manual inserts without procedure calls in worker
-            db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
+            db.create_table_node(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
             # add unique index for the iterative approxiamtion
-            db.add_unique_index(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.vertices]) 
+            #db.add_unique_index(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.vertices]) 
             if self.candidate_store == "table":
                 db.create_table(f"td_node_{n.id}_candidate", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
                 candidate_view = self.candidates_select(n)
@@ -366,6 +379,7 @@ class Problem(object):
                 db.create_view(f"td_node_{n.id}_candidate_v", candidate_view)
             ass_view = self.assignment_view(n)
             ass_view = db.replace_dynamic_tabs(ass_view)
+            #print(ass_view)
             db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 db.close()
@@ -489,6 +503,7 @@ class Problem(object):
                 # get number of result rows in table and check if the limit should be applied or not
                 count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
                 count = count[0]
+                
                 if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
                     # if amount of rows is higher than the Cap use the Cap as Limit
                     # to avoid having to much rows to work with
@@ -501,11 +516,14 @@ class Problem(object):
             countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
             countTable = countTable[0]
             
+            #print(db.select_query(select))
             # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
-            if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
-                db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
-            else:
-                db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
+            #if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
+            db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
+            #else:
+                #db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
+            #print(db.select_query(f"SELECT * FROM td_node_{node.id}"))
+            #print(" ")
         if self.interrupted:
             return
         self.after_solve_node(node, db)

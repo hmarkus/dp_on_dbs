@@ -122,6 +122,14 @@ class DB(object):
                     )
         self.execute_ddl(q)
 
+    def create_table_node(self, name, columns, if_not_exists = True):
+        q = sql.SQL("CREATE TABLE %s {} ({})" % "IF NOT EXISTS" if if_not_exists else "").format(
+                    self.__table_name__(name),
+                    sql.Identifier('row_number') + sql.SQL(' TEXT PRIMARY KEY,') + sql.SQL(', ').join(sql.Identifier(c[0]) + sql.SQL(" "+c[1]) for c in columns)
+                    )
+        #print(q)
+        self.execute_ddl(q)
+
     def create_view(self, name, text):
         q = sql.SQL("CREATE VIEW {} AS ").format(self.__table_name__(name))
         q = sql.Composed([q,sql.SQL(text)])
@@ -178,10 +186,12 @@ class DB(object):
         if checkConflict:
             # if conflicts should be handeld (iterative approximation) set the model count, if a conflict appears
             # to the greater one of the newly inserted or the current one in the table
-            q = sql.Composed([q, sql.SQL(' ON CONFLICT ((ARRAY[{}])) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(
+            #q = sql.Composed([q, sql.SQL(' ON CONFLICT ((ARRAY[{}])) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(
                 #sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns),
-                sql.SQL(', ').join(sql.Identifier(c) for c in columns),
-                self.__table_name__(table))])
+                #sql.SQL(', ').join(sql.Identifier(c) for c in columns),
+                #self.__table_name__(table))])
+            q = sql.Composed([q, sql.SQL(' ON CONFLICT (row_number) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(self.__table_name__(table))]) 
+            #print(q)
         if returning:
             q = sql.Composed([q,sql.SQL(" RETURNING {}").format(sql.Identifier(returning))])
             return self.exec_and_fetch(q)
@@ -198,7 +208,7 @@ class DB(object):
     # parse whole query and returns all result rows
     def select_query(self, query):
         q = sql.SQL(self.replace_dynamic_tabs(query))
-        print(q)
+        #print(q)
         return self.exec_and_fetch_all(q)
     
     # when all is set then all result rows (not only the first one) get returned
