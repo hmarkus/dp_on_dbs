@@ -186,11 +186,11 @@ class DB(object):
         if checkConflict:
             # if conflicts should be handeld (iterative approximation) set the model count, if a conflict appears
             # to the greater one of the newly inserted or the current one in the table
-            #q = sql.Composed([q, sql.SQL(' ON CONFLICT ((ARRAY[{}])) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(
+            q = sql.Composed([q, sql.SQL(' ON CONFLICT ((ARRAY[{}])) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(
                 #sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns),
-                #sql.SQL(', ').join(sql.Identifier(c) for c in columns),
-                #self.__table_name__(table))])
-            q = sql.Composed([q, sql.SQL(' ON CONFLICT (row_number) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(self.__table_name__(table))]) 
+                sql.SQL(', ').join(sql.Identifier(c) for c in columns),
+                self.__table_name__(table))])
+            #q = sql.Composed([q, sql.SQL(' ON CONFLICT (row_number) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(self.__table_name__(table))]) 
             #print(q)
         if returning:
             q = sql.Composed([q,sql.SQL(" RETURNING {}").format(sql.Identifier(returning))])
