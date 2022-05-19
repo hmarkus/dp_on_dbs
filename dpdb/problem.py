@@ -378,6 +378,7 @@ class Problem(object):
             # this only works in the current version of manual inserts without procedure calls in worker
             #db.create_table_node(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
             db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
+            db.create_table(f"td_node_{n.id}_temp", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
             # add unique index for the iterative approxiamtion
             #db.add_unique_index(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.vertices]) 
             if self.candidate_store == "table":
@@ -529,12 +530,14 @@ class Problem(object):
             # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
             if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
                 db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
-                db.create_table_as(f"td_node_{node.id}", f"td_node_{node.id}_temp")
+                #db.create_table_as(f"td_node_{node.id}", f"td_node_{node.id}_temp")
+                db.insert_select(f"td_node_{node.id}_temp", f"SELECT * FROM p1_td_node_{node.id}")
                 db.delete_all_rows(f"td_node_{node.id}")
                 columns = ', '.join(self.td_node_column_def(c)[0] for c in node.vertices)
                 select_distinct = "SELECT DISTINCT ON ({}) * FROM {}  ORDER BY {}, model_count desc".format(columns, f"p1_td_node_{node.id}_temp", columns)
                 db.insert_select(f"td_node_{node.id}", select_distinct)
-                db.drop_table(f"td_node_{node.id}_temp")
+                db.delete_all_rows(f"td_node_{node.id}_temp")
+                #db.drop_table(f"td_node_{node.id}_temp")
                 #db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
             else:
                 db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
