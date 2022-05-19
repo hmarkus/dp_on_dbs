@@ -120,6 +120,7 @@ class DB(object):
                     self.__table_name__(name),
                     sql.SQL(', ').join(sql.Identifier(c[0]) + sql.SQL(" "+c[1]) for c in columns)
                     )
+        #print(q)
         self.execute_ddl(q)
 
     def create_table_node(self, name, columns, if_not_exists = True):
@@ -139,13 +140,15 @@ class DB(object):
     # necessary for the iterative approximation because the tables only have a sequence primary key
     # coalesce is used to make it work with NULL values in the columns (only works if always the same columns are NULL)
     def add_unique_index(self, table, columns):
-        q = sql.SQL("CREATE UNIQUE INDEX {} ON {} ((ARRAY[{}]))").format(
+        q = sql.SQL("CREATE UNIQUE INDEX {} ON {} ((ARRAY[{}])) ").format(
             sql.SQL("unique_" + table),
             self.__table_name__(table),
             #sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns)
             sql.SQL(', ').join(sql.Identifier(c) for c in columns)
             )
+        #print(q)
         self.execute_ddl(q)
+
 
     def drop_view(self, name, if_exists = True): 
         q = sql.SQL("DROP VIEW %s {}" % "IF EXISTS" if if_exists else "").format(
@@ -197,6 +200,26 @@ class DB(object):
             return self.exec_and_fetch(q)
         else:
             self.execute(q)
+
+    def create_table_as(self, table, newTableName):
+        q = sql.SQL("CREATE TABLE {} AS SELECT * FROM {}").format(
+                self.__table_name__(newTableName),
+                self.__table_name__(table)
+                )
+        self.execute(q)
+    
+    def alter_table_name(self, oldName, newName):
+        q = sql.SQL("ALTER TABLE {} RENAME TO {}").format(
+                self.__table_name__(oldName),
+                self.__table_name__(newName)
+                )
+        self.execute(q)
+
+    def delete_all_rows(self, table):
+        q = sql.SQL("DELETE FROM {}").format(
+                self.__table_name__(table)
+                )
+        self.execute(q)
 
     def persist_view(self, table, view=None):
         if not view:
