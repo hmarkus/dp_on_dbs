@@ -430,7 +430,7 @@ class Problem(object):
                 self.db.ignore_next_praefix()
                 self.db.insert("problem_option",("id", "type", "name", "value"),(self.id,"cfg",k,v))
 
-    def solve(self):
+    def solve(self, delete = False):
         self.db.ignore_next_praefix()
         self.db.update("problem",["calc_start_time"],["statement_timestamp()"],[f"ID = {self.id}"])
         self.db.commit()
@@ -440,7 +440,7 @@ class Problem(object):
         workers = {}
         with ThreadPoolExecutor(self.max_worker_threads) as executor:
             for n in self.td.nodes:
-                e = executor.submit(self.node_worker,n,workers)
+                e = executor.submit(self.node_worker,n,workers, delete)
                 workers[n.id] = e
         self.after_solve()
                  
@@ -464,7 +464,7 @@ class Problem(object):
     def interrupt(self):
         self.interrupted = True
 
-    def node_worker(self, node, workers):
+    def node_worker(self, node, workers, delete):
         try:
             for c in node.children:
                 if not self.interrupted:
@@ -478,7 +478,7 @@ class Problem(object):
             db = DB.from_pool(self.pool)
             db.set_praefix(f"p{self.id}_")
             logger.debug("Creating records for node %d", node.id)
-            self.solve_node(node,db)
+            self.solve_node(node,db, delete)
             db.close()
             if not self.interrupted:
                 logger.debug("Node %d finished", node.id)
@@ -487,7 +487,7 @@ class Problem(object):
             logger.exception("Error in worker thread")
             os.kill(os.getpid(), signal.SIGUSR1)
 
-    def solve_node(self, node, db):
+    def solve_node(self, node, db, delete):
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             db.update("td_node_status",["start_time"],["statement_timestamp()"],[f"node = {node.id}"])
             db.commit()
@@ -536,7 +536,8 @@ class Problem(object):
                 columns = ', '.join(self.td_node_column_def(c)[0] for c in node.vertices)
                 select_distinct = "SELECT DISTINCT ON ({}) * FROM {}  ORDER BY {}, model_count desc".format(columns, f"p1_td_node_{node.id}_temp", columns)
                 db.insert_select(f"td_node_{node.id}", select_distinct)
-                db.delete_all_rows(f"td_node_{node.id}_temp")
+                if delete:
+                    db.delete_all_rows(f"td_node_{node.id}_temp")
                 #db.drop_table(f"td_node_{node.id}_temp")
                 #db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
             else:

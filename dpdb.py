@@ -100,7 +100,11 @@ def solve_problem(cfg, cls, file, **kwargs):
                 if (i % stepAmount) == 0 and i != 0 and j != len(kwargs["limit_result_rows"]):
                     problem.limit_result_rows = kwargs["limit_result_rows"][j]
                     j = j + 1
-            problem.solve()
+
+            if i % 3 == 0:
+                problem.solve(True)
+            else:
+                problem.solve()
     else:
         problem.solve()
     problem.db.close()
