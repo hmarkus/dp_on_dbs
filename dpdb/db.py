@@ -126,7 +126,7 @@ class DB(object):
     def create_table_node(self, name, columns, if_not_exists = True):
         q = sql.SQL("CREATE TABLE %s {} ({})" % "IF NOT EXISTS" if if_not_exists else "").format(
                     self.__table_name__(name),
-                    sql.Identifier('row_number') + sql.SQL(' TEXT PRIMARY KEY,') + sql.SQL(', ').join(sql.Identifier(c[0]) + sql.SQL(" "+c[1]) for c in columns)
+                    sql.Identifier('insert_time') + sql.SQL(' TIMESTAMP,') + sql.SQL(', ').join(sql.Identifier(c[0]) + sql.SQL(" "+c[1]) for c in columns)
                     )
         #print(q)
         self.execute_ddl(q)
@@ -218,6 +218,15 @@ class DB(object):
     def delete_all_rows(self, table):
         q = sql.SQL("DELETE FROM {}").format(
                 self.__table_name__(table)
+                )
+        self.execute(q)
+
+    def delete_n_rows(self, table, rows):
+        #print(self.select_query("SELECT * FROM {} ORDER BY insert_time LIMIT {}".format(table, str(rows))))
+        q = sql.SQL("DELETE FROM {} WHERE ctid IN (SELECT ctid FROM {} ORDER BY insert_time LIMIT {})").format(
+                self.__table_name__(table),
+                self.__table_name__(table),
+                sql.SQL(str(rows))
                 )
         self.execute(q)
 

@@ -376,11 +376,11 @@ class Problem(object):
 
             # create all columns and insert null if values are not used in parent
             # this only works in the current version of manual inserts without procedure calls in worker
-            #db.create_table_node(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
-            db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
-            db.create_table(f"td_node_{n.id}_temp", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
+            db.create_table_node(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
+            #db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
+            #db.create_table(f"td_node_{n.id}_temp", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
             # add unique index for the iterative approxiamtion
-            #db.add_unique_index(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.vertices]) 
+            db.add_unique_index(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.vertices]) 
             if self.candidate_store == "table":
                 db.create_table(f"td_node_{n.id}_candidate", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
                 candidate_view = self.candidates_select(n)
@@ -505,7 +505,7 @@ class Problem(object):
             ass_view = self.db.replace_dynamic_tabs(ass_view)
             db.create_select(f"td_node_{node.id}", ass_view)
         else:
-            select = f"SELECT * from td_node_{node.id}_v"
+            select = f"SELECT statement_timestamp(), * from td_node_{node.id}_v"
             if self.randomize_rows:
                 select += " ORDER BY RANDOM()"
             if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
@@ -525,21 +525,26 @@ class Problem(object):
             countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
             countTable = countTable[0]
             
+             
             #print(node.id)
             #print(db.select_query(select))
             # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
             if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
-                db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
+                #db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
                 #db.create_table_as(f"td_node_{node.id}", f"td_node_{node.id}_temp")
-                db.insert_select(f"td_node_{node.id}_temp", f"SELECT * FROM p1_td_node_{node.id}")
-                db.delete_all_rows(f"td_node_{node.id}")
-                columns = ', '.join(self.td_node_column_def(c)[0] for c in node.vertices)
-                select_distinct = "SELECT DISTINCT ON ({}) * FROM {}  ORDER BY {}, model_count desc".format(columns, f"p1_td_node_{node.id}_temp", columns)
-                db.insert_select(f"td_node_{node.id}", select_distinct)
+                #db.insert_select(f"td_node_{node.id}_temp", f"SELECT * FROM p1_td_node_{node.id}")
+                #db.delete_all_rows(f"td_node_{node.id}")
+                #columns = ', '.join(self.td_node_column_def(c)[0] for c in node.vertices)
+                #select_distinct = "SELECT DISTINCT ON ({}) * FROM {}  ORDER BY {}, model_count desc".format(columns, f"p1_td_node_{node.id}_temp", columns)
+                #db.insert_select(f"td_node_{node.id}", select_distinct)
                 if delete:
-                    db.delete_all_rows(f"td_node_{node.id}_temp")
+                    #print(db.select_query(f"SELECT * from td_node_{node.id}"))
+                    db.delete_n_rows(f"td_node_{node.id}", countTable/3)
+                    #print(db.select_query(f"SELECT * from td_node_{node.id}"))
+                    #db.delete_all_rows(f"td_node_{node.id}_temp")
                 #db.drop_table(f"td_node_{node.id}_temp")
-                #db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
+                db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
+                #print(db.select_query(f"SELECT * from td_node_{node.id}"))
             else:
                 db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
         if self.interrupted:
