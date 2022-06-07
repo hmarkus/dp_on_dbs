@@ -350,6 +350,15 @@ class Problem(object):
             ])
             self.db.create_table("td_edge", [("node", "INTEGER NOT NULL"), ("parent", "INTEGER NOT NULL")])
             self.db.create_table("td_bag", [("bag", "INTEGER NOT NULL"),("node", "INTEGER")])
+            
+            #for node in self.td.nodes:
+                #print(f"{node.id}: {node.vertices}")
+                #if node.parent:
+                    #print(f"{node.parent.id}: {node.parent.vertices}")
+                    #items = set(node.parent.vertices)
+                    #constraint_relevant = [i for i in node.vertices if i in items]
+                    #print(f"{node.id}: {constraint_relevant} - constraint")
+                #print()
 
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 workers = {}
@@ -380,7 +389,17 @@ class Problem(object):
             db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
             #db.create_table(f"td_node_{n.id}_temp", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
             # add unique index for the iterative approxiamtion
-            db.add_unique_index(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.vertices]) 
+                       
+            if n.parent:
+                items = set(n.parent.vertices)
+                n.constraint_relevant = [i for i in n.vertices if i in items]
+
+                if n.constraint_relevant == []:
+                    n.constraint_relevant = n.vertices
+            else:
+                n.constraint_relevant = n.vertices
+
+            db.add_unique_index(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.constraint_relevant]) 
             if self.candidate_store == "table":
                 db.create_table(f"td_node_{n.id}_candidate", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
                 candidate_view = self.candidates_select(n)
@@ -544,8 +563,7 @@ class Problem(object):
                     #print(db.select_query(f"SELECT * from td_node_{node.id}"))
                     #db.delete_all_rows(f"td_node_{node.id}_temp")
                 #db.drop_table(f"td_node_{node.id}_temp")
-                db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.vertices])
-                #print(db.select_query(f"SELECT * from td_node_{node.id}"))
+                db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
             else:
                 db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
         if self.interrupted:
