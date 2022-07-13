@@ -170,71 +170,57 @@ class DB(object):
 
 
     def select_random(self, rows, columns, problem, node, sel_list, where_filter, group_by):
-        #q = "SELECT DISTINCT ON ("
-        #for i in range(columns):
-            #q += "c"+str(i)+", "
-        #q = q[:len(q)-2]
-        #q += ") "
-
-        q = "SELECT DISTINCT ON ("
-        #for i in range(columns):
-            #q += "round(random()) :: int :: bool as c" + str(i) + ", "
+        distinct_values = ""
+        inner_select = ""
+        inner_from = ""
+        
+        first = True
+        ids = set()
         for v in node.vertices:
-            q += f"v{v},"
-        q = q[:-1]
-        q += ") "
-
-        for v in node.vertices:
+            distinct_values += f"v{v},"
             if node.needs_introduce(v):
-                #q += f"i{v}.val "
-                q += "round(random()) :: int :: bool as "
+                inner_select += "round(random()) :: int :: bool as "
             else:
                 nodeid = node.vertex_children(v)[0].id
-                q += f"t{nodeid}."
-            q += f"v{v}, "
+                inner_select += f"t{nodeid}."
+                
+                if first:
+                    first = False
+                    inner_from  += " FROM"
+                if nodeid not in ids:
+                    inner_from += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
+                ids.add(nodeid)
+            inner_select += f"v{v}"
+            
+        distinct_values = distinct_values[:-1]
 
         extra_cols = problem.candidate_extra_cols(node)
         
         if extra_cols:
-            q += "{}".format(",".join(extra_cols))
-        q += ", generate_series(1,"+str(rows) + ")"
+            inner_select += "{}".format(",".join(extra_cols))
+        inner_select += ", generate_series(1,"+str(rows) + ")"
         
-        first = True
-        ids = set()
-        for n in node.vertices:
-            if not node.needs_introduce(n):
-                if first:
-                    first = False
-                    q  += " FROM"
-                nodeid = node.vertex_children(n)[0].id
-                if nodeid not in ids:
-                    q += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
-                ids.add(nodeid)
-            #else:
-                #q += f" introduce i{n},"
 
         for n in node.children:
-            #if not node.needs_introduce(n):
             if first:
                 first = False
                 q  += " FROM"
             nodeid = n.id
             if nodeid not in ids:
-                q += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
+                inner_from += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
             ids.add(nodeid)
          
         if not first:
-            q = q[:-1]
+            inner_from = inner_from[:-1]
+            
+        q = f"SELECT DISTINCT ON ({distinct_values}) {inner_select} {inner_from}"
         
         if group_by:
             q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter} GROUP BY {group_by}"
         else:
             q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter}"
-        #q = f"SELECT {sel_list} FROM (WITH introduce AS (SELECT round(random()) :: int :: bool as val) {q}) AS candidate {where_filter} GROUP BY {group_by}"
-        #print(q)
 
         q = sql.SQL(q)
-        #return q
         return self.exec_and_fetch_all(q)
 
     def insert(self, table, columns, values, returning = None):

@@ -559,6 +559,15 @@ class Problem(object):
                         else:
                             limit = (list({self.limit_result_rows})[0])/100
                             select += f" LIMIT ({count}*{limit})"
+                            
+                #count the rows in the table
+                countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
+                countTable = countTable[0]
+                # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
+                if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
+                    db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
+                else:
+                    db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
             else:
                 sel_list = ",".join([var2col(v) if v in node.stored_vertices else "null::{} {}".format(self.td_node_column_def(v)[1],var2col(v)) for v in node.vertices])
                 sel_list += ", sum(model_count) as model_count"
@@ -573,31 +582,6 @@ class Problem(object):
                 select = db.select_random(math.floor((2**col)*(limit)), col, self, node, sel_list, where_filter, group_by)
                 db.insert_list(f"td_node_{node.id}", select, col, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
             
-            #print(len(db.select_query(select)))
-            
-            if not self.no_view:
-                #count the rows in the table
-                countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
-                countTable = countTable[0]
-                # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
-                if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
-                    #db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
-                    #db.create_table_as(f"td_node_{node.id}", f"td_node_{node.id}_temp")
-                    #db.insert_select(f"td_node_{node.id}_temp", f"SELECT * FROM p1_td_node_{node.id}")
-                    #db.delete_all_rows(f"td_node_{node.id}")
-                    #columns = ', '.join(self.td_node_column_def(c)[0] for c in node.vertices)
-                    #select_distinct = "SELECT DISTINCT ON ({}) * FROM {}  ORDER BY {}, model_count desc".format(columns, f"p1_td_node_{node.id}_temp", columns)
-                    #db.insert_select(f"td_node_{node.id}", select_distinct)
-                    #if delete:
-                        #print(db.select_query(f"SELECT * from td_node_{node.id}"))
-                        #db.delete_n_rows(f"td_node_{node.id}", countTable/3)
-                        #print(db.select_query(f"SELECT * from td_node_{node.id}"))
-                        #db.delete_all_rows(f"td_node_{node.id}_temp")
-                    #db.drop_table(f"td_node_{node.id}_temp")
-                    db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
-                else:
-                    db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
-            #print(db.select_query(f"SELECT * from td_node_{node.id}"))
         if self.interrupted:
             return
         self.after_solve_node(node, db)
