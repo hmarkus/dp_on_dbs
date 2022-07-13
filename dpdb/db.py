@@ -190,7 +190,7 @@ class DB(object):
                 if nodeid not in ids:
                     inner_from += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
                 ids.add(nodeid)
-            inner_select += f"v{v}"
+            inner_select += f"v{v},"
             
         distinct_values = distinct_values[:-1]
 
