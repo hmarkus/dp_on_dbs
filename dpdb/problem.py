@@ -3,6 +3,7 @@ import logging
 import os
 import signal
 import threading
+import math
 from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
@@ -53,6 +54,11 @@ args.general = {
         dest="table_row_limit",
         default=1000,
         help="Max Amount of Rows in table - after this limit is reached the model_count still gets updated but no new rows are inserted. If limit = 0 the limit will be ignored."
+    ),
+    "--no-view": dict(
+        action="store_true",
+        dest="no_view",
+        help="If set the rows are not generated via a view but only with random numbers directly in the select."
     )
 }
 
@@ -122,6 +128,10 @@ class Problem(object):
             self.randomize_rows = False
         else:
             self.randomize_rows = True
+        if "no_view" in kwargs and kwargs["no_view"]:
+            self.no_view = True
+        else:
+            self.no_view = False
         self.limit_introduce = limit_introduce
         self.max_worker_threads = max_worker_threads
         self.kwargs = kwargs
@@ -405,10 +415,12 @@ class Problem(object):
                 candidate_view = self.candidates_select(n)
                 candidate_view = db.replace_dynamic_tabs(candidate_view)
                 db.create_view(f"td_node_{n.id}_candidate_v", candidate_view)
-            ass_view = self.assignment_view(n)
-            ass_view = db.replace_dynamic_tabs(ass_view)
-            #print(ass_view)
-            db.create_view(f"td_node_{n.id}_v", ass_view)
+            
+            if not self.no_view:
+                ass_view = self.assignment_view(n)
+                ass_view = db.replace_dynamic_tabs(ass_view)
+                print(ass_view)
+                db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 db.close()
             
@@ -461,6 +473,9 @@ class Problem(object):
             for n in self.td.nodes:
                 e = executor.submit(self.node_worker,n,workers, delete)
                 workers[n.id] = e
+
+        #for i in range(1,10):
+            #print(self.db.select_random(5,3))
         self.after_solve()
                  
         # create the views new after every iteration to apply the limit again and get new rows for the nex iteration
@@ -497,6 +512,8 @@ class Problem(object):
             db = DB.from_pool(self.pool)
             db.set_praefix(f"p{self.id}_")
             logger.debug("Creating records for node %d", node.id)
+            #for i in range(15):
+                #print(db.select_random())
             self.solve_node(node,db, delete)
             db.close()
             if not self.interrupted:
@@ -524,48 +541,63 @@ class Problem(object):
             ass_view = self.db.replace_dynamic_tabs(ass_view)
             db.create_select(f"td_node_{node.id}", ass_view)
         else:
-            select = f"SELECT * from td_node_{node.id}_v"
-            #select = f"SELECT statement_timestamp(), * from td_node_{node.id}_v"
-            if self.randomize_rows:
-                select += " ORDER BY RANDOM()"
-            if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
-                # get number of result rows in table and check if the limit should be applied or not
-                count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
-                count = count[0]
+            if not self.no_view:
+                select = f"SELECT * from td_node_{node.id}_v"
+                #select = f"SELECT statement_timestamp(), * from td_node_{node.id}_v"
+                if self.randomize_rows:
+                    select += " ORDER BY RANDOM()"
+                if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
+                    # get number of result rows in table and check if the limit should be applied or not
+                    count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
+                    count = count[0]
                 
-                if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
-                    # if amount of rows is higher than the Cap use the Cap as Limit
-                    # to avoid having to much rows to work with
-                    if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_UPPER_CAP < count:
-                        select += f" LIMIT {self.LIMIT_RESULT_ROWS_UPPER_CAP}"
-                    else:
-                        limit = (list({self.limit_result_rows})[0])/100
-                        select += f" LIMIT ({count}*{limit})"
-            # cont the rows in the table
-            countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
-            countTable = countTable[0]
-            
-             
-            #print(node.id)
-            #print(db.select_query(select))
-            # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
-            if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
-                #db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
-                #db.create_table_as(f"td_node_{node.id}", f"td_node_{node.id}_temp")
-                #db.insert_select(f"td_node_{node.id}_temp", f"SELECT * FROM p1_td_node_{node.id}")
-                #db.delete_all_rows(f"td_node_{node.id}")
-                #columns = ', '.join(self.td_node_column_def(c)[0] for c in node.vertices)
-                #select_distinct = "SELECT DISTINCT ON ({}) * FROM {}  ORDER BY {}, model_count desc".format(columns, f"p1_td_node_{node.id}_temp", columns)
-                #db.insert_select(f"td_node_{node.id}", select_distinct)
-                #if delete:
-                    #print(db.select_query(f"SELECT * from td_node_{node.id}"))
-                    #db.delete_n_rows(f"td_node_{node.id}", countTable/3)
-                    #print(db.select_query(f"SELECT * from td_node_{node.id}"))
-                    #db.delete_all_rows(f"td_node_{node.id}_temp")
-                #db.drop_table(f"td_node_{node.id}_temp")
-                db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
+                    if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
+                        # if amount of rows is higher than the Cap use the Cap as Limit
+                        # to avoid having to much rows to work with
+                        if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_UPPER_CAP < count:
+                            select += f" LIMIT {self.LIMIT_RESULT_ROWS_UPPER_CAP}"
+                        else:
+                            limit = (list({self.limit_result_rows})[0])/100
+                            select += f" LIMIT ({count}*{limit})"
             else:
-                db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
+                sel_list = ",".join([var2col(v) if v in node.stored_vertices else "null::{} {}".format(self.td_node_column_def(v)[1],var2col(v)) for v in node.vertices])
+                sel_list += ", sum(model_count) as model_count"
+                where_filter = self.filter(node)
+                group_by = ""
+                if node.stored_vertices:
+                    group_by = "{}".format(",".join([var2col(v) for v in node.stored_vertices]))
+                col = len(node.vertices)
+                limit = (list({self.limit_result_rows})[0])/100
+                print(2**col)
+                print((2**col)*limit)
+                select = db.select_random(math.floor((2**col)*(limit)), col, self, node, sel_list, where_filter, group_by)
+                db.insert_list(f"td_node_{node.id}", select, col, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
+            
+            #print(len(db.select_query(select)))
+            
+            if not self.no_view:
+                #count the rows in the table
+                countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
+                countTable = countTable[0]
+                # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
+                if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
+                    #db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
+                    #db.create_table_as(f"td_node_{node.id}", f"td_node_{node.id}_temp")
+                    #db.insert_select(f"td_node_{node.id}_temp", f"SELECT * FROM p1_td_node_{node.id}")
+                    #db.delete_all_rows(f"td_node_{node.id}")
+                    #columns = ', '.join(self.td_node_column_def(c)[0] for c in node.vertices)
+                    #select_distinct = "SELECT DISTINCT ON ({}) * FROM {}  ORDER BY {}, model_count desc".format(columns, f"p1_td_node_{node.id}_temp", columns)
+                    #db.insert_select(f"td_node_{node.id}", select_distinct)
+                    #if delete:
+                        #print(db.select_query(f"SELECT * from td_node_{node.id}"))
+                        #db.delete_n_rows(f"td_node_{node.id}", countTable/3)
+                        #print(db.select_query(f"SELECT * from td_node_{node.id}"))
+                        #db.delete_all_rows(f"td_node_{node.id}_temp")
+                    #db.drop_table(f"td_node_{node.id}_temp")
+                    db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
+                else:
+                    db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
+            #print(db.select_query(f"SELECT * from td_node_{node.id}"))
         if self.interrupted:
             return
         self.after_solve_node(node, db)

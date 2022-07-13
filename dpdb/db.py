@@ -168,6 +168,75 @@ class DB(object):
 
         return query
 
+
+    def select_random(self, rows, columns, problem, node, sel_list, where_filter, group_by):
+        #q = "SELECT DISTINCT ON ("
+        #for i in range(columns):
+            #q += "c"+str(i)+", "
+        #q = q[:len(q)-2]
+        #q += ") "
+
+        q = "SELECT DISTINCT ON ("
+        #for i in range(columns):
+            #q += "round(random()) :: int :: bool as c" + str(i) + ", "
+        for v in node.vertices:
+            q += f"v{v},"
+        q = q[:-1]
+        q += ") "
+
+        for v in node.vertices:
+            if node.needs_introduce(v):
+                #q += f"i{v}.val "
+                q += "round(random()) :: int :: bool as "
+            else:
+                nodeid = node.vertex_children(v)[0].id
+                q += f"t{nodeid}."
+            q += f"v{v}, "
+
+        extra_cols = problem.candidate_extra_cols(node)
+        
+        if extra_cols:
+            q += "{}".format(",".join(extra_cols))
+        q += ", generate_series(1,"+str(rows) + ")"
+        
+        first = True
+        ids = set()
+        for n in node.vertices:
+            if not node.needs_introduce(n):
+                if first:
+                    first = False
+                    q  += " FROM"
+                nodeid = node.vertex_children(n)[0].id
+                if nodeid not in ids:
+                    q += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
+                ids.add(nodeid)
+            #else:
+                #q += f" introduce i{n},"
+
+        for n in node.children:
+            #if not node.needs_introduce(n):
+            if first:
+                first = False
+                q  += " FROM"
+            nodeid = n.id
+            if nodeid not in ids:
+                q += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
+            ids.add(nodeid)
+         
+        if not first:
+            q = q[:-1]
+        
+        if group_by:
+            q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter} GROUP BY {group_by}"
+        else:
+            q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter}"
+        #q = f"SELECT {sel_list} FROM (WITH introduce AS (SELECT round(random()) :: int :: bool as val) {q}) AS candidate {where_filter} GROUP BY {group_by}"
+        #print(q)
+
+        q = sql.SQL(q)
+        #return q
+        return self.exec_and_fetch_all(q)
+
     def insert(self, table, columns, values, returning = None):
         sql_str = "INSERT INTO {} ({}) VALUES ({})"
         q = sql.SQL(sql_str).format(
@@ -180,6 +249,17 @@ class DB(object):
             return self.exec_and_fetch(q,values)
         else:
             self.execute(q,values)
+
+    def insert_list(self, table, listToInsert, columnCount, columns):
+        with self._conn.cursor() as cur:
+            q = "INSERT INTO p1_" + str(table) + " VALUES("
+            for i in range(columnCount):
+                q += "%s, "
+            q += "%s) ON CONFLICT ((ARRAY[{}])) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)".format(
+                    ",".join(c for c in columns),
+                    "p1_" + str(table))
+            #print(q)
+            cur.executemany(q, listToInsert)
 
     def insert_select(self, table, select, checkConflict = False, columns = None, returning = None):
         sql_str = "INSERT INTO {} {}"
