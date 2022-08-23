@@ -6,6 +6,7 @@ import psycopg2 as pg
 from psycopg2 import sql
 from psycopg2.pool import ThreadedConnectionPool
 from threading import Semaphore
+import numpy as np
 
 DEBUG_SQL = logging.DEBUG - 5
 
@@ -136,6 +137,15 @@ class DB(object):
         q = sql.Composed([q,sql.SQL(text)])
         self.execute_ddl(q)
     
+    def create_view_mat(self, name, text):
+        q = sql.SQL("CREATE MATERIALIZED VIEW {} AS ").format(self.__table_name__(name))
+        q = sql.Composed([q,sql.SQL(text)])
+        self.execute_ddl(q)
+
+    def refresh_mat_view(self, name):
+        q = sql.SQL("REFRESH MATERIALIZED VIEW {}").format(self.__table_name__(name))
+        self.execute_ddl(q)
+    
     # create unique index for all the variable columns
     # necessary for the iterative approximation because the tables only have a sequence primary key
     # coalesce is used to make it work with NULL values in the columns (only works if always the same columns are NULL)
@@ -204,7 +214,7 @@ class DB(object):
         for n in node.children:
             if first:
                 first = False
-                q  += " FROM"
+                inner_from  += " FROM"
             nodeid = n.id
             if nodeid not in ids:
                 inner_from += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
@@ -219,10 +229,80 @@ class DB(object):
             q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter} GROUP BY {group_by}"
         else:
             q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter}"
-
+        #print(q)
         q = sql.SQL(q)
         return self.exec_and_fetch_all(q)
 
+    def select_random_python(self, rows, columns, problem, node, sel_list, where_filter, group_by):
+        distinct_values = ""
+        inner_select = ""
+        inner_from = ""
+        
+        random_numbers = 0
+        
+        first = True
+        ids = set()
+        for v in node.vertices:
+            distinct_values += f"v{v},"
+            if node.needs_introduce(v):
+                inner_select += "%s :: bool as " 
+                random_numbers = random_numbers + 1
+            else:
+                nodeid = node.vertex_children(v)[0].id
+                inner_select += f"t{nodeid}."
+                
+                if first:
+                    first = False
+                    inner_from  += " FROM"
+                if nodeid not in ids:
+                    inner_from += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
+                ids.add(nodeid)
+            inner_select += f"v{v},"
+            
+        distinct_values = distinct_values[:-1]
+
+        extra_cols = problem.candidate_extra_cols(node)
+        
+        if extra_cols:
+            inner_select += "{}".format(",".join(extra_cols))
+        #inner_select += ", generate_series(1,"+str(rows) + ")"
+        
+
+        for n in node.children:
+            if first:
+                first = False
+                inner_from  += " FROM"
+            nodeid = n.id
+            if nodeid not in ids:
+                inner_from += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
+            ids.add(nodeid)
+         
+        if not first:
+            inner_from = inner_from[:-1]
+            
+        q = f"SELECT DISTINCT {inner_select} {inner_from}"
+        
+        if group_by:
+            q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter} GROUP BY {group_by}"
+        else:
+            q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter}"
+        q = sql.SQL(q)
+        print(q)
+         
+        random_values = np.random.randint(2, size=(rows, random_numbers))
+        print(random_values)
+        random_values = random_values.tolist()
+        
+        retVal = set()
+        for i in range(rows):
+            result = self.exec_and_fetch_all(q, random_values[i])
+            #print(result)
+            if result:
+                #print(type(result))
+                retVal.update(tuple(result))
+            #print(retVal)
+        return retVal
+    
     def insert(self, table, columns, values, returning = None):
         sql_str = "INSERT INTO {} ({}) VALUES ({})"
         q = sql.SQL(sql_str).format(

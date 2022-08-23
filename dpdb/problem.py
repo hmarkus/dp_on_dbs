@@ -10,6 +10,8 @@ from types import SimpleNamespace
 from dpdb.reader import TwReader
 from dpdb.db import DB
 
+import numpy as np
+
 import argparse
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ args.general = {
     "--lower-cap": dict(
         type=int,
         dest="lower_cap",
-        default=1,
+        default=0,
         help="Lower Cap for activating the limit in solve. If lowerCap == 0 it will be ignored."
     ),
     "--upper-cap": dict(
@@ -243,7 +245,7 @@ class Problem(object):
             q += " {} ".format(self.join(node))
         
         # the rows are always randomly ordered to avoid skipping a variable
-        q += " ORDER BY RANDOM()"
+        #q += " ORDER BY RANDOM()"
         # limit_introduce is used to be able to set a limit separately for introduce and solve 
         if introduce and self.limit_introduce:
             # in the limit the newly introduced variables are used
@@ -490,6 +492,7 @@ class Problem(object):
         self.db.ignore_next_praefix()
         self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
         self.db.commit()
+        print(self.summe)
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             self.db.ignore_next_praefix()
             elapsed = self.db.select("problem",["end_time-calc_start_time","calc_start_time-setup_start_time"],[f"ID = {self.id}"])
@@ -523,6 +526,7 @@ class Problem(object):
             logger.exception("Error in worker thread")
             os.kill(os.getpid(), signal.SIGUSR1)
 
+    summe = 0
     def solve_node(self, node, db, delete):
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             db.update("td_node_status",["start_time"],["statement_timestamp()"],[f"node = {node.id}"])
@@ -544,30 +548,39 @@ class Problem(object):
             if not self.no_view:
                 select = f"SELECT * from td_node_{node.id}_v"
                 #select = f"SELECT statement_timestamp(), * from td_node_{node.id}_v"
-                if self.randomize_rows:
-                    select += " ORDER BY RANDOM()"
+                #if self.randomize_rows:
+                    #select += " ORDER BY RANDOM()"
                 if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
                     # get number of result rows in table and check if the limit should be applied or not
                     count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
                     count = count[0]
                 
                     if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
+                        if self.randomize_rows:
+                            select += " ORDER BY RANDOM()"
                         # if amount of rows is higher than the Cap use the Cap as Limit
                         # to avoid having to much rows to work with
                         if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_UPPER_CAP < count:
+                            self.summe += self.LIMIT_RESULT_ROWS_UPPER_CAP
                             select += f" LIMIT {self.LIMIT_RESULT_ROWS_UPPER_CAP}"
                         else:
                             limit = (list({self.limit_result_rows})[0])/100
                             select += f" LIMIT ({count}*{limit})"
-                            
+                            #select += f" WHERE random() < {limit}"
+                            self.summe += (count*limit)
+                    else:
+                        self.summe += count
                 #count the rows in the table
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
                 # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
+                print(select)
                 if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
                     db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
                 else:
                     db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
+                #db.refresh_mat_view(f"td_node_{node.id}_v")
+                #print(db.select_query(f"SELECT * from td_node_{node.id}_v"))
             else:
                 sel_list = ",".join([var2col(v) if v in node.stored_vertices else "null::{} {}".format(self.td_node_column_def(v)[1],var2col(v)) for v in node.vertices])
                 sel_list += ", sum(model_count) as model_count"
@@ -575,13 +588,34 @@ class Problem(object):
                 group_by = ""
                 if node.stored_vertices:
                     group_by = "{}".format(",".join([var2col(v) for v in node.stored_vertices]))
-                col = len(node.vertices)
+                #col = len(node.vertices)
+                col = len(node.constraint_relevant)
                 limit = (list({self.limit_result_rows})[0])/100
-                print(2**col)
-                print((2**col)*limit)
-                select = db.select_random(math.floor((2**col)*(limit)), col, self, node, sel_list, where_filter, group_by)
-                db.insert_list(f"td_node_{node.id}", select, col, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
-            
+                #print(self.LIMIT_RESULT_ROWS_LOWER_CAP)
+                if self.LIMIT_RESULT_ROWS_LOWER_CAP < (2**col):
+                    if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_UPPER_CAP < ((2**col)):
+                        #print("cap")
+                        rows = self.LIMIT_RESULT_ROWS_UPPER_CAP
+                        #print(rows)
+                    else:
+                        #print("no cap")
+                        #rows = ((2**(col/2))*limit)
+                        rows = ((2**col)*limit)
+                        #print(rows)
+                else:
+                    #print("no lower")
+                    rows = (2**col)
+                    #rows = (2**self.LIMIT_RESULT_ROWS_LOWER_CAP)
+                    #print(rows)
+                #print(rows)
+                self.summe += rows
+                #print(len(node.vertices))
+                select = db.select_random(rows, len(node.vertices), self, node, sel_list, where_filter, group_by)
+                #print(type(select))
+                #print(select)
+                db.insert_list(f"td_node_{node.id}", select, len(node.vertices), [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
+                #print(db.select_query(f"Select * from td_node_{node.id}"))
+                print(self.summe)
         if self.interrupted:
             return
         self.after_solve_node(node, db)
