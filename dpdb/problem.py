@@ -427,6 +427,7 @@ class Problem(object):
             if not self.no_view:
                 ass_view = self.assignment_view(n)
                 ass_view = db.replace_dynamic_tabs(ass_view)
+                print(ass_view)
                 db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 db.close()
@@ -575,6 +576,7 @@ class Problem(object):
                     else:
                         self.summe += count
                 #count the rows in the table
+                print(select)
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
                 # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
@@ -611,7 +613,7 @@ class Problem(object):
                 self.summe += rows
                 select = db.select_random(rows, len(node.vertices), self, node, sel_list, where_filter, group_by)
                 db.insert_list(f"td_node_{node.id}", select, len(node.vertices), [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
-                print(self.summe)
+                #print(self.summe)
         if self.interrupted:
             return
         self.after_solve_node(node, db)
