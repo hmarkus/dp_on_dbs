@@ -101,9 +101,6 @@ def solve_problem(cfg, cls, file, **kwargs):
                     problem.limit_result_rows = kwargs["limit_result_rows"][j]
                     j = j + 1
 
-            #if i % 3 == 0:
-                #problem.solve(True)
-            #else:
             problem.solve()
     else:
         problem.solve()

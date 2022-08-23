@@ -178,7 +178,7 @@ class DB(object):
 
         return query
 
-
+    # select the new values in each select randomly
     def select_random(self, rows, columns, problem, node, sel_list, where_filter, group_by):
         distinct_values = ""
         inner_select = ""
@@ -187,13 +187,17 @@ class DB(object):
         first = True
         ids = set()
         for v in node.vertices:
+            # build up the distinct clause
             distinct_values += f"v{v},"
+            # if the node is new in this table select a random number between 0-1 and round it to either 0 or 1 and cast it to a bool
             if node.needs_introduce(v):
                 inner_select += "round(random()) :: int :: bool as "
+            # if the node is not new find the correct reference
             else:
                 nodeid = node.vertex_children(v)[0].id
                 inner_select += f"t{nodeid}."
                 
+                # check if other tables are need if yes build up inner from clause
                 if first:
                     first = False
                     inner_from  += " FROM"
@@ -232,7 +236,7 @@ class DB(object):
         #print(q)
         q = sql.SQL(q)
         return self.exec_and_fetch_all(q)
-
+    
     def select_random_python(self, rows, columns, problem, node, sel_list, where_filter, group_by):
         distinct_values = ""
         inner_select = ""
@@ -243,6 +247,7 @@ class DB(object):
         first = True
         ids = set()
         for v in node.vertices:
+            # same principle as above but the random number is generated in python and then passed at execution - doesn't work because of mismatch of placeholders and parameter
             distinct_values += f"v{v},"
             if node.needs_introduce(v):
                 inner_select += "%s :: bool as " 
@@ -265,7 +270,6 @@ class DB(object):
         
         if extra_cols:
             inner_select += "{}".format(",".join(extra_cols))
-        #inner_select += ", generate_series(1,"+str(rows) + ")"
         
 
         for n in node.children:
@@ -294,13 +298,11 @@ class DB(object):
         random_values = random_values.tolist()
         
         retVal = set()
+        # because of the mismatch every statement is executed individually - group by doesn't work and therefore the result is always to low 
         for i in range(rows):
             result = self.exec_and_fetch_all(q, random_values[i])
-            #print(result)
             if result:
-                #print(type(result))
                 retVal.update(tuple(result))
-            #print(retVal)
         return retVal
     
     def insert(self, table, columns, values, returning = None):
@@ -333,7 +335,7 @@ class DB(object):
         if columns and not checkConflict:
             q = sql.Composed([q,sql.SQL(', ').join(map(sql.Identifier, columns))])
         if checkConflict:
-            # if conflicts should be handeld (iterative approximation) set the model count, if a conflict appears
+            # if conflicts should be handelt (iterative approximation) set the model count, if a conflict appears
             # to the greater one of the newly inserted or the current one in the table
             q = sql.Composed([q, sql.SQL(' ON CONFLICT ((ARRAY[{}])) DO UPDATE SET model_count = greatest({}.model_count, EXCLUDED.model_count)').format(
                 #sql.SQL(', ').join(sql.SQL("coalesce(") + sql.Identifier(c) + sql.SQL(",False)") for c in columns),

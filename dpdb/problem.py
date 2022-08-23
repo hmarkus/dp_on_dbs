@@ -216,7 +216,8 @@ class Problem(object):
             # introudce is used to check if new variables are introduced in this call
             introduce = True
             q += "WITH introduce AS ({}) ".format(self.introduce(node))
-
+        
+        # attempts to assign a PK to each row - failed because every select of the view gives a different result
         #q += "SELECT ROW_NUMBER() OVER (ORDER BY {}) as row_number, {}".format(
                 #",".join([var2tab_alias(node,v) for v in node.vertices]),
                 #",".join([var2tab_col(node, v) for v in node.vertices]),
@@ -244,8 +245,9 @@ class Problem(object):
         if len(node.children) > 1:
             q += " {} ".format(self.join(node))
         
-        # the rows are always randomly ordered to avoid skipping a variable
+        # the rows are always randomly ordered to avoid skipping a variable - not necessary to achieve randomness therefore left out to achieve better performance
         #q += " ORDER BY RANDOM()"
+        
         # limit_introduce is used to be able to set a limit separately for introduce and solve 
         if introduce and self.limit_introduce:
             # in the limit the newly introduced variables are used
@@ -280,6 +282,7 @@ class Problem(object):
         q = "{} {}".format(self.assignment_select(node),self.filter(node))
         if node.stored_vertices:
             q += " GROUP BY {}".format(",".join([var2col(v) for v in node.stored_vertices]))
+            # attempt of assigning a PK
             #q += ", row_number"
         #else:
             #q += " GROUP BY row_number"
@@ -397,11 +400,12 @@ class Problem(object):
 
             # create all columns and insert null if values are not used in parent
             # this only works in the current version of manual inserts without procedure calls in worker
+            # attempt to add timestamp to each row and delete the oldest rows after some time
             #db.create_table_node(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
             db.create_table(f"td_node_{n.id}", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
             #db.create_table(f"td_node_{n.id}_temp", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
-            # add unique index for the iterative approxiamtion
-                       
+            
+            # select only the columns that are not null in the table to reduce the amount of columns in the index  
             if n.parent:
                 items = set(n.parent.vertices)
                 n.constraint_relevant = [i for i in n.vertices if i in items]
@@ -410,7 +414,8 @@ class Problem(object):
                     n.constraint_relevant = n.vertices
             else:
                 n.constraint_relevant = n.vertices
-
+            
+            # add unique index for the iterative approximation 
             db.add_unique_index(f"td_node_{n.id}", [self.td_node_column_def(c)[0] for c in n.constraint_relevant]) 
             if self.candidate_store == "table":
                 db.create_table(f"td_node_{n.id}_candidate", [self.td_node_column_def(c) for c in n.vertices] + self.td_node_extra_columns())
@@ -418,10 +423,10 @@ class Problem(object):
                 candidate_view = db.replace_dynamic_tabs(candidate_view)
                 db.create_view(f"td_node_{n.id}_candidate_v", candidate_view)
             
+            # create view if the values should not be generated randomly in the select
             if not self.no_view:
                 ass_view = self.assignment_view(n)
                 ass_view = db.replace_dynamic_tabs(ass_view)
-                print(ass_view)
                 db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 db.close()
@@ -476,11 +481,9 @@ class Problem(object):
                 e = executor.submit(self.node_worker,n,workers, delete)
                 workers[n.id] = e
 
-        #for i in range(1,10):
-            #print(self.db.select_random(5,3))
         self.after_solve()
                  
-        # create the views new after every iteration to apply the limit again and get new rows for the nex iteration
+        # create the views new after every iteration to apply the limit again and get new rows for the next iteration
         #if "faster" not in self.kwargs or not self.kwargs["faster"]:
             #res = 0
             #for n in self.td.nodes:
@@ -492,7 +495,8 @@ class Problem(object):
         self.db.ignore_next_praefix()
         self.db.update("problem",["end_time"],["statement_timestamp()"],[f"ID = {self.id}"])
         self.db.commit()
-        print(self.summe)
+        # check how many rows where generated each iteration
+        #print(self.summe)
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             self.db.ignore_next_praefix()
             elapsed = self.db.select("problem",["end_time-calc_start_time","calc_start_time-setup_start_time"],[f"ID = {self.id}"])
@@ -515,8 +519,6 @@ class Problem(object):
             db = DB.from_pool(self.pool)
             db.set_praefix(f"p{self.id}_")
             logger.debug("Creating records for node %d", node.id)
-            #for i in range(15):
-                #print(db.select_random())
             self.solve_node(node,db, delete)
             db.close()
             if not self.interrupted:
@@ -547,7 +549,9 @@ class Problem(object):
         else:
             if not self.no_view:
                 select = f"SELECT * from td_node_{node.id}_v"
+                # also get timestamp to delete oldest rows
                 #select = f"SELECT statement_timestamp(), * from td_node_{node.id}_v"
+                # this randomize should not be necessary anymore
                 #if self.randomize_rows:
                     #select += " ORDER BY RANDOM()"
                 if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
@@ -574,14 +578,15 @@ class Problem(object):
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
                 # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
-                print(select)
                 if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
                     db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
                 else:
                     db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
+                # refresh for materialized view 
                 #db.refresh_mat_view(f"td_node_{node.id}_v")
-                #print(db.select_query(f"SELECT * from td_node_{node.id}_v"))
+            # if the values should be generated randomly in the select
             else:
+                # build up the select according to the view
                 sel_list = ",".join([var2col(v) if v in node.stored_vertices else "null::{} {}".format(self.td_node_column_def(v)[1],var2col(v)) for v in node.vertices])
                 sel_list += ", sum(model_count) as model_count"
                 where_filter = self.filter(node)
@@ -592,29 +597,20 @@ class Problem(object):
                 col = len(node.constraint_relevant)
                 limit = (list({self.limit_result_rows})[0])/100
                 #print(self.LIMIT_RESULT_ROWS_LOWER_CAP)
+                # figure out how many rows should be generated
                 if self.LIMIT_RESULT_ROWS_LOWER_CAP < (2**col):
                     if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_UPPER_CAP < ((2**col)):
-                        #print("cap")
                         rows = self.LIMIT_RESULT_ROWS_UPPER_CAP
-                        #print(rows)
                     else:
-                        #print("no cap")
                         #rows = ((2**(col/2))*limit)
                         rows = ((2**col)*limit)
-                        #print(rows)
                 else:
-                    #print("no lower")
                     rows = (2**col)
                     #rows = (2**self.LIMIT_RESULT_ROWS_LOWER_CAP)
-                    #print(rows)
                 #print(rows)
                 self.summe += rows
-                #print(len(node.vertices))
                 select = db.select_random(rows, len(node.vertices), self, node, sel_list, where_filter, group_by)
-                #print(type(select))
-                #print(select)
                 db.insert_list(f"td_node_{node.id}", select, len(node.vertices), [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
-                #print(db.select_query(f"Select * from td_node_{node.id}"))
                 print(self.summe)
         if self.interrupted:
             return
