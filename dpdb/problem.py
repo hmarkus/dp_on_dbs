@@ -310,7 +310,12 @@ class Problem(object):
                 else:
                     substr = q[fromIndex:]
                 limit = (list({self.limit_result_rows})[0])/100
-                q += f" LIMIT ((SELECT least(Count(*), {self.LIMIT_RESULT_ROWS_UPPER_CAP}) {substr})*{limit})"
+                # if upper cap is set select the smaller one from count and cap if not just use count
+                if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0:
+                    q += f" LIMIT ((SELECT least(Count(*), {self.LIMIT_RESULT_ROWS_UPPER_CAP}) {substr})*{limit})"
+                else:
+                    q += f" LIMIT ((SELECT Count(*) {substr})*{limit})"
+                #print(self.db.select_query(f"SELECT least(Count(*), {self.LIMIT_RESULT_ROWS_UPPER_CAP}) {substr}"))
         return q
 
     # the following methods should be considered final
@@ -469,6 +474,8 @@ class Problem(object):
                 self.db.ignore_next_praefix()
                 self.db.insert("problem_option",("id", "type", "name", "value"),(self.id,"cfg",k,v))
 
+    
+    #first = True
     def solve(self, delete = False):
         self.db.ignore_next_praefix()
         self.db.update("problem",["calc_start_time"],["statement_timestamp()"],[f"ID = {self.id}"])
@@ -498,6 +505,7 @@ class Problem(object):
         self.db.commit()
         # check how many rows where generated each iteration
         #print(self.summe)
+        #self.first = False
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             self.db.ignore_next_praefix()
             elapsed = self.db.select("problem",["end_time-calc_start_time","calc_start_time-setup_start_time"],[f"ID = {self.id}"])
@@ -539,14 +547,22 @@ class Problem(object):
         if self.candidate_store == "table":
             db.persist_view(f"td_node_{node.id}_candidate")
         if "faster" in self.kwargs and self.kwargs["faster"]:
+            print("faster")
             # if limit should be used or not
             if self.limit_result_rows:
                 # True tells the assignment_view function that the limit part of the query should be added
                 ass_view = self.assignment_view(node, True)
             else:
                 ass_view = self.assignment_view(node)
+            print(ass_view)
             ass_view = self.db.replace_dynamic_tabs(ass_view)
+            #db.drop_table(f"td_node_{node.id}")
+            #print(self.first)
+            #if self.first:
             db.create_select(f"td_node_{node.id}", ass_view)
+            #else:
+                #insertRows = db.select_query(ass_view)
+                #print(insertRows)
         else:
             if not self.no_view:
                 select = f"SELECT * from td_node_{node.id}_v"
@@ -576,7 +592,7 @@ class Problem(object):
                     else:
                         self.summe += count
                 #count the rows in the table
-                print(select)
+                #print(select)
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
                 # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
