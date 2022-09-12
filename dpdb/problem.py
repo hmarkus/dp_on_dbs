@@ -11,6 +11,7 @@ from dpdb.reader import TwReader
 from dpdb.db import DB
 
 import numpy as np
+from random import randint
 
 import argparse
 logger = logging.getLogger(__name__)
@@ -298,7 +299,7 @@ class Problem(object):
         if not node.stored_vertices and not extra_group:
             q += " LIMIT 1"
         else:
-            q += " ORDER BY RANDOM()"
+            #q += " ORDER BY RANDOM()"
             if checkLimit == True:
                 # to use the limit the amount of rows has to be counted in the limit query
                 # therefore the same FROM and WHERE clause has to be used in the subselect
@@ -432,7 +433,7 @@ class Problem(object):
             if not self.no_view:
                 ass_view = self.assignment_view(n)
                 ass_view = db.replace_dynamic_tabs(ass_view)
-                print(ass_view)
+                #print(ass_view)
                 db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 db.close()
@@ -586,13 +587,18 @@ class Problem(object):
                             select += f" LIMIT {self.LIMIT_RESULT_ROWS_UPPER_CAP}"
                         else:
                             limit = (list({self.limit_result_rows})[0])/100
-                            select += f" LIMIT ({count}*{limit})"
-                            #select += f" WHERE random() < {limit}"
-                            self.summe += (count*limit)
+                            #select += f" LIMIT ({count}*{limit})"
+                            #self.summe += (count*limit)
+                            limit = count * limit
+                            offset = randint(0, count-1)
+                            #print("Count: " + str(count))
+                            #print("Offset: " + str(offset))
+                            select += f" OFFSET {offset} FETCH NEXT {limit} ROWS ONLY"
                     else:
                         self.summe += count
                 #count the rows in the table
                 #print(select)
+                #print(db.select_query(select))
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
                 # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
