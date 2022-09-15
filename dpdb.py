@@ -92,17 +92,19 @@ def solve_problem(cfg, cls, file, **kwargs):
     stepAmount = 0
     if "limit_result_rows" in kwargs and kwargs["limit_result_rows"]:
         stepAmount = round(kwargs["iterations"] / len(kwargs["limit_result_rows"]))
-    #if "faster" not in kwargs or not kwargs["faster"]:
-    problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
-    j = 1
-    for i in range(kwargs["iterations"]):
-        if "limit_result_rows" in kwargs and kwargs["limit_result_rows"] and stepAmount > 0:
-            if (i % stepAmount) == 0 and i != 0 and j != len(kwargs["limit_result_rows"]):
-                problem.limit_result_rows = kwargs["limit_result_rows"][j]
-                j = j + 1
+    if "faster" not in kwargs or not kwargs["faster"]:
+        problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
+        j = 1
+        for i in range(kwargs["iterations"]):
+            if "limit_result_rows" in kwargs and kwargs["limit_result_rows"] and stepAmount > 0:
+                if (i % stepAmount) == 0 and i != 0 and j != len(kwargs["limit_result_rows"]):
+                    problem.limit_result_rows = kwargs["limit_result_rows"][j]
+                    j = j + 1
+            problem.solve()
+    else:
+        if "limit_result_rows" in kwargs and kwargs["limit_result_rows"]:
+            problem.limit_result_rows = kwargs["limit_result_rows"][0]
         problem.solve()
-    #else:
-        #problem.solve()
     problem.db.close()
 
 _LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
