@@ -100,6 +100,7 @@ def solve_problem(cfg, cls, file, **kwargs):
                 if (i % stepAmount) == 0 and i != 0 and j != len(kwargs["limit_result_rows"]):
                     problem.limit_result_rows = kwargs["limit_result_rows"][j]
                     j = j + 1
+            #print(problem.limit_result_rows)
             problem.solve()
     else:
         if "limit_result_rows" in kwargs and kwargs["limit_result_rows"]:

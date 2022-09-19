@@ -24,10 +24,11 @@ args.general = {
         help="Limit number of result rows per table. Can be a list (useful with --iterations) then every item of the list is used roughly the same amount of times.",
         nargs="*"
     ),
-    "--randomize-rows": dict(
-        action="store_true",
+    "--randomize": dict(
+        #action="store_true",
         dest="randomize_rows",
-        help="If set the rows in the solve methode do not get randomized anymore"
+        choices=["order", "offset"],
+        help="Switch between randomize methods"
     ),
     "--candidate-store": dict(
         dest="candidate_store",
@@ -57,12 +58,12 @@ args.general = {
         dest="table_row_limit",
         default=1000,
         help="Max Amount of Rows in table - after this limit is reached the model_count still gets updated but no new rows are inserted. If limit = 0 the limit will be ignored."
-    ),
-    "--no-view": dict(
-        action="store_true",
-        dest="no_view",
-        help="If set the rows are not generated via a view but only with random numbers directly in the select."
     )
+    #"--no-view": dict(
+    #    action="store_true",
+    #    dest="no_view",
+    #    help="If set the rows are not generated via a view but only with random numbers directly in the select."
+    #)
 }
 
 args.specific = {}
@@ -128,9 +129,12 @@ class Problem(object):
         # check if --randomize-rows parameter is set if yes then in solve
         # the rows shouldn't be randomized 
         if "randomize_rows" in kwargs and kwargs["randomize_rows"]:
-            self.randomize_rows = False
+            self.randomize_rows = kwargs["randomize_rows"]
         else:
-            self.randomize_rows = True
+            self.randomize_rows = None
+        print(self.randomize_rows)
+        #else:
+            #self.randomize_rows = True
         if "no_view" in kwargs and kwargs["no_view"]:
             self.no_view = True
         else:
@@ -299,7 +303,8 @@ class Problem(object):
         if not node.stored_vertices and not extra_group:
             q += " LIMIT 1"
         else:
-            #q += " ORDER BY RANDOM()"
+            if self.randomize_rows == "order":
+                q += " ORDER BY RANDOM()"
             if checkLimit == True:
                 # to use the limit the amount of rows has to be counted in the limit query
                 # therefore the same FROM and WHERE clause has to be used in the subselect
@@ -433,7 +438,7 @@ class Problem(object):
             if not self.no_view:
                 ass_view = self.assignment_view(n)
                 ass_view = db.replace_dynamic_tabs(ass_view)
-                #print(ass_view)
+                print(ass_view)
                 db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 db.close()
@@ -578,8 +583,8 @@ class Problem(object):
                     count = count[0]
                 
                     if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
-                        if self.randomize_rows:
-                            select += " ORDER BY RANDOM()"
+                        #if self.randomize_rows:
+                            #select += " ORDER BY RANDOM()"
                         # if amount of rows is higher than the Cap use the Cap as Limit
                         # to avoid having to much rows to work with
                         if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_UPPER_CAP < count:
@@ -587,13 +592,15 @@ class Problem(object):
                             select += f" LIMIT {self.LIMIT_RESULT_ROWS_UPPER_CAP}"
                         else:
                             limit = (list({self.limit_result_rows})[0])/100
-                            #select += f" LIMIT ({count}*{limit})"
+                            if self.randomize_rows == "order":
+                                select += f" LIMIT ({count}*{limit})"
                             #self.summe += (count*limit)
-                            limit = count * limit
-                            offset = randint(0, count-1)
+                            if self.randomize_rows == "offset":
+                                limit = count * limit
+                                offset = randint(0, count-1)
                             #print("Count: " + str(count))
                             #print("Offset: " + str(offset))
-                            select += f" OFFSET {offset} FETCH NEXT {limit} ROWS ONLY"
+                                select += f" OFFSET {offset} FETCH NEXT {limit} ROWS ONLY"
                     else:
                         self.summe += count
                 #count the rows in the table
@@ -601,6 +608,7 @@ class Problem(object):
                 #print(db.select_query(select))
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
+                print(select)
                 # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
                 if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
                     db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
