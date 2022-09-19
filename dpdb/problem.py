@@ -608,12 +608,14 @@ class Problem(object):
                 #print(db.select_query(select))
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
-                print(select)
+                print(countTable)
+                #print(select)
                 # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
                 if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
                     db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
                 else:
-                    db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.vertices]) 
+                    print("update")
+                    db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.constraint_relevant]) 
                 # refresh for materialized view 
                 #db.refresh_mat_view(f"td_node_{node.id}_v")
             # if the values should be generated randomly in the select
