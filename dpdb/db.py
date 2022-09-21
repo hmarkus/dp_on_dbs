@@ -286,10 +286,10 @@ class DB(object):
         else:
             q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter}"
         q = sql.SQL(q)
-        print(q)
+        #print(q)
          
         random_values = np.random.randint(2, size=(rows, random_numbers))
-        print(random_values)
+        #print(random_values)
         random_values = random_values.tolist()
         
         retVal = set()
@@ -342,7 +342,7 @@ class DB(object):
             q = sql.Composed([q,sql.SQL(" RETURNING {}").format(sql.Identifier(returning))])
             return self.exec_and_fetch(q)
         else:
-            print(q)
+            #print(q)
             self.execute(q)
 
     def create_table_as(self, table, newTableName):
