@@ -347,6 +347,7 @@ class DB(object):
             q = sql.Composed([q,sql.SQL(" RETURNING {}").format(sql.Identifier(returning))])
             return self.exec_and_fetch(q)
         else:
+            print(q)
             self.execute(q)
 
     def create_table_as(self, table, newTableName):
@@ -441,6 +442,7 @@ class DB(object):
                         sql.Identifier(c)
                         ) for c in columns])
                     )
+        #print(q)
         self.execute(q)
 
     def call(self, procedure, params = []):
