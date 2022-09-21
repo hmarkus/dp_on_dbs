@@ -628,23 +628,23 @@ class Problem(object):
                 if node.stored_vertices:
                     group_by = "{}".format(",".join([var2col(v) for v in node.stored_vertices]))
                 #col = len(node.vertices)
-                col = len(node.constraint_relevant)
+                col = len(node.vertices)
                 limit = (list({self.limit_result_rows})[0])/100
                 #print(self.LIMIT_RESULT_ROWS_LOWER_CAP)
                 # figure out how many rows should be generated
-                if self.LIMIT_RESULT_ROWS_LOWER_CAP < (2**col):
-                    if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_UPPER_CAP < ((2**col)):
-                        rows = self.LIMIT_RESULT_ROWS_UPPER_CAP
-                    else:
+                #if self.LIMIT_RESULT_ROWS_LOWER_CAP < (2**col):
+                    #if self.LIMIT_RESULT_ROWS_UPPER_CAP != 0 and self.LIMIT_RESULT_ROWS_UPPER_CAP < ((2**col)):
+                        #rows = self.LIMIT_RESULT_ROWS_UPPER_CAP
+                    #else:
                         #rows = ((2**(col/2))*limit)
-                        rows = ((2**col)*limit)
-                else:
-                    rows = (2**col)
+                        #rows = ((2**col)*limit)
+                #else:
+                    #rows = (2**col)
                     #rows = (2**self.LIMIT_RESULT_ROWS_LOWER_CAP)
                 #print(rows)
-                self.summe += rows
-                select = db.select_random(rows, len(node.vertices), self, node, sel_list, where_filter, group_by)
-                db.insert_list(f"td_node_{node.id}", select, len(node.vertices), [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
+                #self.summe += rows
+                select = db.select_random(math.floor((2**col)), col, self, node, sel_list, where_filter, group_by)
+                db.insert_list(f"td_node_{node.id}", select, col, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
                 #print(self.summe)
         if self.interrupted:
             return

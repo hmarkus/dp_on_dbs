@@ -180,60 +180,55 @@ class DB(object):
 
     # select the new values in each select randomly
     def select_random(self, rows, columns, problem, node, sel_list, where_filter, group_by):
-        distinct_values = ""
-        inner_select = ""
-        inner_from = ""
-        
-        first = True
-        ids = set()
+        q = "SELECT DISTINCT ON ("
         for v in node.vertices:
-            # build up the distinct clause
-            distinct_values += f"v{v},"
-            # if the node is new in this table select a random number between 0-1 and round it to either 0 or 1 and cast it to a bool
+            q += f"v{v},"
+        q = q[:-1]
+        q += ") "
+
+        for v in node.vertices:
             if node.needs_introduce(v):
-                inner_select += "round(random()) :: int :: bool as "
-            # if the node is not new find the correct reference
+                q += "round(random()) :: int :: bool as "
             else:
                 nodeid = node.vertex_children(v)[0].id
-                inner_select += f"t{nodeid}."
-                
-                # check if other tables are need if yes build up inner from clause
-                if first:
-                    first = False
-                    inner_from  += " FROM"
-                if nodeid not in ids:
-                    inner_from += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
-                ids.add(nodeid)
-            inner_select += f"v{v},"
-            
-        distinct_values = distinct_values[:-1]
+                q += f"t{nodeid}."
+            q += f"v{v}, "
 
         extra_cols = problem.candidate_extra_cols(node)
-        
+
         if extra_cols:
-            inner_select += "{}".format(",".join(extra_cols))
-        inner_select += ", generate_series(1,"+str(rows) + ")"
-        
+            q += "{}".format(",".join(extra_cols))
+        q += ", generate_series(1,"+str(rows) + ")"
+
+        first = True
+        ids = set()
+        for n in node.vertices:
+            if not node.needs_introduce(n):
+                if first:
+                    first = False
+                    q += " FROM"
+                nodeid = node.vertex_children(n)[0].id
+                if nodeid not in ids:
+                    q += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
+                ids.add(nodeid)
 
         for n in node.children:
             if first:
                 first = False
-                inner_from  += " FROM"
+                q += " FROM"
             nodeid = n.id
             if nodeid not in ids:
-                inner_from += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
+                q += " {} {},".format(f"p1_td_node_{nodeid}", f"t{nodeid}")
             ids.add(nodeid)
-         
+
         if not first:
-            inner_from = inner_from[:-1]
-            
-        q = f"SELECT DISTINCT ON ({distinct_values}) {inner_select} {inner_from}"
-        
+            q = q[:-1]
+
         if group_by:
-            q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter} GROUP BY {group_by}"
+            q = f"SELECT {sel_list} FROM ({q}) AS candiate {where_filter} GROUP BY {group_by}"
         else:
-            q = f"SELECT {sel_list} FROM ({q}) AS candidate {where_filter}"
-        #print(q)
+            q = f"SELECT {sel_list} FROM ({q}) AS canidate {where_filter}"
+
         q = sql.SQL(q)
         return self.exec_and_fetch_all(q)
     
