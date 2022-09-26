@@ -132,7 +132,7 @@ class Problem(object):
             self.randomize_rows = kwargs["randomize_rows"]
         else:
             self.randomize_rows = None
-        print(self.randomize_rows)
+        #print(self.randomize_rows)
         #else:
             #self.randomize_rows = True
         if "no_view" in kwargs and kwargs["no_view"]:
@@ -438,7 +438,7 @@ class Problem(object):
             if not self.no_view:
                 ass_view = self.assignment_view(n)
                 ass_view = db.replace_dynamic_tabs(ass_view)
-                print(ass_view)
+                #print(ass_view)
                 db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 db.close()
@@ -608,13 +608,13 @@ class Problem(object):
                 #print(db.select_query(select))
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
-                print(countTable)
+                #print(countTable)
                 #print(select)
                 # if count is too high then the model_count for the existing rows gets updated but no new rows are inserted
                 if self.TABLE_ROW_LIMIT == 0 or countTable < self.TABLE_ROW_LIMIT:
                     db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select), True, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
                 else:
-                    print("update")
+                    #print("update")
                     db.update_select_model_count(f"td_node_{node.id}", db.replace_dynamic_tabs(select), [self.td_node_column_def(c)[0] for c in node.constraint_relevant]) 
                 # refresh for materialized view 
                 #db.refresh_mat_view(f"td_node_{node.id}_v")
