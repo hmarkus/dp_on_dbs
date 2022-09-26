@@ -27,7 +27,7 @@ args.general = {
     "--randomize": dict(
         #action="store_true",
         dest="randomize_rows",
-        choices=["order", "offset"],
+        choices=["order", "offset", "noview"],
         help="Switch between randomize methods"
     ),
     "--candidate-store": dict(
@@ -58,12 +58,12 @@ args.general = {
         dest="table_row_limit",
         default=1000,
         help="Max Amount of Rows in table - after this limit is reached the model_count still gets updated but no new rows are inserted. If limit = 0 the limit will be ignored."
-    ),
-    "--no-view": dict(
-        action="store_true",
-        dest="no_view",
-        help="If set the rows are not generated via a view but only with random numbers directly in the select."
     )
+    #"--no-view": dict(
+        #action="store_true",
+        #dest="no_view",
+        #help="If set the rows are not generated via a view but only with random numbers directly in the select."
+    #)
 }
 
 args.specific = {}
@@ -132,13 +132,14 @@ class Problem(object):
             self.randomize_rows = kwargs["randomize_rows"]
         else:
             self.randomize_rows = None
+        print(self.randomize_rows)
         #print(self.randomize_rows)
         #else:
             #self.randomize_rows = True
-        if "no_view" in kwargs and kwargs["no_view"]:
-            self.no_view = True
-        else:
-            self.no_view = False
+        #if "no_view" in kwargs and kwargs["no_view"]:
+            #self.no_view = True
+        #else:
+            #self.no_view = False
         self.limit_introduce = limit_introduce
         self.max_worker_threads = max_worker_threads
         self.kwargs = kwargs
@@ -435,7 +436,7 @@ class Problem(object):
                 db.create_view(f"td_node_{n.id}_candidate_v", candidate_view)
             
             # create view if the values should not be generated randomly in the select
-            if not self.no_view:
+            if self.randomize_rows != "noview":
                 ass_view = self.assignment_view(n)
                 ass_view = db.replace_dynamic_tabs(ass_view)
                 print(ass_view)
@@ -570,7 +571,7 @@ class Problem(object):
                 #insertRows = db.select_query(ass_view)
                 #print(insertRows)
         else:
-            if not self.no_view:
+            if self.randomize_rows != "noview":
                 select = f"SELECT * from td_node_{node.id}_v"
                 # also get timestamp to delete oldest rows
                 #select = f"SELECT statement_timestamp(), * from td_node_{node.id}_v"
@@ -643,6 +644,7 @@ class Problem(object):
                     #rows = (2**self.LIMIT_RESULT_ROWS_LOWER_CAP)
                 #print(rows)
                 #self.summe += rows
+                #print("noview -----------------------------------------------------------------")
                 select = db.select_random(math.floor((2**col)), col, self, node, sel_list, where_filter, group_by)
                 db.insert_list(f"td_node_{node.id}", select, col, [self.td_node_column_def(c)[0] for c in node.constraint_relevant])
                 #print(self.summe)
