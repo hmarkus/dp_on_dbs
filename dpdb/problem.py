@@ -58,12 +58,12 @@ args.general = {
         dest="table_row_limit",
         default=1000,
         help="Max Amount of Rows in table - after this limit is reached the model_count still gets updated but no new rows are inserted. If limit = 0 the limit will be ignored."
+    ),
+    "--no-view": dict(
+        action="store_true",
+        dest="no_view",
+        help="If set the rows are not generated via a view but only with random numbers directly in the select."
     )
-    #"--no-view": dict(
-    #    action="store_true",
-    #    dest="no_view",
-    #    help="If set the rows are not generated via a view but only with random numbers directly in the select."
-    #)
 }
 
 args.specific = {}
@@ -604,7 +604,7 @@ class Problem(object):
                     else:
                         self.summe += count
                 #count the rows in the table
-                #print(select)
+                print(select)
                 #print(db.select_query(select))
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
