@@ -132,7 +132,10 @@ class Problem(object):
             self.randomize_rows = kwargs["randomize_rows"]
         else:
             self.randomize_rows = None
-        print(self.randomize_rows)
+        #print(self.randomize_rows)
+        #echo "user Ok"
+        #createdb -p $PORT dpdb_pg 
+        #psql -p $PORT dpdb_pg <<'EOF'
         #print(self.randomize_rows)
         #else:
             #self.randomize_rows = True
@@ -439,7 +442,7 @@ class Problem(object):
             if self.randomize_rows != "noview":
                 ass_view = self.assignment_view(n)
                 ass_view = db.replace_dynamic_tabs(ass_view)
-                print(ass_view)
+                #print(ass_view)
                 db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 db.close()
@@ -554,7 +557,7 @@ class Problem(object):
         if self.candidate_store == "table":
             db.persist_view(f"td_node_{node.id}_candidate")
         if "faster" in self.kwargs and self.kwargs["faster"]:
-            print("faster")
+            #print("faster")
             # if limit should be used or not
             if self.limit_result_rows:
                 # True tells the assignment_view function that the limit part of the query should be added
@@ -582,7 +585,7 @@ class Problem(object):
                     # get number of result rows in table and check if the limit should be applied or not
                     count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
                     count = count[0]
-                
+ 
                     if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
                         #if self.randomize_rows:
                             #select += " ORDER BY RANDOM()"
@@ -598,15 +601,14 @@ class Problem(object):
                             #self.summe += (count*limit)
                             if self.randomize_rows == "offset":
                                 limit = count * limit
-                                offset = randint(0, count-1)
-                            #print("Count: " + str(count))
-                            #print("Offset: " + str(offset))
+                                offset = randint(0, round(count*((100-list({self.limit_result_rows})[0])/100)))
+                                #print("Count: " + str(count))
+                                #print("Offset: " + str(offset))
                                 select += f" OFFSET {offset} FETCH NEXT {limit} ROWS ONLY"
                     else:
                         self.summe += count
                 #count the rows in the table
                 #print(select)
-                #print(db.select_query(select))
                 countTable = db.select(f"td_node_{node.id}", ["Count(*)"])
                 countTable = countTable[0]
                 #print(countTable)
