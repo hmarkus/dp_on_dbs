@@ -50,13 +50,13 @@ args.general = {
     "--upper-cap": dict(
         type=int,
         dest="upper_cap",
-        default=1000,
+        default=0,
         help="Upper Cap for a maximum of rows per step. If upperCap == 0 it will be ignored."
     ),
     "--table-row-limit": dict(
         type=int,
         dest="table_row_limit",
-        default=1000,
+        default=0,
         help="Max Amount of Rows in table - after this limit is reached the model_count still gets updated but no new rows are inserted. If limit = 0 the limit will be ignored."
     )
     #"--no-view": dict(
@@ -584,8 +584,7 @@ class Problem(object):
                 if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
                     # get number of result rows in table and check if the limit should be applied or not
                     count = db.select(f"td_node_{node.id}_v", ["Count(*)"])
-                    count = count[0]
- 
+                    count = count[0] 
                     if self.LIMIT_RESULT_ROWS_LOWER_CAP < count:
                         #if self.randomize_rows:
                             #select += " ORDER BY RANDOM()"
