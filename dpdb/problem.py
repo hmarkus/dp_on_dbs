@@ -132,6 +132,10 @@ class Problem(object):
             self.randomize_rows = kwargs["randomize_rows"]
         else:
             self.randomize_rows = None
+
+        logger.info("Running: " + str(self.randomize_rows))
+        logger.info("Limit Result Rows: " + str(limit_result_rows))
+        logger.info("Faster: " + str(kwargs["faster"]))
         #print(self.randomize_rows)
         #echo "user Ok"
         #createdb -p $PORT dpdb_pg 

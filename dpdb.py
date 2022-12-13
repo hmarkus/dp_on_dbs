@@ -14,6 +14,7 @@ from dpdb.treedecomp import TreeDecomp
 from dpdb.problem import args
 
 logger = logging.getLogger("dpdb")
+logging.basicConfig(stream = sys.stdout, filemode = "w", level = logging.INFO)
 
 def read_cfg(cfg_file):
     import json
