@@ -1,0 +1,44 @@
+\documentclass[tikz,border={0 0 0 0}]{standalone}
+\usepackage{tikzmacros}
+\begin{document}
+\begin{tikzpicture}[every node/.style={draw=black,thin},x=1.5cm,y=1.5cm]
+  % \node (u) {$u$};
+  \node (swim) at (0,0) [] {\textbf{d}rinking cocktails};
+  \node (ski) at (2,0) {\textbf{s}urfing};
+  \node (wexp) at (4,0) {surfing \textbf{e}xpensive};
+  \node (regular) at (1,1) {seasonal surfing \textbf{p}ass req.};
+  \node (once) at (4,1) {\textbf{c}heap if once};
+  \node (adventure) at (0,-1) {\textbf{a}dventure req.};
+  \node (chill) at (2,-1) {\textbf{r}elaxing req.};
+  
+  \node<3>[fill=white] at (swim) {\textbf{d}rinking cocktails};
+  \node<3>[fill=white] at (chill) {\textbf{r}elaxing req.};
+  \node<3>[fill=white] at (once) {\textbf{c}heap if once};
+  
+  \node<4>[fill=white] at (ski) {\textbf{s}urfing};
+  \node<4>[fill=white] at (adventure) {\textbf{a}dventure req.};
+  \node<4>[fill=white] at (once) {\textbf{c}heap if once};
+  
+  \node<5>[fill=white] at (ski) {\textbf{s}urfing};
+  \node<5>[fill=white] at (adventure) {\textbf{a}dventure req.};
+  \node<5>[fill=white] at (regular) {seasonal surfing \textbf{p}ass req.};
+  
+  \foreach \f/\t in {wexp/ski,
+    regular/wexp,
+    regular/once,
+    once/wexp,
+    swim/regular,
+    adventure/chill,
+    adventure/swim,
+    chill/ski,
+    chill/adventure,
+    once/regular}{
+    \draw [-stealth',ultra thick] (\f) to (\t);		
+  }
+\end{tikzpicture}
+\end{center}
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

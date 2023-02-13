@@ -1,0 +1,63 @@
+%\documentclass{standalone}
+\documentclass{article}
+\usepackage{amsmath}
+
+\DeclareMathOperator{\type}{type}
+\DeclareMathOperator{\intr}{intr}
+\DeclareMathOperator{\leaf}{leaf}
+\DeclareMathOperator{\join}{join}
+\DeclareMathOperator{\rem}{rem}
+\DeclareMathOperator{\tab}{tab}
+\newcommand{\eqdef}{\ensuremath{\leftarrow}}
+\newcommand{\SM}{\ensuremath{\;|\;}}
+
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage[table,x11names]{xcolor}
+\usepackage{graphicx}
+\renewcommand*{\algorithmcfname}{Listing}
+\SetKwInput{KwData}{In}
+\SetKwInput{KwResult}{Out}
+\setlength{\textfloatsep}{1em}
+\SetAlFnt{\small}
+\SetAlCapFnt{\small}
+\SetAlCapNameFnt{\small}
+\SetAlCapHSkip{0pt}
+\SetEndCharOfAlgoLine{}
+%\IncMargin{-\parindent}
+
+\begin{document}
+  \begin{algorithm}
+    \KwData{Node~$t$, bag $\chi_t$, clauses~$F_t$, sequence~$C$ of
+      tables.\\{\bf Out:} Table~$\tab_t$}
+    % 
+    \If{$\type(t) = \leaf$}{%
+      $\tab_t \eqdef \{\emptyset\}$ %
+    }%
+    \uElseIf{$\type(t) = \intr$ and
+      $a \in \chi_t \setminus \chi_{t'}$,}{%
+      $\tab_t \eqdef %
+      \Big\{ {\tau \cup \{a\}} \hspace{2em}\SM \tau \in \tab'', {\tau
+        \cup \{a\}} \models F_t \Big\} \;\cup$\\ %
+      $\hspace{3.3em}\Big\{ \tau \hspace{4.7em}\SM \tau \in \tab'',
+      \tau \models F_t \Big\}$
+   % 
+    }%
+    \uElseIf{$\type(t) = \rem$ and
+      $a \in \chi_{t'} \setminus \chi_t$}{%
+      $\tab_t \eqdef \Big\{\tau \setminus \{a\} \hspace{2.2em}\SM \tau \in \tab'' \Big\}$
+   % 
+    } %
+    \uElseIf{$\type(t) = \join$}{%
+      $\tab_t \eqdef \Big\{\tau \hspace{4.6em}\SM \tau \in \tab'', \tau \in \tab''\Big\}$
+   % 
+   \vspace{-0.1em}
+ } 
+ \Return $\tab_t$
+ \vspace{-0.25em}
+\end{algorithm}%
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

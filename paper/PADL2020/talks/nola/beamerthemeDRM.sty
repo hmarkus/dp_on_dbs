@@ -1,0 +1,275 @@
+% LATEX BEAMER TEMPLATE
+% Research Group Discrete Reasoning Methods
+% Institute of Information Systems - Vienna University of Technology
+%
+% This template is using the beamer document class package, see
+% <http://www.ctan.org/tex-archive/macros/latex/contrib/beamer/>
+%
+% Based on Thomas Krennwallner's template for KBS Group
+% For questions and comments send an email to
+% Johannes Fichte <fichte@kr.tuwien.ac.at>
+%
+%
+
+%\ProvidesPackageRCS $Header: /home/vedranm/bitbucket/beamer/base/themes/theme/beamerthemeSingapore.sty,v d02a7cf4d8ae 2010/06/17 09:11:41 rivanvx $
+
+\DeclareOptionBeamer{compress}{\beamer@compresstrue}
+\ProcessOptionsBeamer  
+
+
+%\show\graphicspath 
+
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%		PRESENTATION MODE
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+\mode<presentation>
+{
+%===================================================================
+%		FONT ENCODING
+%===================================================================
+\usepackage[USenglish]{babel}
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage{times}
+\usepackage{helvet}
+
+%===================================================================
+%		GRAPHICS
+%===================================================================
+\usepackage{graphicx}
+\graphicspath{{./fig/}{fig/}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,decorations}
+
+%===================================================================
+%		COLORS
+%===================================================================
+\usepackage{xcolor} 
+\selectcolormodel{rgb} 
+
+\definecolor{KbsDarkBlue}{rgb/cmyk}{0.22,0.29,0.46/0.6,0.4,0,0.4} 
+\definecolor{KbsBrightBlue}{rgb/cmyk}{0.35,0.42,0.58/0.45,0.28,0,0.28} 
+\definecolor{DRMBlue}{cmyk}{0.97,0.23,0,0.50}
+\definecolor{InfosysDarkGrey}{gray}{0.4} 
+\definecolor{InfosysLightGrey}{gray}{0.6} 
+\definecolor{TuWienBlue}{rgb/cmyk}{0,0.36,0.62/1,0.38,0,0.15} 
+\definecolor{TuWienGrey}{rgb/cmyk}{0.4,0.4,0.4/0,0,0,0.75} 
+\definecolor{TuInfRed}{rgb/cmyk}{0.9,0,0.11/0,1,1,0} 
+
+% use bold+serif fonts for math 
+%\usefonttheme[onlymath]{serif} 
+%\boldmath 
+\setbeamertemplate{navigation symbols}{} % turn off navigation symbols
+\setbeamertemplate{bibliography item}[book]
+\beamersetleftmargin{1cm}
+\beamersetrightmargin{1cm}
+
+%itemize hacks
+\addtobeamertemplate{title}{\vspace{.5em}}{\vspace{0.5em}}
+\addtobeamertemplate{proof begin}{}{\vspace{-0.5em}}
+\renewenvironment{enumerate}%
+  {\begin{list}{\arabic{enumi}.}%
+     {\topsep=0cm\itemsep=0cm\parsep=0cm\partopsep=0cm\usecounter{enumi}}%
+   }{\end{list}}
+
+% setup basic bling bling
+\setbeamertemplate{navigation symbols}{}  % no navigation on a poster
+\setbeamertemplate{bibliography item}[triangle] % no bibliography icons
+
+% default coloring is infosys grey
+\setbeamercolor{bibliography entry author}{fg=InfosysDarkGrey}
+\setbeamercolor{bibliography entry title}{fg=black}
+\setbeamercolor{bibliography entry journal}{fg=black}
+\setbeamercolor{bibliography entry note}{fg=black}
+
+\usecolortheme{default}
+\setbeamercolor{structure}{fg=InfosysDarkGrey}
+
+% play around with block colors
+%\setbeamercolor{block body}{fg=black}
+%\setbeamercolor{block title}{fg=white,bg=InfosysDarkGrey}
+
+% basic colors
+\setbeamercolor{alerted text}{fg=DRMBlue}
+\setbeamercolor{example text}{fg=InfosysDarkGrey}
+
+% put number of frames at the bottom
+\setbeamertemplate{footline}[frame number]
+
+
+
+
+\setbeamercolor{bibliography entry author}{fg=DRMBlue}
+\setbeamercolor{bibliography entry title}{fg=black}
+\setbeamercolor{bibliography entry journal}{fg=black}
+\setbeamercolor{bibliography entry note}{fg=black}
+
+\usecolortheme{default}
+\setbeamercolor{structure}{fg=InfosysDarkGrey}%DRMBlue}
+\setbeamercolor{title in head/head}{fg=DRMBlue}
+\setbeamercolor{title}{fg=DRMBlue}
+\setbeamercolor{block title}{fg=DRMBlue}
+\setbeamercolor{frametitle}{fg=DRMBlue}
+
+
+% play around with block colors
+\setbeamercolor{block body}{fg=black}
+%\setbeamercolor{block title}{fg=white,bg=KbsDarkBlue}
+\setbeamercolor{example text}{fg=DRMBlue}
+\setbeamercolor{section in head/foot}{use=structure,bg=structure.fg!25!bg}
+%\useoutertheme[subsection=false]{miniframes}
+\setbeamertemplate{frametitle}[default][center]
+\AtBeginDocument{%
+  {
+    \usebeamercolor{section in head/foot}
+  }
+  \pgfdeclareverticalshading{beamer@headfade}{\paperwidth}
+  {%
+    color(0cm)=(bg);
+    color(1.25cm)=(section in head/foot.bg)%
+  }
+  \setbeamercolor{section in head/foot}{bg=}
+}
+\addtoheadtemplate{\pgfuseshading{beamer@headfade}\vskip-1.1cm}{}
+\beamertemplatedotitem
+
+%  \setbeamercovered{transparent}
+% \setbeamercolor{title in head/head}{fg=black}
+%  \setbeamercolor{title}{fg=black}
+%  \setbeamercolor{block title}{fg=black}
+%  \setbeamercolor{item}{fg=black}
+%  \setbeamercolor{frametitle}{fg=black}
+%  \setbeamercolor{separation line}{bg=deg}
+%  \setbeamercolor{alerted text}{fg=red!80!black}
+%	\setbeamercolor{section in toc}{fg=black,bg=white}
+%	\usefonttheme{structuresmallcapsserif}
+%	\usepackage{helvet}
+%	\setbeamercolor{navigation symbols}{fg=black}
+%	\setbeamercolor{navigation symbols dimmed}{fg=white!80!black}
+%	\setbeamercolor{subsection in head/foot}{fg=black}
+%	\setbeamercolor{subsection in head/foot shaded}{fg= grey}
+%	\setbeamercolor*{section in head/foot}{parent=palette secondary} 
+%	\setbeamercolor*{section in head/foot shaded}{fg=grey} 
+%      \setbeamercolor*{subsection in head/foot}{parent=palette primary}
+%	\setbeamercolor*{palette primary}{fg=black}
+%	\setbeamercolor*{palette primary shaded}{fg=grey}
+%	\setbeamerfont{block title}{size=\large,series=\normalfont}
+%	\setbeamerfont{block}{size=\small,series=\normalfont}
+%\addtobeamertemplate{block begin}{}{\setlength{\parskip}{35pt plus 1pt minus 1pt}}
+%      \addtobeamertemplate{block end}{}{\setlength{\parskip}{40pt plus 1pt minus 1pt}}
+%	\addtobeamertemplate{block title}{}{\setlength{\parskip}{40pt minus 40pt minus 72pt}}
+%	\setbeamertemplate{block begin}{
+%		\vskip0.5em
+	% 	\begin{beamercolorbox}[rounded=true]{block title}%
+	% 	\usebeamerfont*{block title}{\insertblocktitle}
+	% 	\end{beamercolorbox}%
+	% 	\usebeamerfont{block body}%
+	% 	\begin{beamercolorbox}[rounded=true]{block body}%
+	% }
+	% \setbeamertemplate{block end}
+	% {
+	% 	\end{beamercolorbox}
+	% }
+
+
+%\setlength{\textwidth}{12cm}
+
+% \mark{{}{}}
+% \renewcommand\author{\@ifnextchar [{\@authortwo}{\@authorone}}
+% \def\@authorone#1{\gdef\@author{#1}\gdef\@shortauthor{#1}}
+% \def\@authortwo[#1]#2{\gdef\@author{#2}\gdef\@shortauthor{#1}}
+% \gdef\@author{\mbox{}}
+
+% \newcommand\shortauthor[1]{\gdef\@shortauthor{#1}}
+% \gdef\@shortauthor{}
+
+%===================================================================
+%		Title Page
+%===================================================================
+\def\joint#1{\def\Joint{Joint work with #1.}} \def\Joint{}
+\def\grant#1{\def\Grant{#1}} \def\Grant{Research was supported by ERC
+  Grant 239962}
+\def\conference#1{\def\Conference{#1}}\def\Conference{}
+\defbeamertemplate*{title page}{customized}[1][]
+{
+ \medskip\par
+\noindent
+\makebox[1.1\textwidth][s]{\vspace{3em}\rlap{\Conference}\hfill \hfill \llap{\usebeamercolor[fg]{titlegraphic}\inserttitlegraphic}}%
+\par
+ \vfill
+\centering
+  \usebeamerfont{title}\usebeamercolor[fg]{title}\inserttitle\par
+  \usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle\par
+  \bigskip
+%  \usebeamerfont{author}\usebeamercolor[fg]{author}\insertauthor\thanks{\Grant}\par
+  %\usebeamerfont{author}\usebeamercolor[fg]{author}\insertauthor\par
+  %\usebeamerfont{author}\usebeamercolor[fg]{author}\scriptsize{\Joint}\normalfont\par
+  \insertauthor\par
+\bigskip
+  \usebeamerfont{institute}\usebeamercolor[fg]{institute}{\tiny \insertinstitute}\par
+\bigskip
+  \usebeamerfont{date}\usebeamercolor[fg]{date}\insertdate\par
+\vfill
+}
+
+%\setbeamersize{text margin left=2em,text margin right=2em}
+}
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%		Handout MODE
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+\mode<handout>{\RequirePackage{pgfpages}
+\pgfpagesuselayout{4 on 1}[a4paper,border shrink=5mm, landscape]
+\setbeamercolor{background canvas}{bg=black!2}
+}
+
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%		ALL MODES
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+\mode<all>
+{
+\titlegraphic{
+  \includegraphics[height=0.7cm]{0-fig-affiliations/potassco_logo_blue}
+  \hspace{0.1\textwidth}
+  \includegraphics[height=0.7cm]{0-fig-affiliations/TU_Dresden_Logo_HKS41}
+  \hspace{4em}
+  % \includegraphics[height=0.8cm]{JKU_EN_RGB_Schwarz}\hspace{0.2\textwidth}
+  \includegraphics[height=0.7cm]{0-fig-affiliations/logo_DBAI_3_CMYK}\hspace{0.15\textwidth}
+  %\includegraphics[height=0.7cm]{ac-logo}\hspace{0.15\textwidth}
+}
+
+%===================================================================
+%		PDF Properties
+%===================================================================
+\def\keywords#1{\def\Keywords{#1}}\def\Keywords{}
+\def\subject#1{\def\Subject{#1}}\def\Subject{}
+%\pdfoutput=1
+\hypersetup{%
+  pdftitle={\inserttitle},%
+  pdfauthor={\insertauthor},%
+  pdfsubject={\Subject},%
+  pdfkeywords={\Keywords}%
+}
+
+
+%===================================================================
+%		HELPER MACROS
+%===================================================================
+\newcommand{\makeoverview}{%
+  \section*{Outline}
+  \begin{frame}
+    \frametitle{Outline}
+    \tableofcontents
+  \end{frame}
+}
+\newcommand{\makereferences}[1]{%
+  \begin{frame}[allowframebreaks,allowdisplaybreaks]
+    \frametitle{References}
+    \bibliography{#1}
+  \end{frame}
+}
+
+}
+\endinput

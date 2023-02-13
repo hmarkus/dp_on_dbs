@@ -14,6 +14,7 @@ from dpdb.treedecomp import TreeDecomp
 from dpdb.problem import args
 
 logger = logging.getLogger("dpdb")
+logging.basicConfig(stream = sys.stdout, filemode = "w", level = logging.INFO)
 
 def read_cfg(cfg_file):
     import json
@@ -98,9 +99,30 @@ def solve_problem(cfg, cls, file, **kwargs):
             fw.write_td(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, td.edges)
     problem.set_td(td)
     problem.setup()
+    
+    # The number of iterations per item in the limit list get calculated
+    # and then the limit_result_rows variable in the problem class
+    # gets set accordingly (so when the current iteration divided by the stepAmount is zero
+    # and it is not the first one and there are still new arguments in the list left)
+    # if faster is set all the iterations and limit restrictions have no influence
+    stepAmount = 0
+    if "limit_result_rows" in kwargs and kwargs["limit_result_rows"]:
+        stepAmount = round(kwargs["iterations"] / len(kwargs["limit_result_rows"]))
     if "faster" not in kwargs or not kwargs["faster"]:
         problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
-    problem.solve()
+        j = 1
+        for i in range(kwargs["iterations"]):
+            if "limit_result_rows" in kwargs and kwargs["limit_result_rows"] and stepAmount > 0:
+                if (i % stepAmount) == 0 and i != 0 and j != len(kwargs["limit_result_rows"]):
+                    problem.limit_result_rows = kwargs["limit_result_rows"][j]
+                    j = j + 1
+            #print(problem.limit_result_rows)
+            problem.solve()
+    else:
+        if "limit_result_rows" in kwargs and kwargs["limit_result_rows"]:
+            problem.limit_result_rows = kwargs["limit_result_rows"][0]
+        problem.solve()
+    problem.db.close()
 
 _LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
@@ -161,7 +183,8 @@ if __name__ == "__main__":
     prob_opts = parser.add_argument_group("problem options", "Options that apply to all problem types")
     for arg, kwargs in args.general.items():
         prob_opts.add_argument(arg,**kwargs)
-
+   
+    prob_opts.add_argument("--iterations", dest="iterations", help="number of iterations to be run (doesn't work with --faster)", default=1, type=int)
     args = parser.parse_args()
 
     if args.log_level:

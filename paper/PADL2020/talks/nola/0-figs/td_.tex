@@ -1,0 +1,15 @@
+\begin{tikzpicture}[node distance=1mm]
+%\tikzset{every node/.style=tdnode}
+\tikzset{every path/.style=thick}
+
+\node (exchange1) [tdnode] {$\textcolor<6,8>{red}{in(b), in(d)}$};
+\node (exchange2) [tdnode,right=of exchange1]  {$\textcolor<8>{red}{in(b), in(d)}$};
+\node (leaf1) [tdnode,below=of exchange1] {$\textcolor<2,3,4,8>{red}{in(b)}\textcolor<2,3>{red}{,}\textcolor<2,3,5>{red}{in(a)}\textcolor<2,5>{red}{,}\textcolor<2,4, 5>{red}{in(c)}$};
+\node (leaf2) [tdnode,below=of exchange2,xshift=0.5cm]  {$\textcolor<2,7,8>{red}{in(d)}\textcolor<2,7>{red}{,} \textcolor<2,7>{red}{in(e)}$};
+\coordinate (middle) at ($ (exchange1.north east)!.5!(exchange2.north west) $);
+\node (join) [tdnode,above=1mm of middle] {$\textcolor<8>{red}{in(b), in(d)}$};
+\node (tdt) [left=of join] {$T_{G^\pname{PRIM}}:$};
+
+\draw (join) to (exchange1) to (leaf1);
+\draw (join) to (exchange2) to (leaf2);
+\end{tikzpicture}

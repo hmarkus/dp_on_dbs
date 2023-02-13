@@ -61,6 +61,7 @@ class Node(object):
         self.parent = None
         self.children = []
         self._vertex_child_map = {v: [] for v in vertices}
+        self.constraint_relevant = []
 
     def __str__(self):
         return "{0}: {{{1}}}".format(self.id,", ".join(map(str,self.vertices)))

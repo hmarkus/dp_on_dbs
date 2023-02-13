@@ -1,0 +1,116 @@
+% $Id: beamerthemeinfosys.sty 7869 2012-06-08 08:24:15Z tkren $
+%
+% TU Wien - Faculty of Informatics - Institute of Information Systems
+% beamer template
+%
+% This template is using the beamer document class, see
+% <http://www.ctan.org/tex-archive/macros/latex/contrib/beamer/>
+%
+% For questions and comments send an email to
+% Thomas Krennwallner <tkren@kr.tuwien.ac.at>
+%
+\ProvidesPackage{beamerthemeinfosys}[2012/06/08 v1.1 INFOSYS beamer theme]
+\typeout{2012/06/08 v1.1 INFOSYS beamer theme}
+
+%
+% options
+%
+
+\ProcessOptions
+
+\mode<presentation>
+
+% utf8 encoding stuff
+\usepackage[english]{babel}
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage{times}
+\usepackage{helvet}
+
+\usepackage{graphicx}
+\graphicspath{{./figures/}}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,snakes}
+
+% setup colors 
+\usepackage{xcolor} 
+\selectcolormodel{rgb} 
+ 
+\definecolor{DbaiDarkGreen}{rgb/cmyk}{0.66,0.65,0.57/0,0,0.2,0.4} 
+\definecolor{DbaiBrightGreen}{rgb/cmyk}{0.79,0.76,0.65/0.22,0.18,0.36,0} 
+\definecolor{ForsyteDarkYellow}{rgb/cmyk}{0.76,0.59,0.15/0,0.27,0.94,0.28} 
+\definecolor{ForsyteBrightYellow}{rgb/cmyk}{0.81,0.66,0.31/0,0.27,0.94,0.28} 
+\definecolor{KbsDarkBlue}{rgb/cmyk}{0.22,0.29,0.46/0.6,0.4,0,0.4} 
+\definecolor{KbsBrightBlue}{rgb/cmyk}{0.35,0.42,0.58/0.45,0.28,0,0.28} 
+\definecolor{InfosysDarkGrey}{gray}{0.4} 
+\definecolor{InfosysLightGrey}{gray}{0.6} 
+\definecolor{TuWienBlue}{rgb/cmyk}{0,0.36,0.62/1,0.38,0,0.15} 
+\definecolor{TuWienGrey}{rgb/cmyk}{0.4,0.4,0.4/0,0,0,0.75} 
+\definecolor{TuInfRed}{rgb/cmyk}{0.9,0,0.11/0,1,1,0} 
+
+% beamer theme
+
+% use bold+serif fonts for math 
+\usefonttheme[onlymath]{serif} 
+\boldmath 
+\setbeamertemplate{navigation symbols}{} % turn off navigation symbols
+\setbeamertemplate{bibliography item}[book]
+\beamersetleftmargin{0.3cm}
+\beamersetrightmargin{0.3cm}
+
+% setup basic bling bling
+\setbeamertemplate{itemize items}[triangle] % triangle items
+\setbeamertemplate{navigation symbols}{}  % no navigation on a poster
+\setbeamertemplate{bibliography item}[triangle] % no bibliography icons
+
+% default coloring is infosys grey
+\setbeamercolor{bibliography entry author}{fg=InfosysDarkGrey}
+\setbeamercolor{bibliography entry title}{fg=black}
+\setbeamercolor{bibliography entry journal}{fg=black}
+\setbeamercolor{bibliography entry note}{fg=black}
+
+\usecolortheme{default}
+\setbeamercolor{structure}{fg=InfosysDarkGrey}
+
+% play around with block colors
+\setbeamercolor{block body}{fg=black}
+\setbeamercolor{block title}{fg=white,bg=InfosysDarkGrey}
+
+% basic colors
+\setbeamercolor{alerted text}{fg=TuInfRed}
+\setbeamercolor{example text}{fg=InfosysDarkGrey}
+
+% put number of frames at the bottom
+\setbeamertemplate{footline}[frame number]
+%\setbeamertemplate{footline}[text line]
+%{% 
+%  \begin{beamercolorbox}{} 
+%    \insertshortauthor\qquad\qquad\insertshorttitle\hfill\insertframenumber/\inserttotalframenumber\vskip1pt
+%  \end{beamercolorbox}% 
+%} 
+
+% and we are done
+\mode<all>
+
+% some helper macros
+\newcommand{\makeoverview}{%
+  \section*{Overview}
+  \begin{frame}
+    \frametitle{Overview}
+    \tableofcontents
+  \end{frame}
+}
+\newcommand{\makereferences}[1]{%
+  \begin{frame}[allowframebreaks,allowdisplaybreaks]
+    \frametitle{References}
+    \bibliography{#1}
+  \end{frame}
+}
+
+
+\endinput
+
+%%% Local Variables:
+%%% mode: latex
+%%% End:

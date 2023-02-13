@@ -1,0 +1,211 @@
+\begin{tikzpicture}[
+	rounded corners,
+	rect/.style={
+		draw,
+		rectangle,
+		drop shadow,
+		minimum height=5mm,
+		top color=white,
+		middle color=white,
+	},
+	dflatrect/.style={
+		rect,
+		bottom color=red!80!blue!15,
+	},
+	asprect/.style={
+		rect,
+		bottom color=blue!80!green!15,
+	},
+	decomprect/.style={
+		rect,
+		bottom color=yellow!80!black!15,
+	},
+	diam/.style={
+		draw,
+		diamond,
+		shape aspect=2,
+		sharp corners,
+		drop shadow,
+		inner color=white,
+		outer color=green!80!black!20,
+	},
+	font=\footnotesize,
+	arrows=->,
+	>=stealth,
+]
+
+\def\highlightthings{}
+
+\matrix[column sep=4mm, row sep=4mm]{
+
+&&
+\node [dflatrect, text width=18mm, text centered] (populate) {Store partial solutions};
+\node <7> [color=red,overlay,scale=1.2,arrows=-] (graph) at ($(populate.north)+(0.0,+1)$)
+{
+	\setbeamercovered{transparent}
+	\begin{tikzpicture}[overlay,node distance=1mm,scale=0.60,baseline={(current bounding box.north)}]
+		\tikzset{every node/.style={font=\scriptsize, transform shape}}
+		\tikzset{every path/.style=thick}
+		\node (leaf0) [tdnode, label=left:{$n_1$}] {\input{figures/graph0/ids-tables/leaf0}};
+	 \end{tikzpicture}
+};
+\node <11> [color=red,overlay,scale=1.2,arrows=-] (graph) at ($(populate.north)+(0.0,+1)$)
+{
+	\setbeamercovered{transparent}
+	\begin{tikzpicture}[overlay,node distance=1mm,scale=0.65,baseline={(current bounding box.north)}]
+		\tikzset{every node/.style={font=\scriptsize, transform shape}}
+		\tikzset{every path/.style=thick}
+		\node (exchange0) [tdnode, label=left:{$n_2$}] {\input{0-figs/graph0/ids-tables/exchange0}};
+	\end{tikzpicture}
+};
+%\node <17> [color=red,overlay,scale=1.2,arrows=-] (graph) at ($(populate.north)+(0.0,+1)$)
+%{
+%	\setbeamercovered{transparent}
+%	\begin{tikzpicture}[overlay,node distance=1mm,scale=0.60,baseline={(current bounding box.north)}]
+%		\tikzset{every node/.style={font=\scriptsize, transform shape}}
+%		\tikzset{every path/.style=thick}
+%		\node (leaf1) [tdnode, label=right:{$n_3$}]  {\input{0-figs/graph0/ids-tables/leaf1}};
+%	\end{tikzpicture}
+%};
+%\node <19> [color=red,overlay,scale=1.2,arrows=-] (graph) at ($(populate.north)+(0.5,+1)$)
+%{
+%	\setbeamercovered{transparent}
+%	\begin{tikzpicture}[overlay,node distance=1mm,scale=0.65,baseline={(current bounding box.north)}]
+%		\tikzset{every node/.style={font=\scriptsize, transform shape}}
+%		\tikzset{every path/.style=thick}
+%		\node (exchange1) [tdnode, label=right:{$n_4$}]  {\input{0-figs/graph0/ids-tables/exchange1}};
+%	\end{tikzpicture}
+%};
+\node <17> [color=red,overlay,scale=1.2,arrows=-] (graph) at ($(populate.north)+(0.5,+1)$)
+{
+	\setbeamercovered{transparent}
+	\begin{tikzpicture}[overlay,node distance=1mm,scale=0.65,baseline={(current bounding box.north)}]
+		\tikzset{every node/.style={font=\scriptsize, transform shape}}
+		\tikzset{every path/.style=thick}
+		\node (join) [tdnode, label=left:{$n_5$}] {\input{0-figs/graph0/ids-tables/join}};
+	\end{tikzpicture}
+};
+
+%\node <27> [color=red,overlay,scale=1.2,arrows=-] (graph) at ($(populate.north)+(0.0,+1)$)
+%{
+%	\setbeamercovered{transparent}
+%	\begin{tikzpicture}[overlay,node distance=1mm,scale=0.65,baseline={(current bounding box.north)}]
+%		\tikzset{every node/.style={font=\scriptsize, transform shape}}
+%		\tikzset{every path/.style=thick}
+%		\node (root) [tdnode, label=left:{$n_6$}] {\input{0-figs/graph0/ids-tables/root}};
+%	\end{tikzpicture}
+%};
+
+\node <7,11,17>[color=red,dflatrect, text width=18mm, text centered] (populate) {Store partial solutions}; &
+\node [asprect, text width=13mm, text centered] (solve) {ASP call};
+\node <6,10,16> [color=red,asprect, text width=13mm, text centered] (solve) {ASP call};
+\node <6,10,16> [color=red,overlay,scale=1.2,arrows=-] (graph) at ($(solve.north)+(0.0,+0.70)$) 
+{
+	$\Pi_{\Sat{}}$
+};
+\\
+\node [dflatrect, text width=12mm, text centered] (parse) {Parse instance}; 
+\node <2> [color=red, dflatrect, text width=12mm, text centered] (parse)  {Parse instance};
+\node <7,10,11,16,17> [overlay,scale=0.57,arrows=-] (graph) at ($(parse.north)+(0.5,1.54)$) 
+{
+	\input{0-figs/graph0/ids-tables/tables_outline}
+};
+\node <20-> [color=red,overlay,scale=0.57,arrows=-] (graph) at ($(parse.north)+(0.5,1.54)$) 
+{
+	\input{0-figs/graph0/ids-tables/tables_outline}
+};
+\node <2-> [overlay,scale=0.99,arrows=-] (graph) at ($(parse.south)+(0.5,-1.8)$) 
+{
+	\input{0-figs/graph0/graph1}
+};
+\node <6,10,16> [color=red,overlay,scale=0.99,arrows=-] (graph) at ($(parse.south)+(0.5,-1.80)$) 
+{
+	\input{0-figs/graph0/graph1}
+};
+%\node <6> [color=red,overlay,scale=0.65,arrows=-] (graph) at ($(parse.south)+(0.0,-0.90)$) 
+%{\input{0-figs/graph0/graph}};
+&
+\node [decomprect] (decompose) {Decompose};
+\node <3> [color=red, decomprect] (decompose) {Decompose};
+\node <3-> [overlay,scale=0.99,arrows=-] (td) at ($(traverse.south)+(1.85,-1.8)$) 
+{
+	
+	\begin{tikzpicture}[node distance=1mm]
+	 \tikzset{
+	  every node/.style={anchor=north}
+	  every path/.style={thick}
+	 }
+
+	 %\node at (3.5,3.0) (TD) {$\mathcal{T}_{\mathit{Ex}}$:};
+	 \node[tdnode, label=left:{$n_6$}] at (5.5,3.0) (n9) {$\emptyset$};
+	 \node <19>[color=red,tdnode, label=left:{$n_6$}] at (5.5,3.0) (n9) {$\emptyset$};
+	 \node[tdnode, label=left:{$n_5$}] at (5.5,2.4) (n8) {$\{y,c_2\}$};
+	 \node <15,16,17,18> [color=red,tdnode, label=left:{$n_5$}] at (5.5,2.4) (n8) {$\{y,c_2\}$};
+	 \node[tdnode, label=left:{$n_2$}] at (4.7,1.8) (n4) {$\{y,c_2\}$};
+	 \node <9-12,16> [color=red,tdnode, label=left:{$n_2$}] at (4.7,1.8) (n4) {$\{y,c_2\}$};
+	 \node [tdnode, label=left:{$n_1$}] at (4.7,1.2) (n1) {$\{x,y,c_1\}$};
+	 \node <5-8,10> [color=red, tdnode, label=left:{$n_1$}] at (4.7,1.2) (n1) {$\{x,y,c_1\}$};
+	 \node[tdnode, label=right:{$n_4$}] at (6.3,1.8) (n7) {$\{y,c_2\}$};
+	 \node <14,16> [color=red,tdnode, label=right:{$n_4$}] at (6.3,1.8) (n7) {$\{y,c_2\}$};
+	 \node[tdnode, label=right:{$n_3$}] at (6.3,1.2) (n6) {$\{y,z,c_2\}$};
+	 \node <13> [color=red,tdnode, label=right:{$n_3$}] at (6.3,1.2) (n6) {$\{y,z,c_2\}$};
+	 \draw[tdedge] (n1) -- (n4) -- (n8) -- (n7) -- (n6);
+	 \draw[tdedge] (n8) -- (n9);
+	\end{tikzpicture}
+
+
+	%\begin{tikzpicture}[node distance=1mm]
+	%\tikzset{every node/.style=tdnode}
+	%\tikzset{every path/.style=thick}
+
+	%\node (exchange1) {$\{b,c,d\}$};
+	%\node <9-12> [color=red] (exchange1) {$\{b,c,d\}$};
+	%\node (exchange2) [right=of exchange1]  {$\{b,c,d\}$};
+	%\node <17-20>(exchange2) [color=red,right=of exchange1]  {$\{b,c,d\}$};
+	%\node (leaf1) [below=of exchange1] {$\{a,b,c\}$};
+	%\node <5-8> (leaf1) [overlay, color=red,below=of exchange1] {$\{a,b,c\}$};
+	%\node (leaf2) [below=of exchange2]  {$\{d,e\}$};
+	%\node <13-16> (leaf2) [color=red,below=of exchange2]  {$\{d,e\}$};
+	%\coordinate (middle) at ($ (exchange1.north east)!.5!(exchange2.north west) $);
+	%\node (join) [above=1mm of middle] {$\{b,c,d\}$};
+	%\node <21-24>(join) [color=red,above=1mm of middle] {$\{b,c,d\}$};
+
+	%\draw (join) to (exchange1) to (leaf1);
+	%\draw (join) to (exchange2) to (leaf2);
+	%\end{tikzpicture}
+};
+&
+\node [diam] (done) {Done?};
+\node <4,8,12,18,19> [diam,color=red] (done) {Done?};
+\node [above right, xshift=1mm, yshift=1mm, inner sep=0] at (done.east) {no};
+\node <4,8,12> [color=red,above right, xshift=1mm, yshift=1mm, inner sep=0] at (done.east) {no};
+\node [below right, xshift=1mm, yshift=-1mm, inner sep=0] at (done.south) {yes};
+\node <19> [color=red,below right, xshift=1mm, yshift=-1mm, inner sep=0] at (done.south) {yes};
+&
+\node [dflatrect, text width=16mm, text centered] (traverse) {Visit next node in post-order};
+\node <5,9,13,14,15> [color=red,dflatrect, text width=16mm, text centered] (traverse) {Visit next node in post-order};
+
+\\
+
+&
+&
+\node [dflatrect, text width=15mm, text centered] (reconstruct) {Print complete solutions};
+\node <20> [color=red,dflatrect, text width=15mm, text centered] (reconstruct) {Print complete solutions};
+\\
+};
+
+\draw (parse) -- (decompose);
+\draw (decompose) -- (done);
+\draw (done) -- (traverse);
+\draw (done) -- (reconstruct);
+\draw (traverse) -- (solve);
+\draw (solve) -- (populate);
+\draw (populate) -- (done);
+
+%\begin{tikzpicture}[overlay]
+%        \path[->]<1-> (parse) edge [bend left] (decompose);
+%        \path[->]<2-> (decompose) edge [bend right] (done);
+%        \path[->]<3-> (done) edge [out=0, in=-90] (reconstruct);
+%\end{tikzpicture}
+\end{tikzpicture}
+

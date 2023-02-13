@@ -21,9 +21,9 @@ class VertexCover(Problem):
     def candidate_extra_cols(self,node):
         introduce = [var2size(node,v) for v in node.vertices if node.needs_introduce(v)]
         join = [node2size(n) for n in node.children]
+
         q = ""
         if introduce:
-            # number of vertices in the set
             q += " + ".join(introduce)
             if join:
                 q += " + "
@@ -34,7 +34,7 @@ class VertexCover(Problem):
                 duplicates = ["case when {} then 1 else 0 end * {}".format(
                                     var2tab_col(node,var,False),len(node.vertex_children(var))-1) 
                                 for var in set(children) if len(node.vertex_children(var)) > 1]
-                # subtract vertices counted multiple times
+
                 if duplicates:
                     q += " - ({})".format(" + ".join(duplicates))
 
@@ -48,18 +48,20 @@ class VertexCover(Problem):
     def assignment_extra_cols(self,node):
         return ["min(size) AS size"]
 
-    def filter(self,node):
-        # at least one of connected nodes has to be in the set
+    def filter(self, node):
         check = []
+
+        nv = []
         for c in node.vertices:
-            if node.needs_introduce(c):
-                nv = [v for v in self.edges[c] if v in node.vertices] + [c]
-                if len(nv) > 1:
-                    check.append(" OR ".join(map(var2col,nv)))
+            [nv.append((c,v)) for v in self.edges[c] if v in node.vertices and (v,c) not in nv]
+
+        for edge in nv:
+            check.append(" OR ".join(map(var2col, edge)))
         if check:
             return "WHERE ({})".format(") AND (".join(check))
         else:
             return ""
+
 
     def setup_extra(self):
         def create_tables():

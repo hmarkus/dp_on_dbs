@@ -2,20 +2,20 @@
   "db": {
     "dsn": {
       "host": "localhost",
-      "port": 5432,
-      "database": "logicsem", 
-      "user": "logicsem", 
-      "password": "XXX",
+      "port": 15433,
+      "database": "dpdb_pg", 
+      "user": "janedoe", 
+      "password": "janedoe",
       "application_name": "dpdb"
     },
     "max_connections": 100
   },
   "db_admin": {
       "host": "localhost",
-      "port": 5432,
-      "database": "logicsem",
-      "user": "postgres",
-      "password": "XXX",
+      "port": 15433,
+      "database": "dpdb_pg",
+      "user": "janedoe",
+      "password": "janedoe",
       "application_name": "dpdb-admin"
   },
   "htd": {
