@@ -341,7 +341,7 @@ class DB(object):
         select = self.replace_dynamic_tabs(select)
         self.insert_select(table, select)
 
-    def select(self, table, columns, where = None, , all = False):
+    def select(self, table, columns, where = None, all = False):
         q = sql.SQL("SELECT {} FROM {}").format(
                     sql.SQL(', ').join(sql.SQL(c) for c in columns),
                     self.__table_name__(table)

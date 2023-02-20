@@ -3,7 +3,7 @@ class TreeDecomp(object):
     edges = []
     leafs = []
 
-    def __init__(self, num_bags, tree_width, num_orig_vertices, root, bags, adj, minor_graph):
+    def __init__(self, num_bags, tree_width, num_orig_vertices, root, bags, adj, minor_graph=None):
         self.num_bags = num_bags
         self.tree_width = tree_width
         self.num_orig_vertices = num_orig_vertices

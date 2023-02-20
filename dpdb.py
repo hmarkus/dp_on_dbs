@@ -122,7 +122,7 @@ def solve_problem(cfg, cls, file, **kwargs):
         if "limit_result_rows" in kwargs and kwargs["limit_result_rows"]:
             problem.limit_result_rows = kwargs["limit_result_rows"][0]
         problem.solve()
-    problem.db.close()
+    #problem.db.close()
 
 _LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 

@@ -105,8 +105,8 @@ class Problem(object):
     # but no new rows are inserted in this table
     TABLE_ROW_LIMIT = None
 
-     @classmethod
-     def keep_cfg(cls):
+    @classmethod
+    def keep_cfg(cls):
         return []
 
     def __init__(self, name, pool, lower_cap, upper_cap, table_row_limit, max_worker_threads=12,
