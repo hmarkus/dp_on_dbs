@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import logging
 from collections import defaultdict
 
@@ -19,7 +18,7 @@ class SharpSat(Problem):
 
     def td_node_extra_columns(self):
         return [("model_count","NUMERIC")]
-        
+
     def candidate_extra_cols(self,node):
         return ["{} AS model_count".format(
                 " * ".join(set([var2cnt(node,v) for v in node.vertices] +
@@ -91,4 +90,3 @@ args.specific[SharpSat] = dict(
         )
     }
 )
-

@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import clingo
 import logging
 import subprocess
@@ -31,7 +30,7 @@ class SharpSatExt(Problem):
 
     def td_node_column_def(self,var):
         return td_node_column_def(var)
-        
+
     def td_node_extra_columns(self):
         return [("model_count","NUMERIC")]
 

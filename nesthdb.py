@@ -1,11 +1,13 @@
-#!/usr/bin/python3
-# -*- coding: future_fstrings -*-
+#!/usr/bin/env python3
+
 import importlib
 import logging
 import sys
 import tempfile
 
 from collections import defaultdict
+
+import helper # file ./helper.py
 
 from common import *
 from dpdb.abstraction import MinorGraph, ClingoControl
@@ -16,6 +18,7 @@ from dpdb.reader import CnfReader
 from dpdb.writer import FileWriter, StreamWriter, denormalize_cnf, normalize_cnf
 
 logger = logging.getLogger("nestHDB")
+logger.addHandler(logging.StreamHandler(sys.stdout))
 #setup_logging("DEBUG")
 #setup_logging()
 setup_debug_sql()
@@ -218,7 +221,7 @@ class Problem:
 
         logger.info(f"Solver {type} result: {result}")
         return result
-    
+
     def solve_classic(self):
         if interrupted:
             return -1
@@ -356,6 +359,7 @@ def main():
     arg_parser.add_argument("--no-cache", dest="no_cache", help="Disable cache", action="store_true")
     args = parse_args(arg_parser)
     cfg = read_cfg(args.config)
+    cfg = helper.absolutizePaths(cfg) # relative paths would fail if executed from different dir
     fname = args.file
 
     formula = Formula.from_file(fname)
@@ -382,4 +386,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

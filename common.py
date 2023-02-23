@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# -*- coding: future_fstrings -*-
+
 import argparse
 import logging
 import subprocess
@@ -84,7 +84,7 @@ def setup_arg_parser(usage):
     parser = argparse.ArgumentParser(usage="%(prog)s [general options] -f input-file problem-type [problem specific-options]", formatter_class=MyFormatter)
 
     parser.add_argument("-f", "--file", dest="file", help="Input file for the problem to solve", required=True)
-    
+
     # general options
     gen_opts = parser.add_argument_group("general options", "General options")
     gen_opts.add_argument("-t", dest="type", help="type of the cluster run", default="")
@@ -110,7 +110,7 @@ def parse_args(parser):
     logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', level=log_level)
 
     return args
-    
+
 """
 _LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
@@ -155,7 +155,7 @@ if __name__ == "__main__":
             p.add_argument(arg,**kwargs)
 
     parser.add_argument("-f", "--file", dest="file", help="Input file for the problem to solve", required=True)
-    
+
     # general options
     gen_opts = parser.add_argument_group("general options", "General options")
     gen_opts.add_argument("-t", dest="type", help="type of the cluster run", default="")

@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import logging
 
 from dpdb.reader import TdReader, TwReader, EdgeReader
@@ -17,7 +16,7 @@ class VertexCover(Problem):
 
     def td_node_extra_columns(self):
         return [("size","INTEGER")]
-        
+
     def candidate_extra_cols(self,node):
         introduce = [var2size(node,v) for v in node.vertices if node.needs_introduce(v)]
         join = [node2size(n) for n in node.children]
@@ -32,7 +31,7 @@ class VertexCover(Problem):
             if len(join) > 1:
                 children = [vc for c in node.children for vc in c.vertices if vc in node.vertices]
                 duplicates = ["case when {} then 1 else 0 end * {}".format(
-                                    var2tab_col(node,var,False),len(node.vertex_children(var))-1) 
+                                    var2tab_col(node,var,False),len(node.vertex_children(var))-1)
                                 for var in set(children) if len(node.vertex_children(var)) > 1]
                 # subtract vertices counted multiple times
                 if duplicates:
@@ -116,4 +115,3 @@ args.specific[VertexCover] = dict(
         )
     }
 )
-

@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 from dpdb.problem import *
 from collections import defaultdict
 

@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import clingo
 import importlib
 import logging
@@ -150,13 +149,13 @@ class ClingoControl:
         c = clingoctl
 
         aset = [sys.maxsize, False, [], None, []]
-        
+
         def __on_model(model):
             #if len(model.cost) == 0:
             #    return
-            
+
             logger.debug("better answer set found: %s %s %s", model, model.cost, model.optimality_proven)
-            
+
             aset[1] |= model.optimality_proven
             opt = model.cost[0] if len(model.cost) > 0 else 0
             if opt <= aset[0]:
@@ -173,7 +172,7 @@ class ClingoControl:
 
         # FIXME: use mutable string
         prog = encodingContent
-        
+
         if clingoctl is None:
             c = clingo.Control()
 
@@ -190,7 +189,7 @@ class ClingoControl:
             for p in self._nodes:
                 prog += "p({0}).\n".format(p)
 
-            # subset (buckets) of proj to select upon 
+            # subset (buckets) of proj to select upon
             #for b in range(1, select_subset + 1, 1):
             prog += "b({0}).\n".format(select_subset)
             #print(prog)
@@ -391,4 +390,3 @@ class MinorGraph:
         self.normalized_nodes = normalized_nodes
         self.normalized_adj = normalized_adj
         self.normalized_edges = normalized_edges
-

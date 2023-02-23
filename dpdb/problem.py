@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import logging
 import os
 import signal
@@ -255,7 +254,7 @@ class Problem(object):
                 [self.name,self.type,self.td.num_bags,self.td.tree_width,self.td.num_orig_vertices,self.td.root.id],"id")[0]
             self.set_id(problem_id)
             logger.info("Created problem with ID %d", self.id)
-            
+
         def drop_tables():
             logger.debug("Dropping tables")
             self.db.drop_table("td_bag")
@@ -310,7 +309,7 @@ class Problem(object):
             db.create_view(f"td_node_{n.id}_v", ass_view)
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 db.close()
-            
+
         def insert_data():
             logger.debug("Inserting problem data")
             self.db.ignore_next_praefix(3)
@@ -436,4 +435,3 @@ class Problem(object):
             row_cnt = db.last_rowcount
             db.update("td_node_status",["end_time","rows"],["statement_timestamp()",str(row_cnt)],[f"node = {node.id}"])
         db.commit()
-

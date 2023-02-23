@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import logging
 from collections import defaultdict
 
@@ -15,7 +14,7 @@ class Pmc(Problem):
 
     def td_node_column_def(self,var):
         return td_node_column_def(var)
-        
+
     def filter(self,node):
         return filter(self.var_clause_dict, node)
 
