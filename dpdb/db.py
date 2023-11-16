@@ -86,6 +86,16 @@ class DB(object):
                 return cur.fetchone()
         except pg.errors.AdminShutdown:
             logger.warning("Connection closed by admin")
+
+    def exec_and_fetch_all(self, q, p=[]):
+        try:
+            self.__debug_query__(q,p)
+            with self._conn.cursor() as cur:
+                cur.execute(q,p)
+                self.last_rowcount = cur.rowcount
+                return cur.fetchall()
+        except pg.errors.AdminShutdown:
+            logger.warning("Connection closed by admin")
         
     def execute_ddl(self,q):
         try:
@@ -158,6 +168,10 @@ class DB(object):
         select = f"SELECT * FROM {view}"
         select = self.replace_dynamic_tabs(select)
         self.insert_select(table, select)
+
+    def select_query(self, query):
+        q = sql.SQL(self.replace_dynamic_tabs(query))
+        return self.exec_and_fetch_all(q)
 
     def select(self, table, columns, where = None):
         q = sql.SQL("SELECT {} FROM {}").format(

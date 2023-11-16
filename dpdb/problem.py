@@ -66,6 +66,8 @@ def var2tab_col(node, var, alias=True):
 class Problem(object):
     id = None
     td = None
+    sample = None
+    values = None
 
     def __init__(self, name, pool, max_worker_threads=12,
             candidate_store="cte", limit_result_rows=None,
@@ -187,7 +189,20 @@ class Problem(object):
         return q
 
     def assignment_view(self,node):
-        q = "{} {}".format(self.assignment_select(node),self.filter(node))
+        filter = self.filter(node)
+        q = "{} {}".format(self.assignment_select(node),filter)
+
+        if self.sample:
+            first = True
+            for s, v in zip(self.sample, self.values):
+                if set(s).issubset(node.vertices):
+                    if not filter and first:
+                        q += " WHERE NOT "
+                        first = False
+                    else:
+                        q += " AND NOT "
+                    q += " AND NOT ".join([" v{} = {}".format(vs, vv) for vs, vv in zip(s,v)])
+                    #print(q)
 
         if node.stored_vertices:
             q += " GROUP BY {}".format(",".join([var2col(v) for v in node.stored_vertices]))
@@ -202,6 +217,7 @@ class Problem(object):
 
         if not node.stored_vertices and not extra_group:
             q += " LIMIT 1"
+        #print(q)
         return q
 
     # the following methods should be considered final
@@ -211,6 +227,10 @@ class Problem(object):
     def set_id(self,id):
         self.id = id
         self.db.set_praefix(f"p{self.id}_")
+
+    def set_sample(self, sample, values):
+        self.sample = sample
+        self.values = values
 
     def setup(self):
         def create_base_tables():
@@ -231,6 +251,12 @@ class Problem(object):
                 ("name", "VARCHAR(255) NOT NULL"),
                 ("value", "VARCHAR(255)")
             ])
+            #vals = "{}".format(",".join(["i" + str(c) + ".val" for c in range(1, self.td.num_orig_vertices+1)]))
+            #from_statement = "{}".format(", ".join(["introduce i" + str(c) for c in range(1, self.td.num_orig_vertices+1)]))
+            #print(from_statement)
+            #self.db.create_table('globalfilter', [self.td_node_column_def(c) for c in range(1,self.td.num_orig_vertices+1)])
+            #select = "SELECT * FROM (WITH introduce AS ({}) SELECT {} FROM {}) AS truthtable".format(self.introduce(None), vals, from_statement)
+            #self.db.insert_select('globalfilter', select)
 
         def init_problem():
             problem_id = self.db.insert("problem",
@@ -256,6 +282,13 @@ class Problem(object):
             ])
             self.db.create_table("td_edge", [("node", "INTEGER NOT NULL"), ("parent", "INTEGER NOT NULL")])
             self.db.create_table("td_bag", [("bag", "INTEGER NOT NULL"),("node", "INTEGER")])
+             
+            #for c in range(1,self.td.num_orig_vertices+1):
+                #print(c)
+                #print(self.td_node_column_def(c))
+            #self.db.create_table('globalfilter', [self.td_node_column_def(c) for c in range(1,self.td.num_orig_vertices+1)])
+            #select = "SELECT * FROM (WITH introduce AS ({}) SELECT i1.val, i2.val, i3.val, i4.val FROM introduce i1, introduce i2, introduce i3, introduce i4) AS truthtable".format(self.introduce(None))
+            #self.db.insert_select('globalfilter', select)
 
             if "parallel_setup" in self.kwargs and self.kwargs["parallel_setup"]:
                 workers = {}
@@ -383,10 +416,12 @@ class Problem(object):
             os.kill(os.getpid(), signal.SIGUSR1)
 
     def solve_node(self, node, db):
+        #print(db.select_query("SELECT * FROM globalfilter"))
+        #print(db.select_query("SELECT v1 FROM globalfilter"))
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             db.update("td_node_status",["start_time"],["statement_timestamp()"],[f"node = {node.id}"])
             db.commit()
-
+        #logger.info(node.vertices)
         self.before_solve_node(node, db)
         if self.candidate_store == "table":
             db.persist_view(f"td_node_{node.id}_candidate")
@@ -401,6 +436,11 @@ class Problem(object):
             if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
                 select += f" LIMIT {self.limit_result_rows}"
             db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
+            #for s in self.sample:
+                #if set(s).issubset(set(node.vertices)):
+                	#print(node.vertices)
+                	#print(db.select_query(select))
+            #print(db.select_query(f"SELECT * from td_node_{node.id}"))
         if self.interrupted:
             return
         self.after_solve_node(node, db)

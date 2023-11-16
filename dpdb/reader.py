@@ -116,6 +116,7 @@ class TdReader(DimacsReader):
         self.edges = []
         self.bags = {}
         self.adjacency_list = {}
+        self.max_bag = 0
 
     def store_problem_vars(self):
         if self.problem_solution_type == "p":
@@ -151,6 +152,9 @@ class TdReader(DimacsReader):
             elif line.startswith("b "):
                 line = line.split()
                 self.bags[int(line[1])] = [int(v) for v in line[2:]]
+                current_length = len(self.bags[int(line[1])])
+                if current_length > self.max_bag:
+                	self.max_bag = current_length
             else:
                 line = line.split()
                 if len(line) != 2:
