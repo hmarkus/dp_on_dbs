@@ -82,7 +82,7 @@ def solve_problem(cfg, cls, file, **kwargs):
     logger.info(f"#bags: {td.num_bags} tree_width: {td.tree_width} #vertices: {td.num_orig_vertices} #leafs: {len(td.leafs)} #edges: {len(td.edges)}")
     logger.info(f"{tdr.max_bag}")
 
-    candidate_number = 250
+    candidate_number = 5
     sample, values = generate_sample(tdr, td, candidate_number)
 
     if "td_file" in kwargs and kwargs["td_file"]:
@@ -102,24 +102,29 @@ def generate_sample(tdr, td, candidate_number):
 	sample = []
 	values = []
 
-	for i in range(candidate_number):
-		size = random.randint(1, tdr.max_bag)
+	#for i in range(candidate_number):
+		#size = random.randint(1, tdr.max_bag)
 		#print(size)
-		random_sample = random.sample(range(1,td.num_orig_vertices + 1), k=size)
-		random_sample.sort()
-		candidate.append(random_sample)
+		#random_sample = random.sample(range(1,td.num_orig_vertices + 1), k=size)
+		#random_sample.sort()
+		#candidate.append(random_sample)
 	#print(candidate)
 
-	for c in candidate:
-		for b in tdr.bags:
-			if set(c).issubset(set(tdr.bags[b])):
+	for i in range(candidate_number):
+		bag = tdr.bags[random.randint(1, len(tdr.bags))]
+		sample.append(bag)
+		values.append(random.choices([True, False], k=len(bag)))
+
+	#for c in candidate:
+		#for b in tdr.bags:
+			#if set(c).issubset(set(tdr.bags[b])):
 				#print('sub')
 				#print(c)
 				#print(tdr.bags[b])
-				sample.append(c)
-				values.append(random.choices([True, False], k=len(c)))
-				break
-	#print(sample)
+				#sample.append(c)
+				#values.append(random.choices([True, False], k=len(c)))
+				#break
+	print(sample)
 	#print(values)
 	return sample, values
 
