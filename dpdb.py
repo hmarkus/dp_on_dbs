@@ -81,11 +81,9 @@ def solve_problem(cfg, cls, file, **kwargs):
     td = TreeDecomp(tdr.num_bags, tdr.tree_width, tdr.num_orig_vertices, tdr.root, tdr.bags, tdr.adjacency_list)
     logger.info(f"#bags: {td.num_bags} tree_width: {td.tree_width} #vertices: {td.num_orig_vertices} #leafs: {len(td.leafs)} #edges: {len(td.edges)}")
     logger.info(f"{tdr.max_bag}")
-    #logger.info(round(tdr.max_bag/4))
+
     candidate_number = 250
     sample, values = generate_sample(tdr, td, candidate_number)
-    #print(sample)
-    #print(values)
 
     if "td_file" in kwargs and kwargs["td_file"]:
         with FileWriter(kwargs["td_file"]) as fw:
@@ -103,11 +101,7 @@ def generate_sample(tdr, td, candidate_number):
 	candidate = []
 	sample = []
 	values = []
-	#for b in tdr.bags:
-    		#if len(tdr.bags[b]) == round(tdr.max_bag/4) - 1:
-    			#print(tdr.bags[b])
-    			#candidate = tdr.bags[b]
-    			#break
+
 	for i in range(candidate_number):
 		size = random.randint(1, tdr.max_bag)
 		#print(size)
@@ -124,23 +118,9 @@ def generate_sample(tdr, td, candidate_number):
 				#print(tdr.bags[b])
 				sample.append(c)
 				values.append(random.choices([True, False], k=len(c)))
-				#values.append([True])
-				#values.append(random.choices(range(0,2), k=len(c)))
 				break
 	#print(sample)
 	#print(values)
-	#logger.info(f"{td.leafs}")
-	#logger.info(f"{td.root}")
-	#logger.info(f"{td.num_orig_vertices}")
-	#logger.info(bin(td.num_orig_vertices))
-	#logger.info(2**td.num_orig_vertices)
-	#logger.info(bin(2**td.num_orig_vertices-1))
-	#section_length = 200
-	#begin = random.randrange(0, (Decimal(2)**td.num_orig_vertices) - section_length)
-	#print(begin)
-	#variable_count = 0.9
-	#start_var = td.num_orig_vertices * variable_count
-	#for x in range(begin, begin + section_length):
 	return sample, values
 
 # Simple custom class to use both argparse formats at once
