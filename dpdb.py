@@ -82,7 +82,7 @@ def solve_problem(cfg, cls, file, **kwargs):
     logger.info(f"#bags: {td.num_bags} tree_width: {td.tree_width} #vertices: {td.num_orig_vertices} #leafs: {len(td.leafs)} #edges: {len(td.edges)}")
     logger.info(f"{tdr.max_bag}")
 
-    candidate_number = 5
+    candidate_number = 0
     sample, values = generate_sample(tdr, td, candidate_number)
 
     if "td_file" in kwargs and kwargs["td_file"]:
