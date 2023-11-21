@@ -93,12 +93,15 @@ def solve_problem(cfg, cls, file, **kwargs):
     problem.setup()
     if "faster" not in kwargs or not kwargs["faster"]:
         problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
-    problem.solve(True, None, None)
+    problem.solve()
+    del sample[0]
+    del values[0]
+    problem.set_sample(sample, values)
     #sample_variables = sample[0]
     #print(sample_variables)
     #sample_values = values[0]
     #print(sample_values)
-    #problem.solve(False, sample_variables, sample_values)
+    problem.solve()
     problem.db.close()
 
 _LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
@@ -130,7 +133,7 @@ def generate_sample(tdr, td, candidate_number):
 				#sample.append(c)
 				#values.append(random.choices([True, False], k=len(c)))
 				#break
-	print(sample)
+	#print(sample)
 	#print(values)
 	return sample, values
 

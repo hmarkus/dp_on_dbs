@@ -207,6 +207,12 @@ class DB(object):
         else:
             self.execute(q)
 
+    def delete_all_rows(self, table):
+        q = sql.SQL("DELETE FROM {}").format(
+                self.__table_name__(table)
+                )
+        self.execute(q)
+
     def call(self, procedure, params = []):
         q = sql.SQL("CALL {} ({})").format(
                     sql.Identifier(procedure),
