@@ -188,21 +188,30 @@ class Problem(object):
 
         return q
 
-    def assignment_view(self,node):
+    def assignment_view(self,node, ns = None, nv = None):
         filter = self.filter(node)
         q = "{} {}".format(self.assignment_select(node),filter)
 
-        if self.sample:
+        if self.sample and not ns and not nv:
             first = True
             for s, v in zip(self.sample, self.values):
                 if set(s).issubset(node.vertices):
                     if not filter and first:
-                        q += " WHERE NOT "
+                        q += " WHERE NOT ("
                         first = False
                     else:
-                        q += " AND NOT "
-                    q += " AND NOT ".join([" v{} = {}".format(vs, vv) for vs, vv in zip(s,v)])
+                        q += " AND NOT ("
+                    q += " AND ".join([" v{} = {}".format(vs, vv) for vs, vv in zip(s,v)])
+                    q += ")"
                     #print(q)
+
+        if ns and nv:
+            if not filter:
+                q += " WHERE ("
+            else:
+                q += " AND ("
+            q += " AND ".join([" v{} = {}".format(vs,vv) for vs, vv in zip(ns,nv)])
+            q += ")"
 
         if node.stored_vertices:
             q += " GROUP BY {}".format(",".join([var2col(v) for v in node.stored_vertices]))
@@ -217,7 +226,7 @@ class Problem(object):
 
         if not node.stored_vertices and not extra_group:
             q += " LIMIT 1"
-
+        print(q)
         return q
 
     # the following methods should be considered final
@@ -351,7 +360,7 @@ class Problem(object):
                 self.db.ignore_next_praefix()
                 self.db.insert("problem_option",("id", "type", "name", "value"),(self.id,"cfg",k,v))
 
-    def solve(self):
+    def solve(self, first, ns, nv):
         self.db.ignore_next_praefix()
         self.db.update("problem",["calc_start_time"],["statement_timestamp()"],[f"ID = {self.id}"])
         self.db.commit()
@@ -362,7 +371,7 @@ class Problem(object):
 
         with ThreadPoolExecutor(self.max_worker_threads) as executor:
             for n in self.td.nodes:
-                e = executor.submit(self.node_worker,n,workers)
+                e = executor.submit(self.node_worker,n,workers, first, ns, nv)
                 workers[n.id] = e
 
         self.after_solve()
@@ -374,12 +383,12 @@ class Problem(object):
             self.db.ignore_next_praefix()
             elapsed = self.db.select("problem",["end_time-calc_start_time","calc_start_time-setup_start_time"],[f"ID = {self.id}"])
             logger.info("Setup time: %s; Calc time: %s", elapsed[1], elapsed[0])
-        self.db.close()
+        #self.db.close()
 
     def interrupt(self):
         self.interrupted = True
 
-    def node_worker(self, node, workers):
+    def node_worker(self, node, workers, first,ns,nv):
         try:
             for c in node.children:
                 if not self.interrupted:
@@ -393,7 +402,7 @@ class Problem(object):
             db = DB.from_pool(self.pool)
             db.set_praefix(f"p{self.id}_")
             logger.debug("Creating records for node %d", node.id)
-            self.solve_node(node,db)
+            self.solve_node(node,db, first,ns,nv)
             db.close()
             if not self.interrupted:
                 logger.debug("Node %d finished", node.id)
@@ -402,7 +411,7 @@ class Problem(object):
             logger.exception("Error in worker thread")
             os.kill(os.getpid(), signal.SIGUSR1)
 
-    def solve_node(self, node, db):
+    def solve_node(self, node, db, first,ns,nv):
         if "faster" not in self.kwargs or not self.kwargs["faster"]:
             db.update("td_node_status",["start_time"],["statement_timestamp()"],[f"node = {node.id}"])
             db.commit()
@@ -415,17 +424,33 @@ class Problem(object):
             ass_view = self.db.replace_dynamic_tabs(ass_view)
             db.create_select(f"td_node_{node.id}", ass_view)
         else:
-            select = f"SELECT * from td_node_{node.id}_v"
-            if self.randomize_rows:
-                select += " ORDER BY RANDOM()"
-            if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
-                select += f" LIMIT {self.limit_result_rows}"
-            db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
+            if first:
+                select = f"SELECT * from td_node_{node.id}_v"
+                if self.randomize_rows:
+                    select += " ORDER BY RANDOM()"
+                if self.limit_result_rows and (node.stored_vertices or self.group_extra_cols(node)):
+                    select += f" LIMIT {self.limit_result_rows}"
+                db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(select))
+                #print(db.select_query(f"SELECT * from td_node_{node.id}"))
+            else:
+                if set(ns).issubset(set(node.vertices)):
+                    print('yes')
+                    print(node.vertices)
+                    print(ns)
+                    view = self.assignment_view(node, ns, nv)
+                    print(view)
+                    print(db.select_query(view))
+                    db.insert_select(f"td_node_{node.id}", db.replace_dynamic_tabs(view))
+                else:
+                    print('no')
+                    print(node.vertices)
+                    select = f"SELECT * FROM td_node_{node.id}_v"
+                    print(db.select_query(select))
             #for s in self.sample:
                 #if set(s).issubset(set(node.vertices)):
                 	#print(node.vertices)
                 	#print(db.select_query(select))
-            #print(db.select_query(f"SELECT * from td_node_{node.id}"))
+            print(db.select_query(f"SELECT * from td_node_{node.id}"))
         if self.interrupted:
             return
         self.after_solve_node(node, db)

@@ -82,7 +82,7 @@ def solve_problem(cfg, cls, file, **kwargs):
     logger.info(f"#bags: {td.num_bags} tree_width: {td.tree_width} #vertices: {td.num_orig_vertices} #leafs: {len(td.leafs)} #edges: {len(td.edges)}")
     logger.info(f"{tdr.max_bag}")
 
-    candidate_number = 0
+    candidate_number = 1
     sample, values = generate_sample(tdr, td, candidate_number)
 
     if "td_file" in kwargs and kwargs["td_file"]:
@@ -93,7 +93,13 @@ def solve_problem(cfg, cls, file, **kwargs):
     problem.setup()
     if "faster" not in kwargs or not kwargs["faster"]:
         problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
-    problem.solve()
+    problem.solve(True, None, None)
+    #sample_variables = sample[0]
+    #print(sample_variables)
+    #sample_values = values[0]
+    #print(sample_values)
+    #problem.solve(False, sample_variables, sample_values)
+    problem.db.close()
 
 _LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
