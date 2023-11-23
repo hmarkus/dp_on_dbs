@@ -82,7 +82,7 @@ def solve_problem(cfg, cls, file, **kwargs):
     logger.info(f"#bags: {td.num_bags} tree_width: {td.tree_width} #vertices: {td.num_orig_vertices} #leafs: {len(td.leafs)} #edges: {len(td.edges)}")
     logger.info(f"{tdr.max_bag}")
 
-    candidate_number = 1
+    candidate_number = 2
     sample, values = generate_sample(tdr, td, candidate_number)
 
     if "td_file" in kwargs and kwargs["td_file"]:
@@ -94,14 +94,13 @@ def solve_problem(cfg, cls, file, **kwargs):
     if "faster" not in kwargs or not kwargs["faster"]:
         problem.store_cfg(flatten_cfg(cfg,("db.dsn","db_admin","htd.path")))
     problem.solve()
-    del sample[0]
-    del values[0]
-    problem.set_sample(sample, values)
-    #sample_variables = sample[0]
-    #print(sample_variables)
-    #sample_values = values[0]
-    #print(sample_values)
-    problem.solve()
+
+    for i in range(candidate_number):
+        del_constraint = random.randint(0, len(sample) - 1)
+        del sample[del_constraint]
+        del values[del_constraint]
+        problem.set_sample(sample, values)
+        problem.solve()
     problem.db.close()
 
 _LOG_LEVEL_STRINGS = ["DEBUG_SQL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
@@ -111,28 +110,11 @@ def generate_sample(tdr, td, candidate_number):
 	sample = []
 	values = []
 
-	#for i in range(candidate_number):
-		#size = random.randint(1, tdr.max_bag)
-		#print(size)
-		#random_sample = random.sample(range(1,td.num_orig_vertices + 1), k=size)
-		#random_sample.sort()
-		#candidate.append(random_sample)
-	#print(candidate)
-
 	for i in range(candidate_number):
 		bag = tdr.bags[random.randint(1, len(tdr.bags))]
 		sample.append(bag)
 		values.append(random.choices([True, False], k=len(bag)))
 
-	#for c in candidate:
-		#for b in tdr.bags:
-			#if set(c).issubset(set(tdr.bags[b])):
-				#print('sub')
-				#print(c)
-				#print(tdr.bags[b])
-				#sample.append(c)
-				#values.append(random.choices([True, False], k=len(c)))
-				#break
 	#print(sample)
 	#print(values)
 	return sample, values
